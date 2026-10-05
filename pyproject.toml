@@ -9,6 +9,9 @@ dependencies = [
   "pypdfium2>=4,<6",
   "pillow>=11,<13",
   "psutil>=6,<8",
+  "sqlalchemy>=2,<3",
+  "alembic>=1.16,<2",
+  "psycopg[binary]>=3.2,<4",
 ]
 
 [project.optional-dependencies]
@@ -32,4 +35,3 @@ markers = ["extraction: requires cached real extraction models"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-

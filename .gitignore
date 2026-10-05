@@ -7,7 +7,8 @@ __pycache__/
 artifacts/
 data/
 models/
-.env
+.env*
+!.env.example
 .env.*
 !.env.example
 *.egg-info/
@@ -15,4 +16,3 @@ web/node_modules/
 web/dist/
 web/test-results/
 web/playwright-report/
-
