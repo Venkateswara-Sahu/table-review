@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from table_review.accounts.service import AuthenticationError
 from table_review.accounts.types import Actor
+from table_review.api_types import SessionCreated, SessionView
 
 router = APIRouter(prefix="/api/v1")
 
@@ -18,7 +19,7 @@ def require_actor(request: Request) -> Actor:
     return request.app.state.accounts.resolve_session(request.cookies.get("tr_session", ""))
 
 
-@router.post("/session")
+@router.post("/session", response_model=SessionCreated)
 def sign_in(payload: SignInInput, request: Request, response: Response):
     grant = request.app.state.accounts.sign_in(
         payload.username, payload.password, request.client.host if request.client else "unknown"
@@ -49,7 +50,7 @@ def sign_in(payload: SignInInput, request: Request, response: Response):
     }
 
 
-@router.get("/session")
+@router.get("/session", response_model=SessionView)
 def session_state(request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     csrf = request.cookies.get("tr_csrf", "")
     if csrf:

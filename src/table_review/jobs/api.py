@@ -6,6 +6,7 @@ from pydantic import Field, model_validator
 
 from table_review.accounts.api import require_actor
 from table_review.accounts.types import Actor
+from table_review.api_types import RunList, TaskList, TaskView
 from table_review.documents.service import DocumentError
 from table_review.documents.types import ImmutableModel, PageBox
 
@@ -25,7 +26,7 @@ class RunInput(ImmutableModel):
         return self
 
 
-@router.post("/documents/{document_id}/runs", status_code=202)
+@router.post("/documents/{document_id}/runs", status_code=202, response_model=TaskView)
 def submit(
     document_id: UUID,
     payload: RunInput,
@@ -48,27 +49,27 @@ def submit(
     )
 
 
-@router.get("/documents/{document_id}/tasks")
+@router.get("/documents/{document_id}/tasks", response_model=TaskList)
 def tasks(document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return {"items": request.app.state.queue.list(actor.id, document_id)}
 
 
-@router.get("/documents/{document_id}/runs")
+@router.get("/documents/{document_id}/runs", response_model=RunList)
 def runs(document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return {"items": request.app.state.queue.runs(actor.id, document_id)}
 
 
-@router.get("/tasks/{task_id}")
+@router.get("/tasks/{task_id}", response_model=TaskView)
 def task(task_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return request.app.state.queue.get(actor.id, task_id)
 
 
-@router.post("/tasks/{task_id}/cancel")
+@router.post("/tasks/{task_id}/cancel", response_model=TaskView)
 def cancel(task_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return request.app.state.queue.cancel(actor.id, task_id)
 
 
-@router.post("/tasks/{task_id}/retry", status_code=202)
+@router.post("/tasks/{task_id}/retry", status_code=202, response_model=TaskView)
 def retry(
     task_id: UUID,
     request: Request,

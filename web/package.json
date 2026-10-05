@@ -1,0 +1,29 @@
+{
+  "name": "table-review-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "build": "tsc --noEmit && vite build",
+    "test:e2e": "playwright test",
+    "generate:types": "openapi-typescript ../docs/api/openapi.json -o src/api/types.ts && prettier --write src/api/types.ts",
+    "format": "prettier --write src tests *.ts index.html package.json",
+    "format:check": "prettier --check src tests *.ts index.html package.json"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.19.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.9.9",
+    "typescript": "5.9.3",
+    "vite": "8.3.2"
+  }
+}

@@ -7,6 +7,7 @@ from pydantic import Field
 from table_review.accounts.api import require_actor
 from table_review.accounts.types import Actor
 from table_review.documents.types import ImmutableModel
+from table_review.reviews.types import ReviewSnapshot, ReviewState
 
 router = APIRouter(prefix="/api/v1")
 
@@ -20,12 +21,12 @@ class ApprovalInput(ImmutableModel):
     allow_warnings: bool = False
 
 
-@router.get("/revisions/{revision_id}/review")
+@router.get("/revisions/{revision_id}/review", response_model=ReviewState)
 def review(revision_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return request.app.state.reviews.state(actor, revision_id)
 
 
-@router.post("/revisions/{revision_id}/checked")
+@router.post("/revisions/{revision_id}/checked", response_model=ReviewState)
 def checked(
     revision_id: UUID,
     payload: CheckedInput,
@@ -37,7 +38,7 @@ def checked(
     )
 
 
-@router.post("/revisions/{revision_id}/approval")
+@router.post("/revisions/{revision_id}/approval", response_model=ReviewSnapshot)
 def approve(
     revision_id: UUID,
     payload: ApprovalInput,
@@ -47,6 +48,6 @@ def approve(
     return request.app.state.reviews.approve(actor, revision_id, payload.allow_warnings)
 
 
-@router.get("/approvals/{snapshot_id}")
+@router.get("/approvals/{snapshot_id}", response_model=ReviewSnapshot)
 def snapshot(snapshot_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return request.app.state.reviews.snapshot(actor, snapshot_id)

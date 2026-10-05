@@ -1,12 +1,18 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from table_review.accounts.types import Actor
 from table_review.documents.service import DocumentError
 from table_review.documents.types import SourceReference
-from table_review.storage.models import EditEventInput, EditEventRow, TableRecord, TableRow
+from table_review.storage.models import (
+    EditEventInput,
+    EditEventRow,
+    RevisionRow,
+    TableRecord,
+    TableRow,
+)
 from table_review.storage.repository import _record
 from table_review.tables.grid import apply_edit, validate_grid
 from table_review.tables.types import CellContent, TableContent
@@ -92,17 +98,27 @@ class TableService:
             actor.id, table_id, base_revision_id, original.content, event, on_saved=self._after_save
         )
 
-    def list(self, actor, document_id):
+    def list(self, actor, document_id, page_no=None):
         with self.repository.session_factory() as session:
-            self.repository._document(session, actor.id, document_id)
+            document = self.repository._document(session, actor.id, document_id)
+            if page_no is not None and not 1 <= page_no <= document.page_count:
+                raise TableInputError("Select an original page in this report")
+            query = select(TableRow).where(
+                TableRow.owner_id == actor.id, TableRow.document_id == document_id
+            )
+            if page_no is not None:
+                query = query.join(
+                    RevisionRow, RevisionRow.id == TableRow.current_revision_id
+                ).where(
+                    or_(
+                        RevisionRow.content["source_reference"]["page"].as_integer() == page_no,
+                        RevisionRow.content["cells"][0]["reference"]["page"].as_integer()
+                        == page_no,
+                    )
+                )
             return tuple(
                 _record(TableRecord, row)
-                for row in session.scalars(
-                    select(TableRow)
-                    .where(TableRow.owner_id == actor.id, TableRow.document_id == document_id)
-                    .order_by(TableRow.created_at.desc())
-                    .limit(500)
-                )
+                for row in session.scalars(query.order_by(TableRow.created_at.desc()).limit(500))
             )
 
     def get(self, actor, table_id):

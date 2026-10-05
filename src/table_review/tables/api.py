@@ -6,7 +6,9 @@ from pydantic import Field
 
 from table_review.accounts.api import require_actor
 from table_review.accounts.types import Actor
+from table_review.api_types import EditHistory, RevisionView, TableList, TableView
 from table_review.documents.types import ImmutableModel, PageBox
+from table_review.storage.models import TableRecord
 from table_review.tables.grid import EditOperation
 
 router = APIRouter(prefix="/api/v1")
@@ -28,12 +30,17 @@ class ManualInput(ImmutableModel):
     columns: int = Field(ge=1, le=60)
 
 
-@router.get("/documents/{document_id}/tables")
-def tables(document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
-    return {"items": request.app.state.tables.list(actor, document_id)}
+@router.get("/documents/{document_id}/tables", response_model=TableList)
+def tables(
+    document_id: UUID,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+    page_no: int | None = None,
+):
+    return {"items": request.app.state.tables.list(actor, document_id, page_no)}
 
 
-@router.post("/documents/{document_id}/tables", status_code=201)
+@router.post("/documents/{document_id}/tables", status_code=201, response_model=TableRecord)
 def manual(
     document_id: UUID,
     payload: ManualInput,
@@ -45,12 +52,12 @@ def manual(
     )
 
 
-@router.get("/tables/{table_id}")
+@router.get("/tables/{table_id}", response_model=TableView)
 def table(table_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return request.app.state.tables.get(actor, table_id)
 
 
-@router.get("/tables/{table_id}/revisions/{revision_id}")
+@router.get("/tables/{table_id}/revisions/{revision_id}", response_model=RevisionView)
 def revision(
     table_id: UUID,
     revision_id: UUID,
@@ -60,12 +67,12 @@ def revision(
     return request.app.state.repository.get_revision(actor.id, table_id, revision_id)
 
 
-@router.get("/tables/{table_id}/history")
+@router.get("/tables/{table_id}/history", response_model=EditHistory)
 def history(table_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return {"items": request.app.state.tables.history(actor, table_id)}
 
 
-@router.post("/tables/{table_id}/edits")
+@router.post("/tables/{table_id}/edits", response_model=RevisionView)
 def edit(
     table_id: UUID,
     payload: EditInput,
@@ -82,7 +89,7 @@ def edit(
     )
 
 
-@router.post("/tables/{table_id}/restore")
+@router.post("/tables/{table_id}/restore", response_model=RevisionView)
 def restore(
     table_id: UUID,
     payload: RestoreInput,

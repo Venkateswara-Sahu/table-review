@@ -6,11 +6,13 @@ from fastapi.responses import FileResponse
 
 from table_review.accounts.api import require_actor
 from table_review.accounts.types import Actor
+from table_review.api_types import DocumentList, DocumentView, PageView
+from table_review.documents.types import PdfInfo
 
 router = APIRouter(prefix="/api/v1/documents")
 
 
-@router.post("", status_code=201)
+@router.post("", status_code=201, response_model=DocumentView)
 def upload(
     request: Request,
     file: UploadFile,
@@ -25,24 +27,24 @@ def upload(
         file.file.close()
 
 
-@router.get("")
+@router.get("", response_model=DocumentList)
 def documents(request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return {"items": request.app.state.repository.list_documents(actor.id)}
 
 
-@router.get("/{document_id}")
+@router.get("/{document_id}", response_model=DocumentView)
 def document(document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return request.app.state.repository.get_document(actor.id, document_id)
 
 
-@router.post("/{document_id}/open")
+@router.post("/{document_id}/open", response_model=DocumentView)
 def foreground_open(
     document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]
 ):
     return request.app.state.documents.foreground_open(actor, document_id)
 
 
-@router.get("/{document_id}/inspect")
+@router.get("/{document_id}/inspect", response_model=PdfInfo)
 def inspect(document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return request.app.state.documents.inspect(actor, document_id)
 
@@ -53,7 +55,7 @@ def source(document_id: UUID, request: Request, actor: Annotated[Actor, Depends(
     return FileResponse(path, media_type="application/pdf", filename=f"source-{document_id}.pdf")
 
 
-@router.get("/{document_id}/pages/{page_no}")
+@router.get("/{document_id}/pages/{page_no}", response_model=PageView)
 def page_info(
     document_id: UUID,
     page_no: int,

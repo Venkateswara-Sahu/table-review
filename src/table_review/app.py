@@ -14,6 +14,7 @@ from table_review.accounts.service import (
     InvalidAccount,
     SignInThrottled,
 )
+from table_review.api_types import ErrorEnvelope
 from table_review.documents.api import router as documents_router
 from table_review.documents.service import DocumentError, DocumentService
 from table_review.documents.upload_limit import UploadSizeLimit
@@ -56,7 +57,14 @@ def create_app(settings: Settings) -> FastAPI:
         yield
         factory.kw["bind"].dispose()
 
-    app = FastAPI(title="Table Review", lifespan=lifespan)
+    app = FastAPI(
+        title="Table Review",
+        lifespan=lifespan,
+        responses={
+            status: {"model": ErrorEnvelope}
+            for status in (400, 401, 403, 404, 409, 413, 422, 429, 500, 503)
+        },
+    )
     app.state.settings = settings
     app.state.session_factory = factory
     app.state.accounts = AccountService(factory)
