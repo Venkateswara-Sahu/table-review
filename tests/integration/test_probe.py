@@ -30,6 +30,17 @@ def test_probe_preserves_original_page(tmp_path: Path):
     assert result.manifest["model_artifact_hashes"]
     assert any("1,234.50" in c.raw_text for t in result.tables for c in t.content.cells)
     assert all(c.reference.page == 2 for t in result.tables for c in t.content.cells)
+    expected_headers = tuple(
+        sorted(
+            {
+                r
+                for cell in result.tables[0].content.cells
+                if cell.role == "column_header"
+                for r in range(cell.row, cell.row + cell.row_span)
+            }
+        )
+    )
+    assert result.tables[0].content.header_rows == expected_headers
 
 
 def test_rotated_crop_tokens_match_display(tmp_path: Path):

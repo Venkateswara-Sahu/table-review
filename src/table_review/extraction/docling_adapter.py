@@ -14,7 +14,7 @@ from pypdf.generic import RectangleObject
 from table_review.documents.pdf import inspect_pdf, page_info, source_tokens
 from table_review.documents.types import PageBox, SourceReference
 from table_review.extraction.types import ExtractedTable, ExtractionRequest, ExtractionResult
-from table_review.tables.types import CellContent, TableContent
+from table_review.tables.types import CellContent, TableContent, infer_header_roles
 
 
 @lru_cache(maxsize=4)
@@ -242,6 +242,13 @@ class DoclingExtractor:
                                 rows=table.data.num_rows,
                                 columns=table.data.num_cols,
                                 cells=tuple(cells),
+                                header_rows=infer_header_roles(tuple(cells))[0],
+                                row_label_columns=infer_header_roles(tuple(cells))[1],
+                                source_reference=SourceReference(
+                                    page=page.page_no,
+                                    precision="table" if region else "page",
+                                    box=region,
+                                ),
                             ),
                             source_tokens=table_tokens,
                         )
