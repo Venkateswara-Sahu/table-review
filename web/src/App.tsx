@@ -15,12 +15,27 @@ export default function App() {
   const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [dirty, setDirty] = useState(false);
+  function leave() {
+    return (
+      !dirty ||
+      window.confirm("Discard unsaved changes before leaving this table?")
+    );
+  }
+  function back() {
+    if (leave()) {
+      setDocument(null);
+      window.history.replaceState(null, "", "/");
+    }
+  }
   useEffect(() => {
     let live = true;
     const lost = () => {
       clearPrivateState();
       setActor(null);
       setDocument(null);
+      setDirty(false);
+      window.history.replaceState(null, "", "/");
       setError("");
     };
     window.addEventListener("session-lost", lost);
@@ -29,6 +44,20 @@ export default function App() {
         if (live) {
           setCsrf(session.csrf_token);
           setActor(session.actor);
+          const id = new URLSearchParams(window.location.search).get(
+            "document",
+          );
+          if (id)
+            void apiRequest<Document>(
+              `/api/v1/documents/${encodeURIComponent(id)}/open`,
+              { method: "POST" },
+            )
+              .then((value) => {
+                if (live) setDocument(value);
+              })
+              .catch((error) => {
+                if (live) setError(errorMessage(error));
+              });
         }
       })
       .catch(() => {})
@@ -41,6 +70,7 @@ export default function App() {
     };
   }, []);
   async function signOut() {
+    if (!leave()) return;
     try {
       await apiRequest<void>("/api/v1/session", { method: "DELETE" });
     } catch (error) {
@@ -50,6 +80,8 @@ export default function App() {
     clearPrivateState();
     setActor(null);
     setDocument(null);
+    setDirty(false);
+    window.history.replaceState(null, "", "/");
     setError("");
   }
   async function open(report: Document) {
@@ -59,6 +91,7 @@ export default function App() {
         { method: "POST" },
       );
       setDocument(updated);
+      window.history.replaceState(null, "", `/?document=${updated.id}&page=1`);
     } catch (error) {
       setError(errorMessage(error));
     }
@@ -66,7 +99,14 @@ export default function App() {
   return (
     <>
       <header className="app-header">
-        <a href="/" className="wordmark">
+        <a
+          href="/"
+          className="wordmark"
+          onClick={(event) => {
+            event.preventDefault();
+            back();
+          }}
+        >
           ▦ &nbsp; Table Review
         </a>
         <span className="trial-label">PRIVATE TRIAL</span>
@@ -96,7 +136,7 @@ export default function App() {
       ) : (
         <div key={actor.id}>
           {document ? (
-            <ReportPages document={document} onBack={() => setDocument(null)} />
+            <ReportPages document={document} onBack={back} onDirty={setDirty} />
           ) : (
             <ReportList onOpen={(report) => void open(report)} />
           )}

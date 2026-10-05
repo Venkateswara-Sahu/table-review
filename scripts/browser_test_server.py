@@ -68,6 +68,7 @@ def main():
         ("rotated.pdf", rotated_cropped_report, [1]),
         ("blank.pdf", blank_report, None),
         ("fallback.pdf", two_page_report, None),
+        ("review.pdf", two_page_report, None),
     ):
         path = creator(fixtures / filename)
         doc = app.state.documents.upload(

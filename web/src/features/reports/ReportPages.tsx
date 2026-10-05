@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiRequest, errorMessage } from "../../api/client";
 import type {
   Document,
@@ -10,16 +10,39 @@ import type {
   Task,
 } from "../../api/models";
 import { SourcePage } from "../review/SourcePage";
+import { ReviewScreen } from "../review/ReviewScreen";
 
 export function ReportPages({
   document,
   onBack,
+  onDirty,
 }: {
   document: Document;
   onBack: () => void;
+  onDirty: (value: boolean) => void;
 }) {
-  const [pageNo, setPageNo] = useState(1);
-  const [pageInput, setPageInput] = useState("1");
+  const initialPage = Number(
+    new URLSearchParams(window.location.search).get("page") ?? "1",
+  );
+  const startPage =
+    Number.isInteger(initialPage) &&
+    initialPage >= 1 &&
+    initialPage <= document.page_count
+      ? initialPage
+      : 1;
+  const [pageNo, setPageNo] = useState(startPage);
+  const [pageInput, setPageInput] = useState(String(startPage));
+  const [dirty, setDirty] = useState(false);
+  const reportDirty = useCallback(
+    (value: boolean) => {
+      setDirty(value);
+      onDirty(value);
+    },
+    [onDirty],
+  );
+  const leaveTable = () =>
+    !dirty ||
+    window.confirm("Discard unsaved changes before leaving this table?");
   const [pagesInput, setPagesInput] = useState("1");
   const [page, setPage] = useState<PageInfo | null>(null);
   const [tables, setTables] = useState<Table[]>([]);
@@ -73,6 +96,33 @@ export function ReportPages({
       }
     }
     void refresh();
+    const requested = new URLSearchParams(window.location.search).get("table");
+    if (requested)
+      apiRequest<TableView>(`/api/v1/tables/${encodeURIComponent(requested)}`, {
+        signal: controller.signal,
+      })
+        .then((selected) => {
+          if (!live) return;
+          const sourcePage =
+            selected.revision.content.source_reference?.page ??
+            selected.revision.content.cells[0]?.reference.page;
+          if (
+            selected.table.document_id !== document.id ||
+            sourcePage !== pageNo
+          ) {
+            setError("This table does not belong to the selected report page");
+            return;
+          }
+          setView(selected);
+          setReference(
+            selected.revision.content.source_reference ??
+              selected.revision.content.cells[0]?.reference ??
+              null,
+          );
+        })
+        .catch((error) => {
+          if (live) setError(errorMessage(error));
+        });
     const interval = window.setInterval(() => void refresh(), 1500);
     return () => {
       live = false;
@@ -81,12 +131,18 @@ export function ReportPages({
     };
   }, [document.id, pageNo]);
   async function openTable(table: Table) {
+    if (!leaveTable()) return;
     setError("");
     try {
       const selected = await apiRequest<TableView>(
         `/api/v1/tables/${table.id}`,
       );
       setView(selected);
+      window.history.replaceState(
+        null,
+        "",
+        `/?document=${document.id}&page=${pageNo}&table=${table.id}`,
+      );
       setReference(
         selected.revision.content.source_reference ??
           selected.revision.content.cells[0]?.reference ??
@@ -97,6 +153,7 @@ export function ReportPages({
     }
   }
   function changePage() {
+    if (!leaveTable()) return;
     const next = Number(pageInput);
     if (!Number.isInteger(next) || next < 1 || next > document.page_count) {
       setError("Choose an original page number in this report");
@@ -104,6 +161,11 @@ export function ReportPages({
     }
     setError("");
     setPageNo(next);
+    window.history.replaceState(
+      null,
+      "",
+      `/?document=${document.id}&page=${next}`,
+    );
   }
   async function extract(selectedRegion?: PageBox) {
     setError("");
@@ -155,6 +217,7 @@ export function ReportPages({
     }
   }
   async function createManual() {
+    if (!leaveTable()) return;
     if (!region) return;
     setBusy(true);
     setError("");
@@ -298,55 +361,15 @@ export function ReportPages({
             </div>
           )}
           {view && (
-            <>
-              <p className="warning">
-                Draft · compare every cell with the source before approving.
-              </p>
-              <div className="preview-grid">
-                <table>
-                  <tbody>
-                    {Array.from(
-                      { length: view.revision.content.rows },
-                      (_, row) => (
-                        <tr key={row}>
-                          {view.revision.content.cells
-                            .filter((cell) => cell.row === row)
-                            .sort((a, b) => a.col - b.col)
-                            .map((cell) => (
-                              <td
-                                key={cell.id}
-                                rowSpan={cell.row_span}
-                                colSpan={cell.col_span}
-                              >
-                                <button
-                                  aria-label={`Source: ${cell.text || "blank cell"}`}
-                                  onClick={() => setReference(cell.reference)}
-                                >
-                                  {cell.text || "—"}
-                                </button>
-                              </td>
-                            ))}
-                        </tr>
-                      ),
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {view.revision.content.unit_notes.length > 0 && (
-                <div className="unit-notes">
-                  <h3>Raw unit notes</h3>
-                  {view.revision.content.unit_notes.map((note, i) => (
-                    <p key={i}>{note}</p>
-                  ))}
-                </div>
-              )}
-              <details>
-                <summary>Run details</summary>
-                <pre>
-                  {JSON.stringify(view.revision.extraction_manifest, null, 2)}
-                </pre>
-              </details>
-            </>
+            <ReviewScreen
+              key={view.table.id}
+              view={view}
+              onSource={setReference}
+              onDirty={reportDirty}
+              onRevision={(revision) =>
+                setView((value) => (value ? { ...value, revision } : value))
+              }
+            />
           )}
           {region && (
             <div className="manual-panel">

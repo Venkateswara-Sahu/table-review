@@ -92,6 +92,9 @@ test("rotation and coarse source references remain honest", async ({
     .getByRole("button", { name: "Open rotated.pdf", exact: true })
     .click();
   await page.getByRole("button", { name: "Open table 1", exact: true }).click();
+  await expect(page.getByText("Unsaved changes", { exact: true })).toHaveCount(
+    0,
+  );
   await page
     .getByRole("button", { name: "Source: 1,234.50", exact: true })
     .click();
