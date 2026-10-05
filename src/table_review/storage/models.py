@@ -14,6 +14,35 @@ class Base(DeclarativeBase):
     pass
 
 
+class AccountRow(Base):
+    __tablename__ = "accounts"
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    username: Mapped[str] = mapped_column(String(80), unique=True)
+    password_hash: Mapped[str]
+    auth_epoch: Mapped[UUID] = mapped_column(default=uuid4)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SessionRow(Base):
+    __tablename__ = "account_sessions"
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    owner_id: Mapped[UUID] = mapped_column(ForeignKey("accounts.id"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    csrf_hash: Mapped[str] = mapped_column(String(64))
+    auth_epoch: Mapped[UUID]
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SignInThrottleRow(Base):
+    __tablename__ = "sign_in_throttles"
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    failures: Mapped[int] = mapped_column(default=0)
+    window_started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class DocumentRow(Base):
     __tablename__ = "documents"
     __table_args__ = (UniqueConstraint("id", "owner_id", name="uq_document_owner"),)

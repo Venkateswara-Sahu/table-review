@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Settings(BaseModel):
@@ -19,3 +19,8 @@ class Settings(BaseModel):
     retention_days: int = 30
     worker_memory_bytes: int = 6 * 1024**3
     model_path: Path = Path("models")
+    database_url: str = Field(default="", repr=False)
+    database_schema: str | None = None
+    blob_root: Path = Path("data/blobs")
+    public_origin: str = "http://localhost:8000"
+    secure_cookies: bool = True
