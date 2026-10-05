@@ -1,0 +1,35 @@
+[project]
+name = "table-review"
+version = "0.1.0"
+description = "Source-backed PDF table review and reproducible spreadsheet exports"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "pydantic>=2,<3",
+  "pypdf>=6,<7",
+  "pypdfium2>=4,<6",
+  "pillow>=11,<13",
+  "psutil>=6,<8",
+]
+
+[project.optional-dependencies]
+extraction = ["docling>=2.132,<3"]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.13,<1", "reportlab>=4,<5"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/table_review"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+markers = ["extraction: requires cached real extraction models"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
