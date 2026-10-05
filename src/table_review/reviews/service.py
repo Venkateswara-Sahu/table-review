@@ -1,8 +1,10 @@
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import select
 
-from table_review.reviews.models import ReviewSnapshotRow, ReviewStateRow
+from table_review.checks.types import IssueDecisionRecord
+from table_review.reviews.models import IssueDecisionRow, ReviewSnapshotRow, ReviewStateRow
 from table_review.reviews.types import ReviewSnapshot, ReviewState
 from table_review.storage.models import DocumentRow, RevisionRow, TableRow
 from table_review.storage.repository import NotFound, RevisionConflict, _record
@@ -44,13 +46,25 @@ class ReviewService:
         if current and table.current_revision_id != revision.id:
             raise RevisionConflict(table.current_revision_id)
         state = session.get(ReviewStateRow, revision.id)
-        if state is None:
+        created = state is None
+        if created:
             state = ReviewStateRow(revision_id=revision.id, owner_id=actor.id)
             session.add(state)
             session.flush()
-            if self.checker:
-                issues, versions = self.checker(session, revision)
-                state.issues, state.check_versions = list(issues), versions
+        expected_version = getattr(self.checker, "version", None)
+        if self.checker and (
+            created or (expected_version and state.check_versions.get("engine") != expected_version)
+        ):
+            issues, versions = self.checker(session, revision)
+            fingerprints = {issue["fingerprint"] for issue in issues}
+            state.issue_decisions = {
+                key: decision
+                for key, decision in state.issue_decisions.items()
+                if key in fingerprints
+            }
+            state.issues, state.check_versions = list(issues), versions
+            state.current_approval_id = None
+            state.generation += int(not created)
         return table, revision, state
 
     @staticmethod
@@ -120,6 +134,45 @@ class ReviewService:
                 }
                 state.current_approval_id = None
                 state.generation += 1
+            return self._view(session, table, state)
+
+    def decide_issue(self, actor, revision_id, issue_id, decision):
+        with self.session_factory.begin() as session:
+            table, revision, state = self._context(session, actor, revision_id, current=True)
+            issue = next(
+                (item for item in state.issues if UUID(item["id"]) == UUID(str(issue_id))), None
+            )
+            if issue is None:
+                raise NotFound("Issue not found")
+            previous = state.issue_decisions.get(issue["fingerprint"])
+            if (
+                previous
+                and previous["kind"] == decision.kind
+                and previous["reason"] == decision.reason
+                and previous["actor_id"] == str(actor.id)
+            ):
+                return self._view(session, table, state)
+            record = IssueDecisionRecord(
+                kind=decision.kind,
+                reason=decision.reason,
+                actor_id=actor.id,
+                decided_at=datetime.now(UTC),
+                issue_id=issue_id,
+                fingerprint=issue["fingerprint"],
+                revision_id=revision.id,
+            ).model_dump(mode="json")
+            session.add(
+                IssueDecisionRow(
+                    owner_id=actor.id,
+                    revision_id=revision.id,
+                    issue_id=issue_id,
+                    fingerprint=issue["fingerprint"],
+                    decision=record,
+                )
+            )
+            state.issue_decisions = {**state.issue_decisions, issue["fingerprint"]: record}
+            state.current_approval_id = None
+            state.generation += 1
             return self._view(session, table, state)
 
     def after_revision(self, session, old_revision, new_revision, event):

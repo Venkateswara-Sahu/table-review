@@ -15,6 +15,7 @@ from table_review.accounts.service import (
     SignInThrottled,
 )
 from table_review.api_types import ErrorEnvelope
+from table_review.checks.persistence import RevisionChecker
 from table_review.documents.api import router as documents_router
 from table_review.documents.service import DocumentError, DocumentService
 from table_review.documents.upload_limit import UploadSizeLimit
@@ -74,6 +75,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.queue = TaskQueue(app.state.repository, settings, app.state.documents)
     app.state.documents.preparation_queue = app.state.queue
     app.state.reviews = ReviewService(app.state.repository)
+    app.state.reviews.checker = RevisionChecker()
     app.state.tables = TableService(app.state.repository, app.state.documents, app.state.reviews)
     app.add_middleware(UploadSizeLimit, max_pdf_bytes=settings.max_pdf_bytes)
 

@@ -38,3 +38,14 @@ class ReviewSnapshotRow(Base):
     approved_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class IssueDecisionRow(Base):
+    __tablename__ = "issue_decision_events"
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    owner_id: Mapped[UUID] = mapped_column(index=True)
+    revision_id: Mapped[UUID] = mapped_column(ForeignKey("table_revisions.id"), index=True)
+    issue_id: Mapped[UUID]
+    fingerprint: Mapped[str] = mapped_column(String(64))
+    decision: Mapped[dict] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

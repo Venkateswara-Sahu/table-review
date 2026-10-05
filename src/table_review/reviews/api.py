@@ -6,10 +6,22 @@ from pydantic import Field
 
 from table_review.accounts.api import require_actor
 from table_review.accounts.types import Actor
+from table_review.checks.types import IssueDecisionInput
 from table_review.documents.types import ImmutableModel
 from table_review.reviews.types import ReviewSnapshot, ReviewState
 
 router = APIRouter(prefix="/api/v1")
+
+
+@router.post("/revisions/{revision_id}/issues/{issue_id}/decision", response_model=ReviewState)
+def decide_issue(
+    revision_id: UUID,
+    issue_id: UUID,
+    payload: IssueDecisionInput,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+):
+    return request.app.state.reviews.decide_issue(actor, revision_id, issue_id, payload)
 
 
 class CheckedInput(ImmutableModel):

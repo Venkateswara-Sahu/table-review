@@ -177,6 +177,28 @@
         "title": "CheckedInput",
         "type": "object"
       },
+      "Dismiss": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "dismiss",
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "kind"
+        ],
+        "title": "Dismiss",
+        "type": "object"
+      },
       "DocumentList": {
         "properties": {
           "items": {
@@ -396,6 +418,121 @@
         "title": "ErrorEnvelope",
         "type": "object"
       },
+      "Issue": {
+        "additionalProperties": false,
+        "properties": {
+          "affected_cell_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Affected Cell Ids",
+            "type": "array"
+          },
+          "evidence": {
+            "additionalProperties": true,
+            "title": "Evidence",
+            "type": "object"
+          },
+          "fingerprint": {
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "coverage_discrepancy",
+              "duplicate_source_token",
+              "placement_ambiguity",
+              "structural_inconsistency",
+              "limited_reference",
+              "coverage_unavailable"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "affected_cell_ids",
+          "evidence",
+          "fingerprint",
+          "reason"
+        ],
+        "title": "Issue",
+        "type": "object"
+      },
+      "IssueDecisionRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "actor_id": {
+            "format": "uuid",
+            "title": "Actor Id",
+            "type": "string"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "title": "Decided At",
+            "type": "string"
+          },
+          "fingerprint": {
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "issue_id": {
+            "format": "uuid",
+            "title": "Issue Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "dismiss",
+              "resolved",
+              "reopen"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "revision_id": {
+            "format": "uuid",
+            "title": "Revision Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "reason",
+          "actor_id",
+          "decided_at",
+          "issue_id",
+          "fingerprint",
+          "revision_id"
+        ],
+        "title": "IssueDecisionRecord",
+        "type": "object"
+      },
       "ManualInput": {
         "additionalProperties": false,
         "properties": {
@@ -583,6 +720,50 @@
         "title": "PdfInfo",
         "type": "object"
       },
+      "Reopen": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "reopen",
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "kind"
+        ],
+        "title": "Reopen",
+        "type": "object"
+      },
+      "Resolved": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "resolved",
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "kind"
+        ],
+        "title": "Resolved",
+        "type": "object"
+      },
       "RestoreInput": {
         "additionalProperties": false,
         "properties": {
@@ -645,15 +826,16 @@
             "type": "string"
           },
           "issue_decisions": {
-            "additionalProperties": true,
+            "additionalProperties": {
+              "$ref": "#/components/schemas/IssueDecisionRecord"
+            },
             "title": "Issue Decisions",
             "type": "object"
           },
           "issues": {
             "default": [],
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/Issue"
             },
             "title": "Issues",
             "type": "array"
@@ -731,15 +913,16 @@
             "type": "integer"
           },
           "issue_decisions": {
-            "additionalProperties": true,
+            "additionalProperties": {
+              "$ref": "#/components/schemas/IssueDecisionRecord"
+            },
             "title": "Issue Decisions",
             "type": "object"
           },
           "issues": {
             "default": [],
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/Issue"
             },
             "title": "Issues",
             "type": "array"
@@ -3534,6 +3717,175 @@
           }
         },
         "summary": "Checked"
+      }
+    },
+    "/api/v1/revisions/{revision_id}/issues/{issue_id}/decision": {
+      "post": {
+        "operationId": "decide_issue_api_v1_revisions__revision_id__issues__issue_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "issue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Issue Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "discriminator": {
+                  "mapping": {
+                    "dismiss": "#/components/schemas/Dismiss",
+                    "reopen": "#/components/schemas/Reopen",
+                    "resolved": "#/components/schemas/Resolved"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Dismiss"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Resolved"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Reopen"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Decide Issue"
       }
     },
     "/api/v1/revisions/{revision_id}/review": {

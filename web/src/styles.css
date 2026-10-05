@@ -701,3 +701,33 @@ textarea {
   white-space: pre-wrap;
   margin-top: 10px;
 }
+.issue-list {
+  border-top: 1px solid #dde6da;
+  padding-top: 18px;
+  margin-top: 16px;
+  font-size: 12px;
+}
+.issue-card {
+  border: 1px solid #d8dfcc;
+  padding: 12px;
+  margin: 14px 0;
+  border-radius: 6px;
+  background: #fffdf7;
+}
+.issue-card p {
+  margin-bottom: 10px;
+}
+.issue-card label {
+  margin: 12px 0 7px;
+}
+.issue-card textarea {
+  margin-bottom: 8px;
+}
+.decision-record {
+  margin-top: 12px;
+  padding: 9px;
+  background: #eaf1e9;
+}
+.source-literal {
+  white-space: pre-wrap;
+}

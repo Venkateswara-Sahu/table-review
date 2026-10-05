@@ -59,8 +59,15 @@ def test_never_auto_approves_and_checks_not_run_is_a_warning(client, owned_table
     assert approve(client, table.current_revision_id, warnings=False).status_code == 409
     snapshot = approve(client, table.current_revision_id).json()
     assert snapshot["label"] == "reviewed_with_warnings"
-    assert snapshot["unresolved_count"] == 1
-    assert snapshot["check_versions"] == {"checks": "not_run"}
+    assert snapshot["unresolved_count"] == 3  # Not run, unavailable coverage, limited geometry.
+    assert {i["kind"] for i in snapshot["issues"]} == {"coverage_unavailable", "limited_reference"}
+    assert snapshot["check_versions"] == {
+        "engine": "1",
+        "coverage": "not_run",
+        "source_identity": "not_run",
+        "placement": "1",
+        "structural": "1",
+    }
 
 
 def test_text_edit_retains_old_snapshot_and_carries_only_unchanged_checks(client, app, owned_table):
@@ -239,7 +246,8 @@ def test_checks_change_invalidates_approval_and_clean_checked_table_can_be_revie
 ):
     actor, _, table = owned_table
     check_all(client, table)
-    # A trusted fixture stands in for Task 10's future check engine, not an API bypass.
+    # This test isolates the approval contract from the actual check engine.
+    app.state.reviews.checker = None
     app.state.reviews.set_checks(actor, table.current_revision_id, (), {"fixture": "v1"})
     snapshot = approve(client, table.current_revision_id, warnings=False).json()
     assert snapshot["label"] == "reviewed" and snapshot["unresolved_count"] == 0

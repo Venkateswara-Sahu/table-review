@@ -17,6 +17,8 @@ import {
 } from "./TableGrid";
 import { ReviewActions } from "./ReviewActions";
 import { History } from "./History";
+import { IssueList } from "./IssueList";
+import type { components } from "../../api/types";
 
 function firstCell(view: TableView) {
   return view.revision.content.cells.reduce<
@@ -294,6 +296,26 @@ export function ReviewScreen({
       setBusy(false);
     }
   }
+  async function decide(
+    id: string,
+    kind: components["schemas"]["IssueDecisionRecord"]["kind"],
+    reason: string,
+  ) {
+    setBusy(true);
+    setError("");
+    try {
+      setReview(
+        await apiRequest<ReviewState>(
+          `/api/v1/revisions/${revision.id}/issues/${id}/decision`,
+          { method: "POST", body: JSON.stringify({ kind, reason }) },
+        ),
+      );
+    } catch (error) {
+      setError(errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <div className="review-screen">
       <div className="review-status">
@@ -368,6 +390,15 @@ export function ReviewScreen({
         busy={busy || dirty}
         onRestore={(id) => void restore(id)}
       />
+      {review && (
+        <IssueList
+          key={revision.id}
+          review={review}
+          busy={busy || dirty}
+          onSource={onSource}
+          onDecision={(id, kind, reason) => void decide(id, kind, reason)}
+        />
+      )}
       <details>
         <summary>Run details</summary>
         <pre>{JSON.stringify(revision.extraction_manifest, null, 2)}</pre>

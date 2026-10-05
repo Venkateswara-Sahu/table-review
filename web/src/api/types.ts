@@ -228,6 +228,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/revisions/{revision_id}/issues/{issue_id}/decision": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Decide Issue */
+    post: operations["decide_issue_api_v1_revisions__revision_id__issues__issue_id__decision_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/revisions/{revision_id}/review": {
     parameters: {
       query?: never;
@@ -489,6 +506,16 @@ export interface components {
       /** Checked */
       checked: boolean;
     };
+    /** Dismiss */
+    Dismiss: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "dismiss";
+      /** Reason */
+      reason: string;
+    };
     /** DocumentList */
     DocumentList: {
       /** Items */
@@ -588,6 +615,68 @@ export interface components {
       /** Request Id */
       request_id: string;
     };
+    /** Issue */
+    Issue: {
+      /** Affected Cell Ids */
+      affected_cell_ids: string[];
+      /** Evidence */
+      evidence: {
+        [key: string]: unknown;
+      };
+      /** Fingerprint */
+      fingerprint: string;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind:
+        | "coverage_discrepancy"
+        | "duplicate_source_token"
+        | "placement_ambiguity"
+        | "structural_inconsistency"
+        | "limited_reference"
+        | "coverage_unavailable";
+      /** Reason */
+      reason: string;
+      reference?: components["schemas"]["SourceReference"] | null;
+    };
+    /** IssueDecisionRecord */
+    IssueDecisionRecord: {
+      /**
+       * Actor Id
+       * Format: uuid
+       */
+      actor_id: string;
+      /**
+       * Decided At
+       * Format: date-time
+       */
+      decided_at: string;
+      /** Fingerprint */
+      fingerprint: string;
+      /**
+       * Issue Id
+       * Format: uuid
+       */
+      issue_id: string;
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "dismiss" | "resolved" | "reopen";
+      /** Reason */
+      reason: string;
+      /**
+       * Revision Id
+       * Format: uuid
+       */
+      revision_id: string;
+    };
     /** ManualInput */
     ManualInput: {
       /** Columns */
@@ -656,6 +745,26 @@ export interface components {
       /** Page Count */
       page_count: number;
     };
+    /** Reopen */
+    Reopen: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "reopen";
+      /** Reason */
+      reason: string;
+    };
+    /** Resolved */
+    Resolved: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: "resolved";
+      /** Reason */
+      reason: string;
+    };
     /** RestoreInput */
     RestoreInput: {
       /**
@@ -698,15 +807,13 @@ export interface components {
       id: string;
       /** Issue Decisions */
       issue_decisions: {
-        [key: string]: unknown;
+        [key: string]: components["schemas"]["IssueDecisionRecord"];
       };
       /**
        * Issues
        * @default []
        */
-      issues: {
-        [key: string]: unknown;
-      }[];
+      issues: components["schemas"]["Issue"][];
       /**
        * Label
        * @enum {string}
@@ -744,15 +851,13 @@ export interface components {
       generation: number;
       /** Issue Decisions */
       issue_decisions?: {
-        [key: string]: unknown;
+        [key: string]: components["schemas"]["IssueDecisionRecord"];
       };
       /**
        * Issues
        * @default []
        */
-      issues: {
-        [key: string]: unknown;
-      }[];
+      issues: components["schemas"]["Issue"][];
       /**
        * Revision Id
        * Format: uuid
@@ -2750,6 +2855,126 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["CheckedInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReviewState"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Request Entity Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorEnvelope"];
+        };
+      };
+    };
+  };
+  decide_issue_api_v1_revisions__revision_id__issues__issue_id__decision_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        revision_id: string;
+        issue_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json":
+          | components["schemas"]["Dismiss"]
+          | components["schemas"]["Resolved"]
+          | components["schemas"]["Reopen"];
       };
     };
     responses: {
