@@ -19,10 +19,14 @@ from table_review.documents.service import DocumentError, DocumentService
 from table_review.documents.upload_limit import UploadSizeLimit
 from table_review.jobs.api import router as jobs_router
 from table_review.jobs.queue import QueueFull, TaskConflict, TaskQueue
+from table_review.reviews.api import router as reviews_router
+from table_review.reviews.service import ReviewIncomplete, ReviewInputError, ReviewService
 from table_review.settings import Settings
 from table_review.storage.blobs import PrivateBlobStore
 from table_review.storage.db import create_session_factory
 from table_review.storage.repository import NotFound, Repository, RevisionConflict, UploadConflict
+from table_review.tables.api import router as tables_router
+from table_review.tables.service import TableInputError, TableService
 
 
 def error_response(request, status, code, message, details=None):
@@ -61,6 +65,8 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.documents = DocumentService(app.state.repository, app.state.blobs, settings)
     app.state.queue = TaskQueue(app.state.repository, settings, app.state.documents)
     app.state.documents.preparation_queue = app.state.queue
+    app.state.reviews = ReviewService(app.state.repository)
+    app.state.tables = TableService(app.state.repository, app.state.documents, app.state.reviews)
     app.add_middleware(UploadSizeLimit, max_pdf_bytes=settings.max_pdf_bytes)
 
     @app.middleware("http")
@@ -162,6 +168,17 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(router)
     app.include_router(documents_router)
     app.include_router(jobs_router)
+    app.include_router(tables_router)
+    app.include_router(reviews_router)
+
+    @app.exception_handler(ReviewIncomplete)
+    async def review_incomplete(request, error):
+        return error_response(request, 409, "review_incomplete", str(error))
+
+    @app.exception_handler(ReviewInputError)
+    @app.exception_handler(TableInputError)
+    async def table_input_error(request, error):
+        return error_response(request, 422, "invalid_table_operation", str(error))
 
     @app.exception_handler(QueueFull)
     async def queue_full(request, error):

@@ -255,6 +255,8 @@ class Repository:
         expected_revision_id: UUID,
         content: TableContent,
         event: EditEventInput,
+        *,
+        on_saved=None,
     ) -> RevisionRecord:
         validate_grid(content)
         checksum = content_checksum(content)
@@ -287,6 +289,7 @@ class Repository:
                         return prior
                     session.expire(table)
                     raise RevisionConflict(table.current_revision_id)
+                old_revision = session.get(RevisionRow, expected_revision_id)
                 row = RevisionRow(
                     id=new_id,
                     owner_id=owner_id,
@@ -294,7 +297,7 @@ class Repository:
                     parent_revision_id=expected_revision_id,
                     content=content.model_dump(mode="json"),
                     checksum=checksum,
-                    extraction_manifest={},
+                    extraction_manifest=old_revision.extraction_manifest,
                 )
                 session.add(row)
                 session.flush()
@@ -311,6 +314,9 @@ class Repository:
                     )
                 )
                 session.flush()
+                if on_saved:
+                    on_saved(session, old_revision, row, event)
+                    session.flush()
                 return _record(RevisionRecord, row)
         except IntegrityError:
             with self.session_factory() as session:

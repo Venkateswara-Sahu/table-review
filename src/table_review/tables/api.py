@@ -1,0 +1,99 @@
+from typing import Annotated
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Header, Request
+from pydantic import Field
+
+from table_review.accounts.api import require_actor
+from table_review.accounts.types import Actor
+from table_review.documents.types import ImmutableModel, PageBox
+from table_review.tables.grid import EditOperation
+
+router = APIRouter(prefix="/api/v1")
+
+
+class EditInput(ImmutableModel):
+    base_revision_id: UUID
+    operation: EditOperation
+
+
+class RestoreInput(ImmutableModel):
+    base_revision_id: UUID
+    historical_revision_id: UUID
+
+
+class ManualInput(ImmutableModel):
+    region: PageBox
+    rows: int = Field(ge=1, le=500)
+    columns: int = Field(ge=1, le=60)
+
+
+@router.get("/documents/{document_id}/tables")
+def tables(document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
+    return {"items": request.app.state.tables.list(actor, document_id)}
+
+
+@router.post("/documents/{document_id}/tables", status_code=201)
+def manual(
+    document_id: UUID,
+    payload: ManualInput,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+):
+    return request.app.state.tables.create_manual(
+        actor, document_id, payload.region, payload.rows, payload.columns
+    )
+
+
+@router.get("/tables/{table_id}")
+def table(table_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
+    return request.app.state.tables.get(actor, table_id)
+
+
+@router.get("/tables/{table_id}/revisions/{revision_id}")
+def revision(
+    table_id: UUID,
+    revision_id: UUID,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+):
+    return request.app.state.repository.get_revision(actor.id, table_id, revision_id)
+
+
+@router.get("/tables/{table_id}/history")
+def history(table_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
+    return {"items": request.app.state.tables.history(actor, table_id)}
+
+
+@router.post("/tables/{table_id}/edits")
+def edit(
+    table_id: UUID,
+    payload: EditInput,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+    idempotency_key: Annotated[UUID, Header()],
+):
+    return request.app.state.tables.edit(
+        actor,
+        table_id,
+        payload.base_revision_id,
+        payload.operation,
+        idempotency_key=idempotency_key,
+    )
+
+
+@router.post("/tables/{table_id}/restore")
+def restore(
+    table_id: UUID,
+    payload: RestoreInput,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+    idempotency_key: Annotated[UUID, Header()],
+):
+    return request.app.state.tables.restore(
+        actor,
+        table_id,
+        payload.base_revision_id,
+        payload.historical_revision_id,
+        idempotency_key=idempotency_key,
+    )
