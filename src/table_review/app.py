@@ -17,6 +17,8 @@ from table_review.accounts.service import (
 from table_review.documents.api import router as documents_router
 from table_review.documents.service import DocumentError, DocumentService
 from table_review.documents.upload_limit import UploadSizeLimit
+from table_review.jobs.api import router as jobs_router
+from table_review.jobs.queue import QueueFull, TaskConflict, TaskQueue
 from table_review.settings import Settings
 from table_review.storage.blobs import PrivateBlobStore
 from table_review.storage.db import create_session_factory
@@ -57,6 +59,8 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.repository = Repository(factory)
     app.state.blobs = PrivateBlobStore(settings.blob_root)
     app.state.documents = DocumentService(app.state.repository, app.state.blobs, settings)
+    app.state.queue = TaskQueue(app.state.repository, settings, app.state.documents)
+    app.state.documents.preparation_queue = app.state.queue
     app.add_middleware(UploadSizeLimit, max_pdf_bytes=settings.max_pdf_bytes)
 
     @app.middleware("http")
@@ -157,6 +161,19 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.include_router(router)
     app.include_router(documents_router)
+    app.include_router(jobs_router)
+
+    @app.exception_handler(QueueFull)
+    async def queue_full(request, error):
+        return error_response(
+            request, 429, "queue_full", "Finish or cancel a queued task before submitting another"
+        )
+
+    @app.exception_handler(TaskConflict)
+    async def task_conflict(request, error):
+        return error_response(
+            request, 409, "task_conflict", "Task retry key differs from saved request"
+        )
 
     @app.exception_handler(DocumentError)
     async def document_error(request, error):

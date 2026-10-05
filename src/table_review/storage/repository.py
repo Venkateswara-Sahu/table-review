@@ -138,6 +138,7 @@ class Repository:
         byte_count: int,
         page_count: int,
         blob_key: str,
+        preparation_queue=None,
     ) -> DocumentRecord:
         try:
             with self.session_factory.begin() as session:
@@ -155,6 +156,11 @@ class Repository:
                 session.add(row)
                 session.flush()
                 session.add(UploadRequestRow(owner_id=owner_id, key=key, document_id=row.id))
+                if preparation_queue is not None:
+                    row.preparation_state = "queued"
+                    preparation_queue.enqueue_in_session(
+                        session, owner_id, row.id, "prepare", {}, "prepare-" + row.id.hex
+                    )
                 session.flush()
                 return _record(DocumentRecord, row)
         except IntegrityError:

@@ -28,6 +28,7 @@ class DocumentError(ValueError):
 class DocumentService:
     def __init__(self, repository: Repository, blobs: PrivateBlobStore, settings: Settings):
         self.repository, self.blobs, self.settings = repository, blobs, settings
+        self.preparation_queue = None
         self.staging = blobs.root / ".staging"
         self.staging.mkdir(exist_ok=True, mode=0o700)
 
@@ -67,6 +68,7 @@ class DocumentService:
                     byte_count=count,
                     page_count=info.page_count,
                     blob_key=key,
+                    preparation_queue=self.preparation_queue,
                 )
             except BaseException:
                 self.blobs.delete(actor.id, key)
@@ -82,10 +84,14 @@ class DocumentService:
             raise DocumentError("invalid_pdf", "The PDF could not be read") from error
         except ValueError as error:
             if "500 page" in str(error):
-                raise DocumentError("page_limit","PDF exceeds the configured page limit") from error
+                raise DocumentError(
+                    "page_limit", "PDF exceeds the configured page limit"
+                ) from error
             if "50 MiB" in str(error):
-                raise DocumentError("byte_limit","PDF exceeds the configured file limit",413) from error
-            raise DocumentError("invalid_pdf","The PDF could not be read") from error
+                raise DocumentError(
+                    "byte_limit", "PDF exceeds the configured file limit", 413
+                ) from error
+            raise DocumentError("invalid_pdf", "The PDF could not be read") from error
         if info.encrypted:
             raise DocumentError(
                 "encrypted_pdf", "Encrypted PDFs are unsupported; upload an unencrypted copy"

@@ -3,6 +3,7 @@ import os
 from alembic import context
 from sqlalchemy import create_engine
 
+from table_review.jobs import models as job_models  # noqa: F401
 from table_review.storage.models import Base
 
 
