@@ -69,6 +69,21 @@ class Repository:
             raise NotFound("Table not found")
         return row
 
+    def _lock_document(self, session, owner_id, document_id):
+        row = session.scalar(
+            select(DocumentRow)
+            .where(
+                DocumentRow.id == document_id,
+                DocumentRow.owner_id == owner_id,
+                DocumentRow.deleted_at.is_(None),
+            )
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        if row is None:
+            raise NotFound("Document not found")
+        return row
+
     def create_document(
         self,
         owner_id: UUID,
@@ -263,6 +278,8 @@ class Repository:
         try:
             with self.session_factory.begin() as session:
                 table = self._table(session, owner_id, table_id)
+                self._lock_document(session, owner_id, table.document_id)
+                session.expire(table)
                 prior = self._duplicate(
                     session, owner_id, table_id, expected_revision_id, checksum, event
                 )

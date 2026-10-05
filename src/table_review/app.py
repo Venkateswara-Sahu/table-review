@@ -19,6 +19,8 @@ from table_review.checks.persistence import RevisionChecker
 from table_review.documents.api import router as documents_router
 from table_review.documents.service import DocumentError, DocumentService
 from table_review.documents.upload_limit import UploadSizeLimit
+from table_review.exports.api import router as exports_router
+from table_review.exports.service import ExportService
 from table_review.jobs.api import router as jobs_router
 from table_review.jobs.queue import QueueFull, TaskConflict, TaskQueue
 from table_review.reviews.api import router as reviews_router
@@ -77,6 +79,9 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.reviews = ReviewService(app.state.repository)
     app.state.reviews.checker = RevisionChecker()
     app.state.tables = TableService(app.state.repository, app.state.documents, app.state.reviews)
+    app.state.exports = ExportService(
+        app.state.repository, app.state.reviews, app.state.queue, app.state.blobs
+    )
     app.add_middleware(UploadSizeLimit, max_pdf_bytes=settings.max_pdf_bytes)
 
     @app.middleware("http")
@@ -180,6 +185,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(jobs_router)
     app.include_router(tables_router)
     app.include_router(reviews_router)
+    app.include_router(exports_router)
 
     @app.exception_handler(ReviewIncomplete)
     async def review_incomplete(request, error):

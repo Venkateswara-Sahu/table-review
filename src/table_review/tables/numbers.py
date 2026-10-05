@@ -13,7 +13,7 @@ class InterpretedValue(ImmutableModel):
     reason: str
 
 
-_UNSIGNED = r"(?:0|[1-9]\d*|[1-9]\d{0,2}(?:,\d{3})+)(?:\.\d+)?"
+_UNSIGNED = r"(?:0|[1-9][0-9]*|[1-9][0-9]{0,2}(?:,[0-9]{3})+)(?:\.[0-9]+)?"
 _SIGNED = re.compile(rf"[+-]?{_UNSIGNED}\Z")
 
 

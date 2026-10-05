@@ -35,6 +35,7 @@ class TaskQueue:
         self.repository, self.settings, self.documents = repository, settings, documents
         self.session_factory = repository.session_factory
         self.handlers = {}
+        self.publishers = {}
 
     def enqueue_in_session(self, session, owner_id, document_id, kind, payload, key):
         if kind not in ("prepare", "extract", "export") or not 1 <= len(key) <= 128:
@@ -243,6 +244,8 @@ class TaskQueue:
             result = outcome.result
             if outcome.status == "succeeded" and outcome.extraction is not None:
                 result = self._publish_extraction(session, row, doc, outcome.extraction)
+            if outcome.status == "succeeded" and row.kind in self.publishers:
+                result = self.publishers[row.kind](session, row, result)
             if row.kind == "prepare":
                 doc.preparation_state = "ready" if outcome.status == "succeeded" else "failed"
             attempt = session.scalar(select(AttemptRow).where(AttemptRow.token == lease.token))

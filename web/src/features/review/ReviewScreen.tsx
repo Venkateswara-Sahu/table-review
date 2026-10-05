@@ -18,6 +18,7 @@ import {
 import { ReviewActions } from "./ReviewActions";
 import { History } from "./History";
 import { IssueList } from "./IssueList";
+import { ExportControls } from "../exports/ExportControls";
 import type { components } from "../../api/types";
 
 function firstCell(view: TableView) {
@@ -389,6 +390,11 @@ export function ReviewScreen({
         revision={revision}
         busy={busy || dirty}
         onRestore={(id) => void restore(id)}
+      />
+      <ExportControls
+        tableId={view.table.id}
+        revisionId={revision.id}
+        disabled={busy || dirty || !review}
       />
       {review && (
         <IssueList

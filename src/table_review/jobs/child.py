@@ -12,6 +12,15 @@ from table_review.settings import Settings
 
 
 def process(payload):
+    if payload["kind"] == "export":
+        from table_review.exports.csv_package import write_csv_package
+        from table_review.exports.types import ExportInput
+        from table_review.exports.workbook import write_workbook
+
+        writer = write_workbook if payload["format"] == "workbook" else write_csv_package
+        return writer(
+            ExportInput.model_validate(payload["snapshot"]), Path(payload["target"])
+        ).model_dump(mode="json")
     if payload["kind"] == "prepare":
         from table_review.storage.blobs import PrivateBlobStore
         from table_review.storage.repository import Repository
