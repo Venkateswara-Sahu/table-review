@@ -2,7 +2,15 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, String, UniqueConstraint, func
+from sqlalchemy import (
+    DateTime,
+    Float,
+    ForeignKey,
+    ForeignKeyConstraint,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -41,6 +49,38 @@ class SignInThrottleRow(Base):
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     failures: Mapped[int] = mapped_column(default=0)
     window_started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class UploadRequestRow(Base):
+    __tablename__ = "upload_requests"
+    __table_args__ = (UniqueConstraint("owner_id", "key", name="uq_upload_owner_key"),)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    owner_id: Mapped[UUID] = mapped_column(index=True)
+    key: Mapped[str] = mapped_column(String(128))
+    document_id: Mapped[UUID] = mapped_column(ForeignKey("documents.id"))
+
+
+class PageArtifactRow(Base):
+    __tablename__ = "page_artifacts"
+    __table_args__ = (
+        UniqueConstraint("owner_id", "document_id", "page_no", "scale", name="uq_page_render"),
+        ForeignKeyConstraint(
+            ["document_id", "owner_id"],
+            ["documents.id", "documents.owner_id"],
+            name="fk_page_document_owner",
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    owner_id: Mapped[UUID] = mapped_column(index=True)
+    document_id: Mapped[UUID]
+    page_no: Mapped[int]
+    scale: Mapped[float] = mapped_column(Float)
+    source_sha256: Mapped[str] = mapped_column(String(64))
+    blob_key: Mapped[str]
+    width: Mapped[float] = mapped_column(Float)
+    height: Mapped[float] = mapped_column(Float)
+    pixel_width: Mapped[int]
+    pixel_height: Mapped[int]
 
 
 class DocumentRow(Base):

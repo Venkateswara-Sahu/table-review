@@ -24,3 +24,4 @@ class Settings(BaseModel):
     blob_root: Path = Path("data/blobs")
     public_origin: str = "http://localhost:8000"
     secure_cookies: bool = True
+    max_render_pixels: int = 16_000_000

@@ -1,13 +1,27 @@
 import hashlib
+import math
 import tempfile
 from contextlib import closing
+from functools import wraps
 from pathlib import Path
+from threading import RLock
 
 import pypdfium2 as pdfium
 from pypdf import PdfReader
 
 from table_review.documents.types import PageBox, PageInfo, PdfInfo, RenderedPage, SourceReference
 from table_review.settings import Settings
+
+_PDFIUM_LOCK = RLock()
+
+
+def _serialized_pdfium(function):
+    @wraps(function)
+    def call(*args, **kwargs):
+        with _PDFIUM_LOCK:
+            return function(*args, **kwargs)
+
+    return call
 
 
 def inspect_pdf(path: Path) -> PdfInfo:
@@ -29,6 +43,7 @@ def _page(document, page_no: int):
     return document[page_no - 1]
 
 
+@_serialized_pdfium
 def page_info(path: Path, page_no: int) -> PageInfo:
     with pdfium.PdfDocument(path) as document, closing(_page(document, page_no)) as page:
         width, height = page.get_size()
@@ -37,11 +52,14 @@ def page_info(path: Path, page_no: int) -> PageInfo:
         return PageInfo(page_no=page_no, width=width, height=height, digital_text_present=digital)
 
 
+@_serialized_pdfium
 def render_page(path: Path, page_no: int, scale: float) -> RenderedPage:
     if not 0 < scale <= 4:
         raise ValueError("Render scale must be greater than zero and at most four")
     with pdfium.PdfDocument(path) as document, closing(_page(document, page_no)) as page:
         width, height = page.get_size()
+        if math.ceil(width * scale) * math.ceil(height * scale) > Settings().max_render_pixels:
+            raise ValueError("Page render exceeds the pixel budget")
         bitmap = page.render(scale=scale)
         try:
             image = bitmap.to_pil()
@@ -67,6 +85,7 @@ def render_page(path: Path, page_no: int, scale: float) -> RenderedPage:
     )
 
 
+@_serialized_pdfium
 def source_tokens(path: Path, page_no: int):
     from table_review.extraction.types import SourceToken
 

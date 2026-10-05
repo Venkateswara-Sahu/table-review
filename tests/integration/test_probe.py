@@ -141,3 +141,74 @@ def test_probe_writes_actual_results_and_rejects_changed_source(tmp_path: Path):
         json.loads(summary.results_path.read_text())["results"][0]["error_type"]
         == "source_hash_mismatch"
     )
+
+
+def test_render_rejects_excessive_pixels_before_allocation(tmp_path: Path, monkeypatch):
+    import pypdfium2 as pdfium
+    from pypdf import PdfWriter
+
+    from table_review.documents.pdf import render_page
+
+    path = tmp_path / "huge-page.pdf"
+    writer = PdfWriter()
+    writer.add_blank_page(width=100000, height=100000)
+    writer.write(path)
+
+    def forbidden(*args, **kwargs):
+        raise RuntimeError("Unsafe native allocation reached")
+
+    monkeypatch.setattr(pdfium.PdfPage, "render", forbidden)
+    with pytest.raises(ValueError, match="pixel"):
+        render_page(path, 1, 1.0)
+
+
+def test_native_pdf_calls_do_not_overlap_between_api_threads(tmp_path: Path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError
+    from threading import Event, Lock
+
+    import pypdfium2 as pdfium
+
+    from table_review.documents.pdf import render_page
+
+    path = two_page_report(tmp_path / "report.pdf")
+    actual = pdfium.PdfDocument
+    entered, release, second_started = Event(), Event(), Event()
+    counter = Lock()
+    active = [0]
+
+    class TrackedDocument:
+        def __init__(self, *args, **kwargs):
+            with counter:
+                if active[0]:
+                    raise RuntimeError("Native calls overlapped")
+                active[0] += 1
+            self.document = actual(*args, **kwargs)
+
+        def __enter__(self):
+            if not entered.is_set():
+                entered.set()
+                assert release.wait(5)
+            return self.document
+
+        def __exit__(self, *args):
+            self.document.close()
+            with counter:
+                active[0] -= 1
+
+    monkeypatch.setattr(pdfium, "PdfDocument", TrackedDocument)
+
+    def second():
+        second_started.set()
+        return render_page(path, 2, 1)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(render_page, path, 2, 1)
+        assert entered.wait(5)
+        follow = pool.submit(second)
+        assert second_started.wait(5)
+        try:
+            with pytest.raises(TimeoutError):
+                follow.result(timeout=0.05)
+        finally:
+            release.set()
+        assert first.result().pixel_width == follow.result().pixel_width == 612

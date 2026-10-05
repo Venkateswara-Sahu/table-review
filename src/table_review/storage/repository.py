@@ -1,3 +1,4 @@
+from datetime import UTC
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select, update
@@ -13,6 +14,7 @@ from table_review.storage.models import (
     RevisionRow,
     TableRecord,
     TableRow,
+    UploadRequestRow,
 )
 from table_review.tables.grid import validate_grid
 from table_review.tables.types import TableContent, content_checksum
@@ -26,6 +28,10 @@ class RevisionConflict(RuntimeError):
     def __init__(self, current_revision_id: UUID | None = None):
         super().__init__("The table has changed; reload before saving")
         self.current_revision_id = current_revision_id
+
+
+class UploadConflict(RuntimeError):
+    pass
 
 
 def _record(cls, row):
@@ -89,6 +95,74 @@ class Repository:
     def get_document(self, owner_id: UUID, document_id: UUID) -> DocumentRecord:
         with self.session_factory() as session:
             return _record(DocumentRecord, self._document(session, owner_id, document_id))
+
+    def list_documents(self, owner_id: UUID) -> tuple[DocumentRecord, ...]:
+        with self.session_factory() as session:
+            rows = session.scalars(
+                select(DocumentRow)
+                .where(DocumentRow.owner_id == owner_id, DocumentRow.deleted_at.is_(None))
+                .order_by(DocumentRow.created_at.desc())
+                .limit(100)
+            ).all()
+            return tuple(_record(DocumentRecord, row) for row in rows)
+
+    def foreground_open(self, owner_id: UUID, document_id: UUID) -> DocumentRecord:
+        from datetime import datetime
+
+        with self.session_factory.begin() as session:
+            row = self._document(session, owner_id, document_id)
+            row.last_foreground_at = datetime.now(UTC)
+            session.flush()
+            return _record(DocumentRecord, row)
+
+    def _upload_duplicate(self, session, owner_id, key, filename, source_sha256):
+        request = session.scalar(
+            select(UploadRequestRow).where(
+                UploadRequestRow.owner_id == owner_id, UploadRequestRow.key == key
+            )
+        )
+        if request is None:
+            return None
+        document = self._document(session, owner_id, request.document_id)
+        if document.filename != filename or document.source_sha256 != source_sha256:
+            raise UploadConflict("Upload key was already used for different content")
+        return _record(DocumentRecord, document)
+
+    def create_uploaded_document(
+        self,
+        owner_id: UUID,
+        *,
+        key: str,
+        filename: str,
+        source_sha256: str,
+        byte_count: int,
+        page_count: int,
+        blob_key: str,
+    ) -> DocumentRecord:
+        try:
+            with self.session_factory.begin() as session:
+                prior = self._upload_duplicate(session, owner_id, key, filename, source_sha256)
+                if prior:
+                    return prior
+                row = DocumentRow(
+                    owner_id=owner_id,
+                    filename=filename,
+                    source_sha256=source_sha256,
+                    byte_count=byte_count,
+                    page_count=page_count,
+                    blob_key=blob_key,
+                )
+                session.add(row)
+                session.flush()
+                session.add(UploadRequestRow(owner_id=owner_id, key=key, document_id=row.id))
+                session.flush()
+                return _record(DocumentRecord, row)
+        except IntegrityError:
+            with self.session_factory() as session:
+                prior = self._upload_duplicate(session, owner_id, key, filename, source_sha256)
+                if prior:
+                    return prior
+            raise
 
     def create_table(
         self,

@@ -30,7 +30,9 @@ def test_secret_hashes_and_seven_day_expiry(client, owner, session_factory):
         assert "temporary-test-password" not in account.password_hash
         assert grant.token_hash == hashlib.sha256(token.encode()).hexdigest()
         assert token != grant.token_hash
-        assert grant.csrf_hash == hashlib.sha256(client.headers["X-CSRF-Token"].encode()).hexdigest()
+        assert (
+            grant.csrf_hash == hashlib.sha256(client.headers["X-CSRF-Token"].encode()).hexdigest()
+        )
         assert 6.99 * 86400 < (grant.expires_at - grant.created_at).total_seconds() <= 7 * 86400 + 1
     with session_factory.begin() as session:
         grant = session.scalar(select(SessionRow).where(SessionRow.owner_id == owner.id))

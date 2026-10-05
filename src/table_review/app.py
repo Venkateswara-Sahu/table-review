@@ -1,25 +1,26 @@
 from contextlib import asynccontextmanager
-from typing import Annotated
-from uuid import UUID, uuid4
+from uuid import uuid4
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
-from table_review.accounts.api import require_actor, router
+from table_review.accounts.api import router
 from table_review.accounts.service import (
     AccountService,
     AuthenticationError,
     InvalidAccount,
     SignInThrottled,
 )
-from table_review.accounts.types import Actor
+from table_review.documents.api import router as documents_router
+from table_review.documents.service import DocumentError, DocumentService
+from table_review.documents.upload_limit import UploadSizeLimit
 from table_review.settings import Settings
 from table_review.storage.blobs import PrivateBlobStore
 from table_review.storage.db import create_session_factory
-from table_review.storage.repository import NotFound, Repository, RevisionConflict
+from table_review.storage.repository import NotFound, Repository, RevisionConflict, UploadConflict
 
 
 def error_response(request, status, code, message, details=None):
@@ -55,6 +56,8 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.accounts = AccountService(factory)
     app.state.repository = Repository(factory)
     app.state.blobs = PrivateBlobStore(settings.blob_root)
+    app.state.documents = DocumentService(app.state.repository, app.state.blobs, settings)
+    app.add_middleware(UploadSizeLimit, max_pdf_bytes=settings.max_pdf_bytes)
 
     @app.middleware("http")
     async def boundaries(request: Request, call_next):
@@ -136,6 +139,10 @@ def create_app(settings: Settings) -> FastAPI:
 
     @app.exception_handler(HTTPException)
     async def http_error(request, error):
+        if getattr(request.state, "upload_size_exceeded", False):
+            return error_response(
+                request, 413, "byte_limit", "Upload exceeds the configured size limit"
+            )
         return error_response(
             request,
             error.status_code,
@@ -149,9 +156,16 @@ def create_app(settings: Settings) -> FastAPI:
         return error_response(request, 500, "internal_error", "Request could not be completed")
 
     app.include_router(router)
+    app.include_router(documents_router)
 
-    @app.get("/api/v1/documents/{document_id}")
-    def owned_document(document_id: UUID, actor: Annotated[Actor, Depends(require_actor)]):
-        return app.state.repository.get_document(actor.id, document_id)
+    @app.exception_handler(DocumentError)
+    async def document_error(request, error):
+        return error_response(request, error.status, error.code, error.message)
+
+    @app.exception_handler(UploadConflict)
+    async def upload_conflict(request, error):
+        return error_response(
+            request, 409, "upload_conflict", "This upload retry key was used for a different file"
+        )
 
     return app

@@ -49,3 +49,27 @@ def rotated_cropped_report(path: Path) -> Path:
     writer.add_page(page)
     writer.write(path)
     return path
+
+
+def blank_report(path: Path, pages: int = 1, encrypted: bool = False) -> Path:
+    from pypdf import PdfWriter
+
+    writer = PdfWriter()
+    for _ in range(pages):
+        writer.add_blank_page(width=612, height=792)
+    if encrypted:
+        writer.encrypt("fixture-password")
+    writer.write(path)
+    return path
+
+
+def padded_report(path: Path, size: int) -> Path:
+    two_page_report(path)
+    data = path.read_bytes()
+    prefix, suffix = data.rsplit(b"startxref", 1)
+    padding = size - len(data)
+    if padding < 2:
+        raise ValueError("Requested size must leave room for a PDF comment")
+    path.write_bytes(prefix + b"%" + b"x" * (padding - 2) + b"\nstartxref" + suffix)
+    assert path.stat().st_size == size
+    return path
