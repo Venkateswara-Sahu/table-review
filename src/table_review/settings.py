@@ -1,0 +1,21 @@
+from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict
+
+
+class Settings(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    max_pdf_bytes: int = 50 * 1024 * 1024
+    max_pdf_pages: int = 500
+    max_selected_pages: int = 5
+    max_rows: int = 500
+    max_columns: int = 60
+    max_grid_slots: int = 10_000
+    max_user_runs: int = 3
+    max_attempts: int = 2
+    task_timeout_seconds: int = 600
+    lease_seconds: int = 60
+    heartbeat_seconds: int = 15
+    retention_days: int = 30
+    worker_memory_bytes: int = 6 * 1024**3
+    model_path: Path = Path("models")

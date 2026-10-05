@@ -1,0 +1,618 @@
+{
+  "schema_version": 1,
+  "split": "development-only",
+  "purpose": "Task 1 CPU and source-geometry feasibility; not held-out accuracy",
+  "reports": [
+    {
+      "source_url": "https://www.ibm.com/downloads/documents/us-en/15db52348fc203a4",
+      "landing_url": "https://www.ibm.com/investor/services/annual-report",
+      "sha256": "2d31534fce2e7cc0a462ebaac864677a465bf0491c9871cd862586e1b0543114",
+      "company": "IBM",
+      "year": 2025,
+      "id": "ibm-2025",
+      "source_path": "../data/reports/ibm-2025.pdf",
+      "accessed": "2026-10-05",
+      "access_note": "Public official investor report; local research use. No redistribution license verified; PDFs and crops excluded from Git.",
+      "pretrained_exposure": "unknown"
+    },
+    {
+      "source_url": "https://s201.q4cdn.com/141608511/files/doc_financials/2025/annual/NVIDIA-2025-Annual-Report.pdf",
+      "landing_url": "https://investor.nvidia.com/financial-info/annual-reports-and-proxies/default.aspx",
+      "sha256": "757b344ab62ba282f6e44e0702e8ce5f190d88fb23b5e0a2beaf4cb277a395cc",
+      "company": "NVIDIA",
+      "year": 2025,
+      "id": "nvidia-2025",
+      "source_path": "../data/reports/nvidia-2025.pdf",
+      "accessed": "2026-10-05",
+      "access_note": "Public official investor report; local research use. No redistribution license verified; PDFs and crops excluded from Git.",
+      "pretrained_exposure": "unknown"
+    }
+  ],
+  "configs": [
+    {
+      "cell_matching": true
+    },
+    {
+      "cell_matching": false
+    }
+  ],
+  "cases": [
+    {
+      "id": "ibm-rd",
+      "report_id": "ibm-2025",
+      "source_path": "../data/reports/ibm-2025.pdf",
+      "source_sha256": "2d31534fce2e7cc0a462ebaac864677a465bf0491c9871cd862586e1b0543114",
+      "page": 24,
+      "title": "Research and Development",
+      "request_region": null,
+      "expected_region": {
+        "page": 24,
+        "left": 90,
+        "top": 110,
+        "right": 505,
+        "bottom": 187,
+        "page_width": 594,
+        "page_height": 774
+      },
+      "manual_truth": {
+        "scope": "Visually checked selected rows and raw header/unit notes; incomplete full-cell annotation",
+        "headers": [
+          "2025",
+          "2024",
+          "Percent Change"
+        ],
+        "unit_notes": [
+          "($ in millions)"
+        ],
+        "rows": [
+          {
+            "label": "Total research and development expense",
+            "values": [
+              "8,316",
+              "7,479",
+              "11.2"
+            ]
+          },
+          {
+            "label": "Acquisition-related charges",
+            "values": [
+              "(4)",
+              "—",
+              "NM"
+            ]
+          },
+          {
+            "label": "Operating (non-GAAP) research and development expense",
+            "values": [
+              "8,312",
+              "7,479",
+              "11.1"
+            ]
+          }
+        ],
+        "annotation_method": "Read rendered original page; transcribed below before extraction outputs"
+      },
+      "anchor_literals": [
+        "2025",
+        "2024",
+        "Percent Change",
+        "Total research and development expense",
+        "8,316",
+        "7,479",
+        "11.2",
+        "Acquisition-related charges",
+        "(4)",
+        "—",
+        "NM",
+        "Operating (non-GAAP) research and development expense",
+        "8,312",
+        "7,479",
+        "11.1"
+      ]
+    },
+    {
+      "id": "ibm-ip",
+      "report_id": "ibm-2025",
+      "source_path": "../data/reports/ibm-2025.pdf",
+      "source_sha256": "2d31534fce2e7cc0a462ebaac864677a465bf0491c9871cd862586e1b0543114",
+      "page": 24,
+      "title": "Intellectual Property and Custom Development Income",
+      "request_region": null,
+      "expected_region": {
+        "page": 24,
+        "left": 90,
+        "top": 275,
+        "right": 505,
+        "bottom": 336,
+        "page_width": 594,
+        "page_height": 774
+      },
+      "manual_truth": {
+        "scope": "Visually checked selected rows and raw header/unit notes; incomplete full-cell annotation",
+        "headers": [
+          "2025",
+          "2024",
+          "Percent Change"
+        ],
+        "unit_notes": [
+          "($ in millions)",
+          "(1) Includes licensing, royalty-based fees and sales."
+        ],
+        "rows": [
+          {
+            "label": "Intellectual property income",
+            "values": [
+              "265",
+              "329",
+              "(19.3)"
+            ]
+          },
+          {
+            "label": "Custom development income",
+            "values": [
+              "699",
+              "667",
+              "4.7"
+            ]
+          },
+          {
+            "label": "Total",
+            "values": [
+              "964",
+              "996",
+              "(3.2)"
+            ]
+          }
+        ],
+        "annotation_method": "Read rendered original page; transcribed below before extraction outputs"
+      },
+      "anchor_literals": [
+        "2025",
+        "2024",
+        "Percent Change",
+        "Intellectual property income",
+        "265",
+        "329",
+        "(19.3)",
+        "Custom development income",
+        "699",
+        "667",
+        "4.7",
+        "Total",
+        "964",
+        "996",
+        "(3.2)"
+      ]
+    },
+    {
+      "id": "ibm-income",
+      "report_id": "ibm-2025",
+      "source_path": "../data/reports/ibm-2025.pdf",
+      "source_sha256": "2d31534fce2e7cc0a462ebaac864677a465bf0491c9871cd862586e1b0543114",
+      "page": 44,
+      "title": "Consolidated Income Statement",
+      "request_region": null,
+      "expected_region": {
+        "page": 44,
+        "left": 90,
+        "top": 94,
+        "right": 505,
+        "bottom": 510,
+        "page_width": 594,
+        "page_height": 774
+      },
+      "manual_truth": {
+        "scope": "Visually checked selected rows and raw header/unit notes; incomplete full-cell annotation",
+        "headers": [
+          "Notes",
+          "2025",
+          "2024",
+          "2023"
+        ],
+        "unit_notes": [
+          "($ in millions except per share amounts)"
+        ],
+        "rows": [
+          {
+            "label": "Services",
+            "values": [
+              "30,714",
+              "29,813",
+              "30,378"
+            ]
+          },
+          {
+            "label": "Total revenue",
+            "values": [
+              "67,535",
+              "62,753",
+              "61,860"
+            ]
+          },
+          {
+            "label": "Net income",
+            "values": [
+              "10,593",
+              "6,023",
+              "7,502"
+            ]
+          }
+        ],
+        "annotation_method": "Read rendered original page; transcribed below before extraction outputs"
+      },
+      "anchor_literals": [
+        "Notes",
+        "2025",
+        "2024",
+        "2023",
+        "Services",
+        "30,714",
+        "29,813",
+        "30,378",
+        "Total revenue",
+        "67,535",
+        "62,753",
+        "61,860",
+        "Net income",
+        "10,593",
+        "6,023",
+        "7,502"
+      ]
+    },
+    {
+      "id": "ibm-equity",
+      "report_id": "ibm-2025",
+      "source_path": "../data/reports/ibm-2025.pdf",
+      "source_sha256": "2d31534fce2e7cc0a462ebaac864677a465bf0491c9871cd862586e1b0543114",
+      "page": 48,
+      "title": "Consolidated Statement of Equity (2023)",
+      "request_region": null,
+      "expected_region": {
+        "page": 48,
+        "left": 90,
+        "top": 95,
+        "right": 505,
+        "bottom": 318,
+        "page_width": 594,
+        "page_height": 774
+      },
+      "manual_truth": {
+        "scope": "Visually checked selected rows and raw header/unit notes; incomplete full-cell annotation",
+        "headers": [
+          "Retained Earnings",
+          "Treasury Stock",
+          "Total Equity"
+        ],
+        "unit_notes": [
+          "($ in millions except per share amounts)"
+        ],
+        "rows": [
+          {
+            "label": "Equity, January 1, 2023",
+            "values": [
+              "58,343",
+              "149,825",
+              "(169,484)",
+              "(16,740)",
+              "21,944",
+              "77",
+              "22,021"
+            ]
+          },
+          {
+            "label": "Equity, December 31, 2023",
+            "values": [
+              "59,643",
+              "151,276",
+              "(169,624)",
+              "(18,761)",
+              "22,533",
+              "80",
+              "22,613"
+            ]
+          }
+        ],
+        "annotation_method": "Read rendered original page; transcribed below before extraction outputs"
+      },
+      "anchor_literals": [
+        "Retained Earnings",
+        "Treasury Stock",
+        "Total Equity",
+        "Equity, January 1, 2023",
+        "58,343",
+        "149,825",
+        "(169,484)",
+        "(16,740)",
+        "21,944",
+        "77",
+        "22,021",
+        "Equity, December 31, 2023",
+        "59,643",
+        "151,276",
+        "(169,624)",
+        "(18,761)",
+        "22,533",
+        "80",
+        "22,613"
+      ]
+    },
+    {
+      "id": "nvidia-income",
+      "report_id": "nvidia-2025",
+      "source_path": "../data/reports/nvidia-2025.pdf",
+      "source_sha256": "757b344ab62ba282f6e44e0702e8ce5f190d88fb23b5e0a2beaf4cb277a395cc",
+      "page": 144,
+      "title": "Consolidated Statements of Income",
+      "request_region": null,
+      "expected_region": {
+        "page": 144,
+        "left": 45,
+        "top": 70,
+        "right": 550,
+        "bottom": 446,
+        "page_width": 594,
+        "page_height": 774
+      },
+      "manual_truth": {
+        "scope": "Visually checked selected rows and raw header/unit notes; incomplete full-cell annotation",
+        "headers": [
+          "Year Ended",
+          "Jan 26, 2025",
+          "Jan 28, 2024",
+          "Jan 29, 2023"
+        ],
+        "unit_notes": [
+          "(In millions, except per share data)"
+        ],
+        "rows": [
+          {
+            "label": "Revenue",
+            "values": [
+              "130,497",
+              "60,922",
+              "26,974"
+            ]
+          },
+          {
+            "label": "Net income",
+            "values": [
+              "72,880",
+              "29,760",
+              "4,368"
+            ]
+          },
+          {
+            "label": "Diluted",
+            "values": [
+              "2.94",
+              "1.19",
+              "0.17"
+            ]
+          }
+        ],
+        "annotation_method": "Read rendered original page; transcribed below before extraction outputs"
+      },
+      "anchor_literals": [
+        "Year Ended",
+        "Jan 26, 2025",
+        "Jan 28, 2024",
+        "Jan 29, 2023",
+        "Revenue",
+        "130,497",
+        "60,922",
+        "26,974",
+        "Net income",
+        "72,880",
+        "29,760",
+        "4,368",
+        "Diluted",
+        "2.94",
+        "1.19",
+        "0.17"
+      ]
+    },
+    {
+      "id": "nvidia-comprehensive",
+      "report_id": "nvidia-2025",
+      "source_path": "../data/reports/nvidia-2025.pdf",
+      "source_sha256": "757b344ab62ba282f6e44e0702e8ce5f190d88fb23b5e0a2beaf4cb277a395cc",
+      "page": 145,
+      "title": "Consolidated Statements of Comprehensive Income",
+      "request_region": null,
+      "expected_region": {
+        "page": 145,
+        "left": 41,
+        "top": 70,
+        "right": 554,
+        "bottom": 292,
+        "page_width": 594,
+        "page_height": 774
+      },
+      "manual_truth": {
+        "scope": "Visually checked selected rows and raw header/unit notes; incomplete full-cell annotation",
+        "headers": [
+          "Year Ended",
+          "Jan 26, 2025",
+          "Jan 28, 2024",
+          "Jan 29, 2023"
+        ],
+        "unit_notes": [
+          "(In millions)"
+        ],
+        "rows": [
+          {
+            "label": "Net income",
+            "values": [
+              "72,880",
+              "29,760",
+              "4,368"
+            ]
+          },
+          {
+            "label": "Total comprehensive income",
+            "values": [
+              "72,881",
+              "29,830",
+              "4,336"
+            ]
+          }
+        ],
+        "annotation_method": "Read rendered original page; transcribed below before extraction outputs"
+      },
+      "anchor_literals": [
+        "Year Ended",
+        "Jan 26, 2025",
+        "Jan 28, 2024",
+        "Jan 29, 2023",
+        "Net income",
+        "72,880",
+        "29,760",
+        "4,368",
+        "Total comprehensive income",
+        "72,881",
+        "29,830",
+        "4,336"
+      ]
+    },
+    {
+      "id": "nvidia-balance",
+      "report_id": "nvidia-2025",
+      "source_path": "../data/reports/nvidia-2025.pdf",
+      "source_sha256": "757b344ab62ba282f6e44e0702e8ce5f190d88fb23b5e0a2beaf4cb277a395cc",
+      "page": 146,
+      "title": "Consolidated Balance Sheets",
+      "request_region": null,
+      "expected_region": {
+        "page": 146,
+        "left": 41,
+        "top": 70,
+        "right": 554,
+        "bottom": 608,
+        "page_width": 594,
+        "page_height": 774
+      },
+      "manual_truth": {
+        "scope": "Visually checked selected rows and raw header/unit notes; incomplete full-cell annotation",
+        "headers": [
+          "Jan 26, 2025",
+          "Jan 28, 2024"
+        ],
+        "unit_notes": [
+          "(In millions, except par value)"
+        ],
+        "rows": [
+          {
+            "label": "Cash and cash equivalents",
+            "values": [
+              "8,589",
+              "7,280"
+            ]
+          },
+          {
+            "label": "Total assets",
+            "values": [
+              "111,601",
+              "65,728"
+            ]
+          },
+          {
+            "label": "Total liabilities",
+            "values": [
+              "32,274",
+              "22,750"
+            ]
+          }
+        ],
+        "annotation_method": "Read rendered original page; transcribed below before extraction outputs"
+      },
+      "anchor_literals": [
+        "Jan 26, 2025",
+        "Jan 28, 2024",
+        "Cash and cash equivalents",
+        "8,589",
+        "7,280",
+        "Total assets",
+        "111,601",
+        "65,728",
+        "Total liabilities",
+        "32,274",
+        "22,750"
+      ]
+    },
+    {
+      "id": "nvidia-cashflow",
+      "report_id": "nvidia-2025",
+      "source_path": "../data/reports/nvidia-2025.pdf",
+      "source_sha256": "757b344ab62ba282f6e44e0702e8ce5f190d88fb23b5e0a2beaf4cb277a395cc",
+      "page": 148,
+      "title": "Consolidated Statements of Cash Flows",
+      "request_region": null,
+      "expected_region": {
+        "page": 148,
+        "left": 41,
+        "top": 60,
+        "right": 554,
+        "bottom": 725,
+        "page_width": 594,
+        "page_height": 774
+      },
+      "manual_truth": {
+        "scope": "Visually checked selected rows and raw header/unit notes; incomplete full-cell annotation",
+        "headers": [
+          "Year Ended",
+          "Jan 26, 2025",
+          "Jan 28, 2024",
+          "Jan 29, 2023"
+        ],
+        "unit_notes": [
+          "(In millions)"
+        ],
+        "rows": [
+          {
+            "label": "Net income",
+            "values": [
+              "72,880",
+              "29,760",
+              "4,368"
+            ]
+          },
+          {
+            "label": "Net cash provided by operating activities",
+            "values": [
+              "64,089",
+              "28,090",
+              "5,641"
+            ]
+          },
+          {
+            "label": "Cash and cash equivalents at end of period",
+            "values": [
+              "8,589",
+              "7,280",
+              "3,389"
+            ]
+          }
+        ],
+        "annotation_method": "Read rendered original page; transcribed below before extraction outputs"
+      },
+      "anchor_literals": [
+        "Year Ended",
+        "Jan 26, 2025",
+        "Jan 28, 2024",
+        "Jan 29, 2023",
+        "Net income",
+        "72,880",
+        "29,760",
+        "4,368",
+        "Net cash provided by operating activities",
+        "64,089",
+        "28,090",
+        "5,641",
+        "Cash and cash equivalents at end of period",
+        "8,589",
+        "7,280",
+        "3,389"
+      ]
+    }
+  ]
+}

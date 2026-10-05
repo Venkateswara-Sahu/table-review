@@ -1,2 +1,1 @@
 """Table Review application package."""
-
