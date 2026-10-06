@@ -55,6 +55,8 @@ def error_response(request, status, code, message, details=None):
 
 
 def create_app(settings: Settings) -> FastAPI:
+    if settings.restore_pending_path.exists():
+        raise JournalUnavailable("Restored service is awaiting verified reconciliation")
     factory = create_session_factory(settings.database_url, schema=settings.database_schema)
 
     @asynccontextmanager

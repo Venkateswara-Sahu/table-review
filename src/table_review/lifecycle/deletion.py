@@ -35,6 +35,7 @@ class CleanupSummary(ImmutableModel):
     failure_count: int = 0
     temporary_artifacts_removed: int = 0
     orphan_blobs_removed: int = 0
+    expired_backups_removed: int = 0
     overdue_count: int = 0
 
 

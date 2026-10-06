@@ -16,6 +16,14 @@ from table_review.jobs.types import ProcessingLimits, TaskOutcome
 
 def maintain(queue, now):
     result = queue.deletion.sweep(now)
+    if queue.settings.backup_root.is_dir():
+        from table_review.lifecycle.backup import BackupError, purge_backups
+
+        try:
+            expired = purge_backups(queue.settings, now)
+            result = result.model_copy(update={"expired_backups_removed": expired})
+        except (BackupError, OSError):
+            result = result.model_copy(update={"failure_count": result.failure_count + 1})
     if any(result.model_dump().values()):
         logging.getLogger(__name__).info("lifecycle_cleanup %s", result.model_dump_json())
     return result
@@ -113,10 +121,15 @@ def main():
     app = create_app(
         Settings(
             database_url=os.environ["TABLE_REVIEW_DATABASE_URL"],
+            database_schema=os.environ.get("TABLE_REVIEW_DATABASE_SCHEMA"),
             blob_root=Path(os.environ.get("TABLE_REVIEW_BLOB_ROOT", "data/blobs")),
             journal_path=Path(os.environ["TABLE_REVIEW_JOURNAL_PATH"])
             if "TABLE_REVIEW_JOURNAL_PATH" in os.environ
             else None,
+            backup_key_path=Path(os.environ["TABLE_REVIEW_BACKUP_KEY_PATH"])
+            if "TABLE_REVIEW_BACKUP_KEY_PATH" in os.environ
+            else None,
+            backup_root=Path(os.environ.get("TABLE_REVIEW_BACKUP_ROOT", "data/backups")),
         )
     )
     try:

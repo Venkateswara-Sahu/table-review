@@ -17,6 +17,7 @@ dependencies = [
   "argon2-cffi>=25,<26",
   "python-multipart>=0.0.20,<1",
   "openpyxl>=3.1,<4",
+  "cryptography>=46,<51",
 ]
 
 [project.optional-dependencies]

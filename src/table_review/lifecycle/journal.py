@@ -187,6 +187,19 @@ class LifecycleJournal:
         except sqlite3.Error as error:
             raise JournalUnavailable("Lifecycle event could not be preserved") from error
 
+    def checkpoint(self):
+        self.verify()
+        with self._connect() as connection:
+            identity = connection.execute("SELECT deployment_id FROM identity").fetchone()[0]
+            last = connection.execute(
+                "SELECT sequence, sha256 FROM events ORDER BY sequence DESC LIMIT 1"
+            ).fetchone()
+            return {
+                "deployment_id": identity,
+                "sequence": last["sequence"] if last else 0,
+                "sha256": last["sha256"] if last else "0" * 64,
+            }
+
     def events_since(self, time: datetime) -> tuple[JournalEntry, ...]:
         if time.tzinfo is None:
             raise ValueError("Journal time must include its timezone")

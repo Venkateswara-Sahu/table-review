@@ -18,7 +18,10 @@ def main():
     parser.add_argument("action", choices=("create", "reset", "revoke"))
     parser.add_argument("username")
     args = parser.parse_args()
-    factory = create_session_factory(os.environ["TABLE_REVIEW_DATABASE_URL"])
+    factory = create_session_factory(
+        os.environ["TABLE_REVIEW_DATABASE_URL"],
+        schema=os.environ.get("TABLE_REVIEW_DATABASE_SCHEMA"),
+    )
     journal_path = Path(
         os.environ.get(
             "TABLE_REVIEW_JOURNAL_PATH",

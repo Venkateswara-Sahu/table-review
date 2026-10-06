@@ -77,6 +77,7 @@ class PageArtifactRow(Base):
     scale: Mapped[float] = mapped_column(Float)
     source_sha256: Mapped[str] = mapped_column(String(64))
     blob_key: Mapped[str]
+    sha256: Mapped[str | None] = mapped_column(String(64))
     width: Mapped[float] = mapped_column(Float)
     height: Mapped[float] = mapped_column(Float)
     pixel_width: Mapped[int]

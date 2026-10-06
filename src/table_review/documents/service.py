@@ -3,7 +3,7 @@ import math
 import tempfile
 from pathlib import Path
 from typing import BinaryIO
-from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
+from uuid import UUID, uuid4
 
 from pypdf.errors import PdfReadError
 from pypdfium2 import PdfiumError
@@ -152,9 +152,13 @@ class DocumentService:
                     PageArtifactRow.source_sha256 == document.source_sha256,
                 )
             )
-            if cached:
+            if cached and cached.sha256:
                 try:
                     with self.blobs.open(actor.id, cached.blob_key) as image:
+                        if hashlib.file_digest(image, "sha256").hexdigest() != cached.sha256:
+                            raise DocumentError(
+                                "page_integrity", "The page failed its integrity check", 503
+                            )
                         return RenderedPage(
                             image_path=Path(image.name),
                             page_box=PageBox(
@@ -177,18 +181,12 @@ class DocumentService:
             raise DocumentError(
                 "page_unavailable", "This page could not be rendered at the selected scale"
             ) from error
-        render_key = uuid5(
-            NAMESPACE_URL, f"page-render-v1:{document.source_sha256}:{page_no}:{float(scale).hex()}"
-        ).hex
-        key = f"{document.id.hex}/{render_key}"
+        key = f"{document.id.hex}/{uuid4().hex}"
         try:
             with self.repository.session_factory.begin() as session:
                 self.repository._lock_document(session, actor.id, document_id)
                 with rendered.image_path.open("rb") as image:
-                    try:
-                        self.blobs.put(actor.id, key, image)
-                    except FileExistsError:
-                        pass
+                    blob = self.blobs.put(actor.id, key, image)
                 session.execute(
                     insert(PageArtifactRow)
                     .values(
@@ -199,12 +197,16 @@ class DocumentService:
                         scale=scale,
                         source_sha256=document.source_sha256,
                         blob_key=key,
+                        sha256=blob.sha256,
                         width=info.width,
                         height=info.height,
                         pixel_width=rendered.pixel_width,
                         pixel_height=rendered.pixel_height,
                     )
-                    .on_conflict_do_nothing()
+                    .on_conflict_do_update(
+                        constraint="uq_page_render",
+                        set_={"blob_key": key, "sha256": blob.sha256},
+                    )
                 )
         finally:
             rendered.image_path.unlink(missing_ok=True)

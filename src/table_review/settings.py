@@ -27,7 +27,15 @@ class Settings(BaseModel):
     max_render_pixels: int = 16_000_000
     journal_path: Path | None = None
     initialize_journal: bool = False
+    backup_key_path: Path | None = Field(default=None, repr=False)
+    backup_root: Path = Path("data/backups")
+    max_backup_bytes: int = 256 * 1024**2
 
     @property
     def lifecycle_journal_path(self):
         return self.journal_path or self.blob_root.parent / "lifecycle" / "journal.sqlite3"
+
+    @property
+    def restore_pending_path(self):
+        root = self.blob_root.absolute()
+        return root.with_name(root.name + ".restore-pending")

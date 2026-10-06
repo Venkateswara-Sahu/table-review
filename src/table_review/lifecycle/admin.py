@@ -15,6 +15,7 @@ def main():
     args = parser.parse_args()
     settings = Settings(
         database_url=os.environ.get("TABLE_REVIEW_DATABASE_URL", ""),
+        database_schema=os.environ.get("TABLE_REVIEW_DATABASE_SCHEMA"),
         blob_root=Path(os.environ.get("TABLE_REVIEW_BLOB_ROOT", "data/blobs")),
         journal_path=Path(os.environ["TABLE_REVIEW_JOURNAL_PATH"])
         if "TABLE_REVIEW_JOURNAL_PATH" in os.environ
