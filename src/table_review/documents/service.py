@@ -182,32 +182,32 @@ class DocumentService:
         ).hex
         key = f"{document.id.hex}/{render_key}"
         try:
-            with rendered.image_path.open("rb") as image:
-                try:
-                    self.blobs.put(actor.id, key, image)
-                except FileExistsError:
-                    pass
+            with self.repository.session_factory.begin() as session:
+                self.repository._lock_document(session, actor.id, document_id)
+                with rendered.image_path.open("rb") as image:
+                    try:
+                        self.blobs.put(actor.id, key, image)
+                    except FileExistsError:
+                        pass
+                session.execute(
+                    insert(PageArtifactRow)
+                    .values(
+                        id=uuid4(),
+                        owner_id=actor.id,
+                        document_id=document_id,
+                        page_no=page_no,
+                        scale=scale,
+                        source_sha256=document.source_sha256,
+                        blob_key=key,
+                        width=info.width,
+                        height=info.height,
+                        pixel_width=rendered.pixel_width,
+                        pixel_height=rendered.pixel_height,
+                    )
+                    .on_conflict_do_nothing()
+                )
         finally:
             rendered.image_path.unlink(missing_ok=True)
-        with self.repository.session_factory.begin() as session:
-            self.repository._document(session, actor.id, document_id)
-            session.execute(
-                insert(PageArtifactRow)
-                .values(
-                    id=uuid4(),
-                    owner_id=actor.id,
-                    document_id=document_id,
-                    page_no=page_no,
-                    scale=scale,
-                    source_sha256=document.source_sha256,
-                    blob_key=key,
-                    width=info.width,
-                    height=info.height,
-                    pixel_width=rendered.pixel_width,
-                    pixel_height=rendered.pixel_height,
-                )
-                .on_conflict_do_nothing()
-            )
         with self.blobs.open(actor.id, key) as image:
             return rendered.model_copy(update={"image_path": Path(image.name)})
 

@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import tempfile
 import time
@@ -11,6 +12,13 @@ from table_review.extraction.types import ExtractionRequest, ExtractorConfig
 from table_review.jobs.queue import StaleLease
 from table_review.jobs.runner import ProcessingFailure, run_operation
 from table_review.jobs.types import ProcessingLimits, TaskOutcome
+
+
+def maintain(queue, now):
+    result = queue.deletion.sweep(now)
+    if any(result.model_dump().values()):
+        logging.getLogger(__name__).info("lifecycle_cleanup %s", result.model_dump_json())
+    return result
 
 
 def run_once(queue, worker_id: str) -> bool:
@@ -106,10 +114,18 @@ def main():
         Settings(
             database_url=os.environ["TABLE_REVIEW_DATABASE_URL"],
             blob_root=Path(os.environ.get("TABLE_REVIEW_BLOB_ROOT", "data/blobs")),
+            journal_path=Path(os.environ["TABLE_REVIEW_JOURNAL_PATH"])
+            if "TABLE_REVIEW_JOURNAL_PATH" in os.environ
+            else None,
         )
     )
     try:
+        next_maintenance = 0
         while True:
+            if time.monotonic() >= next_maintenance:
+                # Fail closed if current journal is unavailable; never recreate it here.
+                maintain(app.state.queue, datetime.now(UTC))
+                next_maintenance = time.monotonic() + 60
             worked = run_once(app.state.queue, f"worker-{os.getpid()}")
             if args.once:
                 return

@@ -52,6 +52,7 @@ def main():
             blob_root=blob_root,
             public_origin="http://127.0.0.1:5173",
             secure_cookies=False,
+            initialize_journal=True,
             model_path=ROOT / "models",
         )
     )

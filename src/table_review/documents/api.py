@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -8,8 +9,16 @@ from table_review.accounts.api import require_actor
 from table_review.accounts.types import Actor
 from table_review.api_types import DocumentList, DocumentView, PageView
 from table_review.documents.types import PdfInfo
+from table_review.lifecycle.deletion import DeletionReceipt
 
 router = APIRouter(prefix="/api/v1/documents")
+
+
+@router.delete("/{document_id}", response_model=DeletionReceipt)
+def delete_document(
+    document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]
+):
+    return request.app.state.deletion.request(actor, document_id, datetime.now(UTC))
 
 
 @router.post("", status_code=201, response_model=DocumentView)

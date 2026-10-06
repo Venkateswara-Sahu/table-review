@@ -40,8 +40,13 @@ class ReviewService:
         )
         if revision is None:
             raise NotFound("Revision not found")
+        table_identity = session.get(TableRow, revision.table_id)
+        self.repository._lock_document(session, actor.id, table_identity.document_id)
         table = session.scalar(
-            select(TableRow).where(TableRow.id == revision.table_id).with_for_update()
+            select(TableRow)
+            .where(TableRow.id == revision.table_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
         )
         if current and table.current_revision_id != revision.id:
             raise RevisionConflict(table.current_revision_id)

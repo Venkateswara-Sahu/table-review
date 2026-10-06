@@ -25,3 +25,9 @@ class Settings(BaseModel):
     public_origin: str = "http://localhost:8000"
     secure_cookies: bool = True
     max_render_pixels: int = 16_000_000
+    journal_path: Path | None = None
+    initialize_journal: bool = False
+
+    @property
+    def lifecycle_journal_path(self):
+        return self.journal_path or self.blob_root.parent / "lifecycle" / "journal.sqlite3"

@@ -15,6 +15,7 @@ def main():
             Settings(
                 database_url="postgresql+psycopg://unused:unused@127.0.0.1/unused",
                 blob_root=Path(temporary) / "blobs",
+                initialize_journal=True,
             )
         )
         try:

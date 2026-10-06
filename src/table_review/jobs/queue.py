@@ -41,7 +41,7 @@ class TaskQueue:
         if kind not in ("prepare", "extract", "export") or not 1 <= len(key) <= 128:
             raise ValueError("Invalid task request")
         _owner_lock(session, owner_id)
-        self.repository._document(session, owner_id, document_id)
+        self.repository._lock_document(session, owner_id, document_id)
         prior = session.scalar(
             select(TaskRow).where(TaskRow.owner_id == owner_id, TaskRow.idempotency_key == key)
         )
@@ -173,6 +173,10 @@ class TaskQueue:
             return None
         doc = session.get(DocumentRow, row.document_id)
         if doc is None or doc.deleted_at is not None:
+            return None
+        if self.repository.journal and self.repository.journal.is_deleted(
+            row.owner_id, row.document_id
+        ):
             return None
         return row
 

@@ -13,7 +13,6 @@ from sqlalchemy.exc import IntegrityError
 from table_review.accounts.types import (
     AccountRecord,
     Actor,
-    MemoryRevocationJournal,
     RevocationJournal,
     SessionGrant,
 )
@@ -43,9 +42,9 @@ def _password(value):
 
 
 class AccountService:
-    def __init__(self, session_factory: SessionFactory, journal: RevocationJournal | None = None):
+    def __init__(self, session_factory: SessionFactory, journal: RevocationJournal):
         self.session_factory = session_factory
-        self.journal = journal or MemoryRevocationJournal()
+        self.journal = journal
         self.hasher = PasswordHasher()
         self._dummy_hash = self.hasher.hash(secrets.token_urlsafe(32))
 
@@ -96,7 +95,12 @@ class AccountService:
                     )
                 except VerificationError:
                     valid = False
-                if not valid or account is None or account.revoked_at is not None:
+                if (
+                    not valid
+                    or account is None
+                    or account.revoked_at is not None
+                    or not self.journal.allows(account.id, account.auth_epoch)
+                ):
                     throttle.failures += 1
                     failure = AuthenticationError("Invalid credentials")
                 else:
@@ -136,6 +140,7 @@ class AccountService:
             account is None
             or account.revoked_at is not None
             or account.auth_epoch != row.auth_epoch
+            or not self.journal.allows(account.id, account.auth_epoch)
         ):
             raise AuthenticationError("Sign in required")
         return row, account
@@ -166,7 +171,11 @@ class AccountService:
             )
             if account is None:
                 raise InvalidAccount("Account unavailable")
-            self.journal.record(owner_id, epoch, kind, now)
+            entry = self.journal.record(owner_id, epoch, kind, now)
+            if entry is not None:
+                from table_review.lifecycle.models import mirror_event
+
+                mirror_event(session, entry)
             account.auth_epoch = epoch
             if password is None:
                 account.revoked_at = now

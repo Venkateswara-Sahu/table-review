@@ -26,6 +26,7 @@ class SessionGrant(ImmutableModel):
 
 class RevocationJournal(Protocol):
     def record(self, owner_id: UUID, auth_epoch: UUID, kind: str, at: datetime) -> None: ...
+    def allows(self, owner_id: UUID, auth_epoch: UUID) -> bool: ...
 
 
 class MemoryRevocationJournal:
@@ -36,3 +37,7 @@ class MemoryRevocationJournal:
 
     def record(self, owner_id, auth_epoch, kind, at):
         self.events.append((owner_id, auth_epoch, kind, at))
+
+    def allows(self, owner_id, auth_epoch):
+        latest = next((event for event in reversed(self.events) if event[0] == owner_id), None)
+        return latest is None or (latest[2] != "revoke_account" and latest[1] == auth_epoch)

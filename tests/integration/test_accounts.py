@@ -205,6 +205,7 @@ def test_admin_commands_prompt_for_passwords_and_never_print_them(
         hide_password=False
     )
     monkeypatch.setenv("TABLE_REVIEW_DATABASE_URL", url)
+    monkeypatch.setenv("TABLE_REVIEW_JOURNAL_PATH", str(admin_service.journal.path))
     monkeypatch.setattr("getpass.getpass", lambda prompt: "operator-test-password-123")
     name = "admin-" + uuid4().hex
     monkeypatch.setattr("sys.argv", ["admin", "create", name])

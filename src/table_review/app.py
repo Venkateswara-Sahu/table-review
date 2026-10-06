@@ -23,6 +23,8 @@ from table_review.exports.api import router as exports_router
 from table_review.exports.service import ExportService
 from table_review.jobs.api import router as jobs_router
 from table_review.jobs.queue import QueueFull, TaskConflict, TaskQueue
+from table_review.lifecycle.deletion import DeletionService
+from table_review.lifecycle.journal import JournalUnavailable, LifecycleJournal
 from table_review.reviews.api import router as reviews_router
 from table_review.reviews.service import ReviewIncomplete, ReviewInputError, ReviewService
 from table_review.settings import Settings
@@ -70,8 +72,12 @@ def create_app(settings: Settings) -> FastAPI:
     )
     app.state.settings = settings
     app.state.session_factory = factory
-    app.state.accounts = AccountService(factory)
+    app.state.journal = LifecycleJournal(
+        settings.lifecycle_journal_path, create=settings.initialize_journal
+    )
+    app.state.accounts = AccountService(factory, app.state.journal)
     app.state.repository = Repository(factory)
+    app.state.repository.journal = app.state.journal
     app.state.blobs = PrivateBlobStore(settings.blob_root)
     app.state.documents = DocumentService(app.state.repository, app.state.blobs, settings)
     app.state.queue = TaskQueue(app.state.repository, settings, app.state.documents)
@@ -82,6 +88,10 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.exports = ExportService(
         app.state.repository, app.state.reviews, app.state.queue, app.state.blobs
     )
+    app.state.deletion = DeletionService(
+        app.state.repository, app.state.blobs, app.state.journal, settings
+    )
+    app.state.queue.deletion = app.state.deletion
     app.add_middleware(UploadSizeLimit, max_pdf_bytes=settings.max_pdf_bytes)
 
     @app.middleware("http")
@@ -134,6 +144,12 @@ def create_app(settings: Settings) -> FastAPI:
     @app.exception_handler(NotFound)
     async def not_found(request, error):
         return error_response(request, 404, "not_found", "Resource not found")
+
+    @app.exception_handler(JournalUnavailable)
+    async def journal_unavailable(request, error):
+        return error_response(
+            request, 503, "lifecycle_unavailable", "Private storage verification is unavailable"
+        )
 
     @app.exception_handler(RevisionConflict)
     async def conflict(request, error):

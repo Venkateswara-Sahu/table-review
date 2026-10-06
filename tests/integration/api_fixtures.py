@@ -20,6 +20,7 @@ def app(session_factory, tmp_path: Path):
         blob_root=tmp_path / "blobs",
         public_origin="http://testserver",
         secure_cookies=False,
+        initialize_journal=True,
     )
     return create_app(settings)
 

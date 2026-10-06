@@ -10,6 +10,29 @@ export function ReportList({
   const [reports, setReports] = useState<Document[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  async function deleteReport(report: Document) {
+    if (
+      !window.confirm(
+        "Delete this report? Saved tables and exports will become inaccessible immediately. Active files are removed within 24 hours under normal operation; existing backups expire within 7 days.",
+      )
+    )
+      return;
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      await apiRequest(`/api/v1/documents/${report.id}`, { method: "DELETE" });
+      setReports((items) => items.filter((item) => item.id !== report.id));
+      setNotice(
+        "Report deleted. Its tables and exports are no longer accessible.",
+      );
+    } catch (error) {
+      setError(errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
   async function refresh(signal?: AbortSignal) {
     try {
       const data = await apiRequest<{ items: Document[] }>(
@@ -83,6 +106,7 @@ export function ReportList({
           {error}
         </p>
       )}
+      {notice && <p role="status">{notice}</p>}
       {reports.length === 0 && (
         <div className="empty">
           <h2>No reports yet</h2>
@@ -111,9 +135,17 @@ export function ReportList({
             </div>
             <button
               aria-label={`Open ${report.filename}`}
+              disabled={busy}
               onClick={() => onOpen(report)}
             >
               Open report <span aria-hidden="true">↗</span>
+            </button>
+            <button
+              aria-label={`Delete ${report.filename}`}
+              disabled={busy}
+              onClick={() => void deleteReport(report)}
+            >
+              Delete
             </button>
           </article>
         ))}

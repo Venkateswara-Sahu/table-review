@@ -41,6 +41,7 @@ def _record(cls, row):
 class Repository:
     def __init__(self, session_factory: SessionFactory):
         self.session_factory = session_factory
+        self.journal = None
 
     def _document(self, session, owner_id, document_id):
         row = session.scalar(
@@ -51,6 +52,8 @@ class Repository:
             )
         )
         if row is None:
+            raise NotFound("Document not found")
+        if self.journal and self.journal.is_deleted(owner_id, document_id):
             raise NotFound("Document not found")
         return row
 
@@ -67,6 +70,7 @@ class Repository:
         )
         if row is None:
             raise NotFound("Table not found")
+        self._document(session, owner_id, row.document_id)
         return row
 
     def _lock_document(self, session, owner_id, document_id):
@@ -81,6 +85,8 @@ class Repository:
             .execution_options(populate_existing=True)
         )
         if row is None:
+            raise NotFound("Document not found")
+        if self.journal and self.journal.is_deleted(owner_id, document_id):
             raise NotFound("Document not found")
         return row
 
@@ -119,13 +125,17 @@ class Repository:
                 .order_by(DocumentRow.created_at.desc())
                 .limit(100)
             ).all()
-            return tuple(_record(DocumentRecord, row) for row in rows)
+            return tuple(
+                _record(DocumentRecord, row)
+                for row in rows
+                if not self.journal or not self.journal.is_deleted(owner_id, row.id)
+            )
 
     def foreground_open(self, owner_id: UUID, document_id: UUID) -> DocumentRecord:
         from datetime import datetime
 
         with self.session_factory.begin() as session:
-            row = self._document(session, owner_id, document_id)
+            row = self._lock_document(session, owner_id, document_id)
             row.last_foreground_at = datetime.now(UTC)
             session.flush()
             return _record(DocumentRecord, row)
@@ -198,7 +208,10 @@ class Repository:
         if origin not in ("extracted", "manual"):
             raise ValueError("Invalid table origin")
         with self.session_factory.begin() as session:
-            self._document(session, owner_id, document_id)
+            document = self._lock_document(session, owner_id, document_id)
+            from datetime import datetime
+
+            document.last_foreground_at = datetime.now(UTC)
             table_id, revision_id = uuid4(), uuid4()
             row = TableRow(
                 id=table_id,

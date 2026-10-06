@@ -3,10 +3,12 @@
 import argparse
 import getpass
 import os
+from pathlib import Path
 
 from sqlalchemy import select
 
 from table_review.accounts.service import AccountService, InvalidAccount
+from table_review.lifecycle.journal import LifecycleJournal
 from table_review.storage.db import create_session_factory
 from table_review.storage.models import AccountRow
 
@@ -17,7 +19,17 @@ def main():
     parser.add_argument("username")
     args = parser.parse_args()
     factory = create_session_factory(os.environ["TABLE_REVIEW_DATABASE_URL"])
-    service = AccountService(factory)
+    journal_path = Path(
+        os.environ.get(
+            "TABLE_REVIEW_JOURNAL_PATH",
+            str(
+                Path(os.environ.get("TABLE_REVIEW_BLOB_ROOT", "data/blobs")).parent
+                / "lifecycle"
+                / "journal.sqlite3"
+            ),
+        )
+    )
+    service = AccountService(factory, LifecycleJournal(journal_path))
     if args.action == "create":
         service.create(args.username, getpass.getpass("New password: "))
     else:
