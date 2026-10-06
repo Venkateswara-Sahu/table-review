@@ -1,0 +1,214 @@
+{
+  "manifest_sha256": "fba7d5f82fb411d5e170680aaee642dd3a9eafcf87039e4c8219ad56bf1c1f5c",
+  "frozen_payload_sha256": "d5cc72fff709dde5d101b585ccf41043e819a28ad22c3e270c43c76157173788",
+  "split": "heldout",
+  "started_at": "2026-10-06T12:36:30.429718+00:00",
+  "finished_at": "2026-10-06T12:47:28.837464+00:00",
+  "check_version": "1",
+  "evaluation_code_sha256": {
+    "annotation.py": "4396869bb91503f62de9aeeec3e306ed6348c0af9c0db470e03d1054566938c4",
+    "manifest.py": "d3ca625b3ab4cd28c7aa4d405c49b7becd610d93f074d674c69ccf1244be7ad5",
+    "metrics.py": "b3cd0ec016424f4388d535a044348759bdc695e4e7c46a5d3321894f78fc299f",
+    "rebuild.py": "e14602de77ec6cc2fda24c3af4cf4a134e8ac5b3ba5d2349f49c5e1e528e53ea",
+    "run.py": "1ec943f877ecb3bd23c7388a116974af352514e9b227808f8e4b8e1e67644b9e"
+  },
+  "code_revision": "de21c941468f161c55d5d4844eebf7d618770a31699f1beaa2bf640a659e9e51",
+  "code_revision_kind": "installed_python_source_sha256",
+  "environment": {
+    "python": "3.12.14",
+    "system": "Windows",
+    "machine": "AMD64"
+  },
+  "groups": {
+    "full_page-matching-on": {
+      "summary": {
+        "literal_occurrence_correct": 467,
+        "literal_occurrence_total": 2246,
+        "predicted_literal_occurrences": 2243,
+        "literal_occurrence_recall": 0.20792520035618878,
+        "case_count": 20,
+        "failure_count": 0,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 46,
+        "literal_total": 2476,
+        "literal_accuracy": 0.018578352180936994,
+        "association_correct": 0,
+        "association_total": 1573,
+        "association_accuracy": 0.0,
+        "geometry_correct": 1021,
+        "geometry_total": 2246,
+        "geometry_accuracy": 0.4545859305431879,
+        "role_correct": 2114,
+        "role_total": 2476,
+        "unit_correct_count": 0,
+        "structure_correct_count": 0,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 151.34599999999864,
+        "peak_rss_bytes": 1469218816
+      },
+      "process_metrics": {
+        "elapsed_seconds": 155.07899999999972,
+        "sampled_peak_rss_bytes": 1474166784,
+        "rss_sample_interval_seconds": 0.1,
+        "hard_memory_enforcement": false
+      },
+      "process_failure": null,
+      "natural_warning_counts": {
+        "coverage_discrepancy": 268,
+        "duplicate_source_token": 80
+      }
+    },
+    "full_page-matching-off": {
+      "summary": {
+        "literal_occurrence_correct": 659,
+        "literal_occurrence_total": 2246,
+        "predicted_literal_occurrences": 1845,
+        "literal_occurrence_recall": 0.2934105075690116,
+        "case_count": 20,
+        "failure_count": 0,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 227,
+        "literal_total": 2476,
+        "literal_accuracy": 0.09168012924071083,
+        "association_correct": 0,
+        "association_total": 1573,
+        "association_accuracy": 0.0,
+        "geometry_correct": 1008,
+        "geometry_total": 2246,
+        "geometry_accuracy": 0.44879786286731965,
+        "role_correct": 2130,
+        "role_total": 2476,
+        "unit_correct_count": 0,
+        "structure_correct_count": 8,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 149.8570000000027,
+        "peak_rss_bytes": 1553674240
+      },
+      "process_metrics": {
+        "elapsed_seconds": 153.6880000000001,
+        "sampled_peak_rss_bytes": 1556271104,
+        "rss_sample_interval_seconds": 0.1,
+        "hard_memory_enforcement": false
+      },
+      "process_failure": null,
+      "natural_warning_counts": {
+        "coverage_discrepancy": 618,
+        "duplicate_source_token": 63
+      }
+    },
+    "crop-matching-on": {
+      "summary": {
+        "literal_occurrence_correct": 469,
+        "literal_occurrence_total": 2246,
+        "predicted_literal_occurrences": 2251,
+        "literal_occurrence_recall": 0.20881567230632236,
+        "case_count": 20,
+        "failure_count": 0,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 46,
+        "literal_total": 2476,
+        "literal_accuracy": 0.018578352180936994,
+        "association_correct": 0,
+        "association_total": 1573,
+        "association_accuracy": 0.0,
+        "geometry_correct": 1022,
+        "geometry_total": 2246,
+        "geometry_accuracy": 0.45503116651825465,
+        "role_correct": 2122,
+        "role_total": 2476,
+        "unit_correct_count": 0,
+        "structure_correct_count": 0,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 160.10999999999967,
+        "peak_rss_bytes": 1478414336
+      },
+      "process_metrics": {
+        "elapsed_seconds": 163.65599999999995,
+        "sampled_peak_rss_bytes": 1482702848,
+        "rss_sample_interval_seconds": 0.1,
+        "hard_memory_enforcement": false
+      },
+      "process_failure": null,
+      "natural_warning_counts": {
+        "coverage_discrepancy": 265,
+        "duplicate_source_token": 75
+      }
+    },
+    "crop-matching-off": {
+      "summary": {
+        "literal_occurrence_correct": 668,
+        "literal_occurrence_total": 2246,
+        "predicted_literal_occurrences": 1860,
+        "literal_occurrence_recall": 0.29741763134461263,
+        "case_count": 20,
+        "failure_count": 0,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 218,
+        "literal_total": 2476,
+        "literal_accuracy": 0.08804523424878836,
+        "association_correct": 0,
+        "association_total": 1573,
+        "association_accuracy": 0.0,
+        "geometry_correct": 1003,
+        "geometry_total": 2246,
+        "geometry_accuracy": 0.44657168299198574,
+        "role_correct": 2130,
+        "role_total": 2476,
+        "unit_correct_count": 0,
+        "structure_correct_count": 7,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 177.0639999999994,
+        "peak_rss_bytes": 1542266880
+      },
+      "process_metrics": {
+        "elapsed_seconds": 181.39100000000053,
+        "sampled_peak_rss_bytes": 1485922304,
+        "rss_sample_interval_seconds": 0.1,
+        "hard_memory_enforcement": false
+      },
+      "process_failure": null,
+      "natural_warning_counts": {
+        "coverage_discrepancy": 606,
+        "duplicate_source_token": 48,
+        "placement_ambiguity": 3
+      }
+    }
+  },
+  "limits": {
+    "group_timeout_seconds": 600,
+    "sampled_rss_limit_bytes": 6442450944,
+    "hard_memory_enforcement": false
+  },
+  "metric_scope": "matched annotated regions; slot metrics are strict physical cells; unordered occurrences do not establish associations; exact table excludes geometry, which is reported separately",
+  "cost_scope": "local CPU, zero model/API requests; energy and monetary hardware costs unmeasured",
+  "injected_summary": {
+    "digit": {
+      "eligible": 20,
+      "detected_new_target_issue": 10,
+      "inconclusive": 10
+    },
+    "sign": {
+      "eligible": 20,
+      "detected_new_target_issue": 10,
+      "inconclusive": 10
+    },
+    "header_swap": {
+      "eligible": 20,
+      "detected_new_target_issue": 10,
+      "inconclusive": 8
+    },
+    "unit": {
+      "eligible": 20,
+      "detected_new_target_issue": 0,
+      "inconclusive": 0
+    }
+  }
+}
