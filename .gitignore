@@ -7,6 +7,7 @@ __pycache__/
 artifacts/
 data/
 models/
+evaluation/corpus.json
 .env*
 !.env.example
 .env.*

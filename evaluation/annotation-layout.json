@@ -1,0 +1,2963 @@
+[
+  {
+    "id": "ibm-2024-income",
+    "report_id": "ibm-2024",
+    "page": 48,
+    "title": "income",
+    "region": {
+      "page": 48,
+      "left": 86,
+      "top": 85,
+      "right": 503,
+      "bottom": 492,
+      "page_width": 585.3599853515625,
+      "page_height": 738.0
+    },
+    "columns": [
+      86,
+      308,
+      337,
+      393,
+      449,
+      503
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 85,
+        "bottom": 95.9,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 85,
+        "bottom": 95.9,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 85,
+        "bottom": 95.9,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 85,
+        "bottom": 95.9,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "top": 85,
+        "bottom": 95.9,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "($ in millions except per share amounts)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/ibm-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "ibm-2024-comprehensive",
+    "report_id": "ibm-2024",
+    "page": 49,
+    "title": "comprehensive",
+    "region": {
+      "page": 49,
+      "left": 86,
+      "top": 84,
+      "right": 503,
+      "bottom": 344,
+      "page_width": 585.3599853515625,
+      "page_height": 738.0
+    },
+    "columns": [
+      86,
+      348,
+      379,
+      420,
+      461,
+      503
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 84,
+        "bottom": 94.5,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 84,
+        "bottom": 94.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 84,
+        "bottom": 94.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 84,
+        "bottom": 94.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "top": 84,
+        "bottom": 94.5,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "($ in millions)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/ibm-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "ibm-2024-balance",
+    "report_id": "ibm-2024",
+    "page": 50,
+    "title": "balance",
+    "region": {
+      "page": 50,
+      "left": 86,
+      "top": 81,
+      "right": 503,
+      "bottom": 630,
+      "page_width": 585.3599853515625,
+      "page_height": 738.0
+    },
+    "columns": [
+      86,
+      386,
+      415,
+      459,
+      503
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 81,
+        "bottom": 91.5,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 81,
+        "bottom": 91.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 81,
+        "bottom": 91.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 81,
+        "bottom": 91.5,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "($ in millions except per share amounts)"
+    ],
+    "joins": [
+      [
+        532.4,
+        556.9
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/ibm-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "ibm-2024-equity",
+    "report_id": "ibm-2024",
+    "page": 52,
+    "title": "equity",
+    "region": {
+      "page": 52,
+      "left": 86,
+      "top": 82,
+      "right": 503,
+      "bottom": 316,
+      "page_width": 585.3599853515625,
+      "page_height": 738.0
+    },
+    "columns": [
+      86,
+      202,
+      242,
+      283,
+      326,
+      379,
+      427,
+      466,
+      503
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 82,
+        "bottom": 121,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 82,
+        "bottom": 121,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 82,
+        "bottom": 121,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 82,
+        "bottom": 121,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "top": 82,
+        "bottom": 121,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "top": 82,
+        "bottom": 121,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 6,
+        "top": 82,
+        "bottom": 121,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 7,
+        "top": 82,
+        "bottom": 121,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "($ in millions except per share amounts)"
+    ],
+    "joins": [
+      [
+        144.2,
+        156.5
+      ],
+      [
+        173.4,
+        185.7
+      ],
+      [
+        202.7,
+        214.6
+      ],
+      [
+        219.4,
+        239.5
+      ],
+      [
+        246.7,
+        275.0
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/ibm-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "ibm-2024-cashflow",
+    "report_id": "ibm-2024",
+    "page": 51,
+    "title": "cashflow",
+    "region": {
+      "page": 51,
+      "left": 86,
+      "top": 84,
+      "right": 503,
+      "bottom": 559,
+      "page_width": 585.3599853515625,
+      "page_height": 738.0
+    },
+    "columns": [
+      86,
+      345,
+      403,
+      453,
+      503
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 84,
+        "bottom": 94.5,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 84,
+        "bottom": 94.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 84,
+        "bottom": 94.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 84,
+        "bottom": 94.5,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "($ in millions)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/ibm-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "ibm-2025-income",
+    "report_id": "ibm-2025",
+    "page": 44,
+    "title": "income",
+    "region": {
+      "page": 44,
+      "left": 90.5,
+      "top": 103,
+      "right": 507.5,
+      "bottom": 510,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      90.5,
+      312.5,
+      341.5,
+      397.5,
+      453.5,
+      507.5
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 103,
+        "bottom": 113.9,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 103,
+        "bottom": 113.9,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 103,
+        "bottom": 113.9,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 103,
+        "bottom": 113.9,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "top": 103,
+        "bottom": 113.9,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "($ in millions except per share amounts)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/ibm-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "ibm-2025-comprehensive",
+    "report_id": "ibm-2025",
+    "page": 45,
+    "title": "comprehensive",
+    "region": {
+      "page": 45,
+      "left": 90.5,
+      "top": 102,
+      "right": 507.5,
+      "bottom": 327,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      90.5,
+      352.5,
+      383.5,
+      424.5,
+      465.5,
+      507.5
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 102,
+        "bottom": 112.5,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 102,
+        "bottom": 112.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 102,
+        "bottom": 112.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 102,
+        "bottom": 112.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "top": 102,
+        "bottom": 112.5,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "($ in millions)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/ibm-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "ibm-2025-balance",
+    "report_id": "ibm-2025",
+    "page": 46,
+    "title": "balance",
+    "region": {
+      "page": 46,
+      "left": 90.5,
+      "top": 99,
+      "right": 507.5,
+      "bottom": 648,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      90.5,
+      390.5,
+      419.5,
+      463.5,
+      507.5
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 99,
+        "bottom": 109.5,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 99,
+        "bottom": 109.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 99,
+        "bottom": 109.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 99,
+        "bottom": 109.5,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "($ in millions except per share amounts)"
+    ],
+    "joins": [
+      [
+        550.4,
+        574.9
+      ]
+    ],
+    "token_splits": [
+      {
+        "text": "2024)C",
+        "offset": 5
+      }
+    ],
+    "annotation_source_path": "../data/reports/ibm-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "ibm-2025-equity",
+    "report_id": "ibm-2025",
+    "page": 48,
+    "title": "equity",
+    "region": {
+      "page": 48,
+      "left": 90.5,
+      "top": 100,
+      "right": 507.5,
+      "bottom": 322,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      90.5,
+      206.5,
+      246.5,
+      287.5,
+      330.5,
+      383.5,
+      431.5,
+      470.5,
+      507.5
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 100,
+        "bottom": 139,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 100,
+        "bottom": 139,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 100,
+        "bottom": 139,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 100,
+        "bottom": 139,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "top": 100,
+        "bottom": 139,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "top": 100,
+        "bottom": 139,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 6,
+        "top": 100,
+        "bottom": 139,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 7,
+        "top": 100,
+        "bottom": 139,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "($ in millions except per share amounts)"
+    ],
+    "joins": [
+      [
+        162.2,
+        174.5
+      ],
+      [
+        191.4,
+        203.7
+      ],
+      [
+        220.7,
+        232.6
+      ],
+      [
+        237.4,
+        257.8
+      ],
+      [
+        264.7,
+        293.0
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/ibm-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "ibm-2025-cashflow",
+    "report_id": "ibm-2025",
+    "page": 47,
+    "title": "cashflow",
+    "region": {
+      "page": 47,
+      "left": 90.5,
+      "top": 102,
+      "right": 507.5,
+      "bottom": 577,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      90.5,
+      349.5,
+      407.5,
+      457.5,
+      507.5
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 102,
+        "bottom": 112.5,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 102,
+        "bottom": 112.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 102,
+        "bottom": 112.5,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 102,
+        "bottom": 112.5,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "($ in millions)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/ibm-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "nvidia-2024-income",
+    "report_id": "nvidia-2024",
+    "page": 150,
+    "title": "income",
+    "region": {
+      "page": 150,
+      "left": 43,
+      "top": 68,
+      "right": 552,
+      "bottom": 440,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      43,
+      339,
+      414,
+      483,
+      552
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 68,
+        "bottom": 93.2,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 68,
+        "bottom": 78.8
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 78.8,
+        "bottom": 93.2
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 78.8,
+        "bottom": 93.2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 78.8,
+        "bottom": 93.2
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In millions, except per share data)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/nvidia-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "nvidia-2024-comprehensive",
+    "report_id": "nvidia-2024",
+    "page": 151,
+    "title": "comprehensive",
+    "region": {
+      "page": 151,
+      "left": 43,
+      "top": 68,
+      "right": 552,
+      "bottom": 299,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      43,
+      339,
+      414,
+      483,
+      552
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 68,
+        "bottom": 93.2,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 68,
+        "bottom": 78.8
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 78.8,
+        "bottom": 93.2
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 78.8,
+        "bottom": 93.2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 78.8,
+        "bottom": 93.2
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In millions)"
+    ],
+    "joins": [
+      [
+        173.0,
+        186.2
+      ],
+      [
+        239.0,
+        252.2
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/nvidia-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "nvidia-2024-balance",
+    "report_id": "nvidia-2024",
+    "page": 152,
+    "title": "balance",
+    "region": {
+      "page": 152,
+      "left": 43,
+      "top": 68,
+      "right": 553,
+      "bottom": 602,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      43,
+      410,
+      485,
+      553
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 68,
+        "bottom": 79.0,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 68,
+        "bottom": 79.0,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 68,
+        "bottom": 79.0,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In millions, except par value)"
+    ],
+    "joins": [
+      [
+        502.3,
+        524.3
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/nvidia-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "nvidia-2024-equity",
+    "report_id": "nvidia-2024",
+    "page": 153,
+    "title": "equity",
+    "region": {
+      "page": 153,
+      "left": 43,
+      "top": 50,
+      "right": 734,
+      "bottom": 435,
+      "page_width": 774.0,
+      "page_height": 594.0
+    },
+    "columns": [
+      43,
+      344,
+      390,
+      439,
+      502,
+      551,
+      624,
+      674,
+      734
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 50,
+        "bottom": 90,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 2,
+        "top": 60,
+        "bottom": 68
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 68,
+        "bottom": 90
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 68,
+        "bottom": 90
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "row_span": 2,
+        "top": 50,
+        "bottom": 90
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "row_span": 2,
+        "top": 50,
+        "bottom": 90
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "row_span": 2,
+        "top": 50,
+        "bottom": 90
+      },
+      {
+        "row": 0,
+        "col": 6,
+        "row_span": 2,
+        "top": 50,
+        "bottom": 90
+      },
+      {
+        "row": 0,
+        "col": 7,
+        "row_span": 2,
+        "top": 50,
+        "bottom": 90
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [
+      [
+        91.1,
+        101.1
+      ]
+    ],
+    "unit_notes": [
+      "(In millions, except per share data)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/nvidia-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "nvidia-2024-cashflow",
+    "report_id": "nvidia-2024",
+    "page": 154,
+    "title": "cashflow",
+    "region": {
+      "page": 154,
+      "left": 43,
+      "top": 68,
+      "right": 552,
+      "bottom": 706,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      43,
+      339,
+      414,
+      483,
+      552
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 68,
+        "bottom": 93.2,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 68,
+        "bottom": 78.8
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 78.8,
+        "bottom": 93.2
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 78.8,
+        "bottom": 93.2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 78.8,
+        "bottom": 93.2
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In millions)"
+    ],
+    "joins": [
+      [
+        408.6,
+        421.9
+      ],
+      [
+        560.1,
+        573.4
+      ],
+      [
+        128.8,
+        142.9
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/nvidia-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "nvidia-2025-income",
+    "report_id": "nvidia-2025",
+    "page": 144,
+    "title": "income",
+    "region": {
+      "page": 144,
+      "left": 43,
+      "top": 68,
+      "right": 552,
+      "bottom": 446,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      43,
+      339,
+      414,
+      483,
+      552
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 68,
+        "bottom": 99.2,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 68,
+        "bottom": 84.8
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 84.8,
+        "bottom": 99.2
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 84.8,
+        "bottom": 99.2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 84.8,
+        "bottom": 99.2
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In millions, except per share data)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/nvidia-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "nvidia-2025-comprehensive",
+    "report_id": "nvidia-2025",
+    "page": 145,
+    "title": "comprehensive",
+    "region": {
+      "page": 145,
+      "left": 43,
+      "top": 68,
+      "right": 552,
+      "bottom": 290,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      43,
+      339,
+      414,
+      483,
+      552
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 68,
+        "bottom": 99.2,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 68,
+        "bottom": 84.8
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 84.8,
+        "bottom": 99.2
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 84.8,
+        "bottom": 99.2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 84.8,
+        "bottom": 99.2
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In millions)"
+    ],
+    "joins": [
+      [
+        163.3,
+        176.4
+      ],
+      [
+        229.3,
+        242.4
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/nvidia-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "nvidia-2025-balance",
+    "report_id": "nvidia-2025",
+    "page": 146,
+    "title": "balance",
+    "region": {
+      "page": 146,
+      "left": 43,
+      "top": 68,
+      "right": 553,
+      "bottom": 602,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      43,
+      410,
+      485,
+      553
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 68,
+        "bottom": 85.0,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 68,
+        "bottom": 85.0,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 68,
+        "bottom": 85.0,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In millions, except par value)"
+    ],
+    "joins": [
+      [
+        508.3,
+        530.3
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/nvidia-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "nvidia-2025-equity",
+    "report_id": "nvidia-2025",
+    "page": 147,
+    "title": "equity",
+    "region": {
+      "page": 147,
+      "left": 49,
+      "top": 60,
+      "right": 729,
+      "bottom": 435,
+      "page_width": 774.0,
+      "page_height": 594.0
+    },
+    "columns": [
+      49,
+      367,
+      417,
+      471,
+      535,
+      609,
+      668,
+      729
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 60,
+        "bottom": 100,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 2,
+        "top": 71,
+        "bottom": 79
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 79,
+        "bottom": 100
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 79,
+        "bottom": 100
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "row_span": 2,
+        "top": 60,
+        "bottom": 100
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "row_span": 2,
+        "top": 60,
+        "bottom": 100
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "row_span": 2,
+        "top": 60,
+        "bottom": 100
+      },
+      {
+        "row": 0,
+        "col": 6,
+        "row_span": 2,
+        "top": 60,
+        "bottom": 100
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [
+      [
+        101.9,
+        111.9
+      ]
+    ],
+    "unit_notes": [
+      "(In millions, except per share data)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/nvidia-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "nvidia-2025-cashflow",
+    "report_id": "nvidia-2025",
+    "page": 148,
+    "title": "cashflow",
+    "region": {
+      "page": 148,
+      "left": 43,
+      "top": 65,
+      "right": 552,
+      "bottom": 726,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      43,
+      339,
+      414,
+      483,
+      552
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 65,
+        "bottom": 88.7,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 65,
+        "bottom": 74.3
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 74.3,
+        "bottom": 88.7
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 74.3,
+        "bottom": 88.7
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 74.3,
+        "bottom": 88.7
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In millions)"
+    ],
+    "joins": [
+      [
+        190.3,
+        203.5
+      ],
+      [
+        427.3,
+        440.6
+      ],
+      [
+        593.1,
+        606.4
+      ],
+      [
+        124.3,
+        138.4
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/nvidia-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "amd-2024-income",
+    "report_id": "amd-2024",
+    "page": 75,
+    "title": "income",
+    "region": {
+      "page": 75,
+      "left": 67,
+      "top": 123.80000000000001,
+      "right": 528,
+      "bottom": 472,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      67,
+      359,
+      415,
+      472,
+      528
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 123.80000000000001,
+        "bottom": 153.8,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 123.80000000000001,
+        "bottom": 133.8
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 133.8,
+        "bottom": 153.8
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 133.8,
+        "bottom": 153.8
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 133.8,
+        "bottom": 153.8
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [
+      [
+        156.8,
+        164.8
+      ]
+    ],
+    "unit_notes": [
+      "(In millions, except per share amounts)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/amd-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "amd-2024-comprehensive",
+    "report_id": "amd-2024",
+    "page": 76,
+    "title": "comprehensive",
+    "region": {
+      "page": 76,
+      "left": 67,
+      "top": 106.2,
+      "right": 528,
+      "bottom": 201,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      67,
+      359,
+      415,
+      472,
+      528
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 106.2,
+        "bottom": 136.2,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 106.2,
+        "bottom": 116.2
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 116.2,
+        "bottom": 136.2
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 116.2,
+        "bottom": 136.2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 116.2,
+        "bottom": 136.2
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [
+      [
+        139.8,
+        147.8
+      ]
+    ],
+    "unit_notes": [
+      "(In millions)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/amd-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "amd-2024-balance",
+    "report_id": "amd-2024",
+    "page": 77,
+    "title": "balance",
+    "region": {
+      "page": 77,
+      "left": 67,
+      "top": 106,
+      "right": 528,
+      "bottom": 650,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      67,
+      415,
+      473,
+      528
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 106,
+        "bottom": 125,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 106,
+        "bottom": 125,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 106,
+        "bottom": 125,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [
+      [
+        128.0,
+        145
+      ]
+    ],
+    "unit_notes": [
+      "(In millions, except par value amounts)"
+    ],
+    "joins": [
+      [
+        548.3,
+        565.3
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/amd-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "amd-2024-equity",
+    "report_id": "amd-2024",
+    "page": 78,
+    "title": "equity",
+    "region": {
+      "page": 78,
+      "left": 67,
+      "top": 106.4,
+      "right": 528,
+      "bottom": 574,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      67,
+      359,
+      415,
+      472,
+      528
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 106.4,
+        "bottom": 136.3,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 106.4,
+        "bottom": 116.4
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 116.4,
+        "bottom": 136.3
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 116.4,
+        "bottom": 136.3
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 116.4,
+        "bottom": 136.3
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [
+      [
+        139.9,
+        147.9
+      ]
+    ],
+    "unit_notes": [
+      "(In millions)"
+    ],
+    "joins": [
+      [
+        304.7,
+        321.7
+      ],
+      [
+        408.7,
+        426.5
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/amd-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "amd-2024-cashflow",
+    "report_id": "amd-2024",
+    "page": 79,
+    "title": "cashflow",
+    "region": {
+      "page": 79,
+      "left": 67,
+      "top": 95.4,
+      "right": 527,
+      "bottom": 670,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      67,
+      378,
+      430,
+      482,
+      527
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 95.4,
+        "bottom": 125.4,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 95.4,
+        "bottom": 105.4
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 105.4,
+        "bottom": 125.4
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 105.4,
+        "bottom": 125.4
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 105.4,
+        "bottom": 125.4
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [
+      [
+        129.0,
+        137.0
+      ]
+    ],
+    "unit_notes": [
+      "(In millions)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/amd-2024.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "amd-2025-income",
+    "report_id": "amd-2025",
+    "page": 72,
+    "title": "income",
+    "region": {
+      "page": 72,
+      "left": 67,
+      "top": 119.4,
+      "right": 528,
+      "bottom": 575,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      67,
+      359,
+      415,
+      472,
+      528
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 119.4,
+        "bottom": 149.4,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 119.4,
+        "bottom": 129.4
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 129.4,
+        "bottom": 149.4
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 129.4,
+        "bottom": 149.4
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 129.4,
+        "bottom": 149.4
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [
+      [
+        152.4,
+        160.4
+      ]
+    ],
+    "unit_notes": [
+      "(In millions, except per share amounts)"
+    ],
+    "joins": [
+      [
+        345.7,
+        362.7
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/amd-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "amd-2025-comprehensive",
+    "report_id": "amd-2025",
+    "page": 73,
+    "title": "comprehensive",
+    "region": {
+      "page": 73,
+      "left": 67,
+      "top": 105.8,
+      "right": 528,
+      "bottom": 201,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      67,
+      359,
+      415,
+      472,
+      528
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 105.8,
+        "bottom": 135.7,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 105.8,
+        "bottom": 115.8
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 115.8,
+        "bottom": 135.7
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 115.8,
+        "bottom": 135.7
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 115.8,
+        "bottom": 135.7
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [
+      [
+        139.3,
+        147.3
+      ]
+    ],
+    "unit_notes": [
+      "(In millions)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/amd-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "amd-2025-balance",
+    "report_id": "amd-2025",
+    "page": 74,
+    "title": "balance",
+    "region": {
+      "page": 74,
+      "left": 67,
+      "top": 105,
+      "right": 528,
+      "bottom": 600,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      67,
+      415,
+      473,
+      528
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 105,
+        "bottom": 125,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 105,
+        "bottom": 125,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 105,
+        "bottom": 125,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [
+      [
+        126.5,
+        145
+      ]
+    ],
+    "unit_notes": [
+      "(In millions, except par value amounts)"
+    ],
+    "joins": [
+      [
+        498.8,
+        515.8
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/amd-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "amd-2025-equity",
+    "report_id": "amd-2025",
+    "page": 75,
+    "title": "equity",
+    "region": {
+      "page": 75,
+      "left": 67,
+      "top": 106.2,
+      "right": 528,
+      "bottom": 538,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      67,
+      359,
+      415,
+      472,
+      528
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 106.2,
+        "bottom": 136.2,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 106.2,
+        "bottom": 116.2
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 116.2,
+        "bottom": 136.2
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 116.2,
+        "bottom": 136.2
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 116.2,
+        "bottom": 136.2
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [
+      [
+        139.8,
+        147.8
+      ]
+    ],
+    "unit_notes": [
+      "(In millions)"
+    ],
+    "joins": [
+      [
+        372.5,
+        390.3
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/amd-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "amd-2025-cashflow",
+    "report_id": "amd-2025",
+    "page": 76,
+    "title": "cashflow",
+    "region": {
+      "page": 76,
+      "left": 67,
+      "top": 99.3,
+      "right": 527,
+      "bottom": 670,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      67,
+      370,
+      430,
+      482,
+      527
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 99.3,
+        "bottom": 129.3,
+        "row_span": 2,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 3,
+        "top": 99.3,
+        "bottom": 109.3
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 109.3,
+        "bottom": 129.3
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 109.3,
+        "bottom": 129.3
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "top": 109.3,
+        "bottom": 129.3
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [
+      [
+        132.9,
+        140.9
+      ]
+    ],
+    "unit_notes": [
+      "(In millions)"
+    ],
+    "joins": [
+      [
+        595.2,
+        607.9
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../data/reports/amd-2025.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "intel-2024-income",
+    "report_id": "intel-2024",
+    "page": 65,
+    "title": "income",
+    "region": {
+      "page": 65,
+      "left": 24,
+      "top": 58,
+      "right": 576,
+      "bottom": 370,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      24,
+      366,
+      435,
+      504,
+      576
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 58,
+        "bottom": 77.6,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 58,
+        "bottom": 77.6,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 58,
+        "bottom": 77.6,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 58,
+        "bottom": 77.6,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In Millions, Except Per Share Amounts)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../artifacts/annotation/intel-2024-visible.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "intel-2024-comprehensive",
+    "report_id": "intel-2024",
+    "page": 66,
+    "title": "comprehensive",
+    "region": {
+      "page": 66,
+      "left": 24,
+      "top": 58,
+      "right": 576,
+      "bottom": 208,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      24,
+      366,
+      435,
+      504,
+      576
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 58,
+        "bottom": 72.6,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 58,
+        "bottom": 72.6,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 58,
+        "bottom": 72.6,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 58,
+        "bottom": 72.6,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In Millions)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../artifacts/annotation/intel-2024-visible.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "intel-2024-balance",
+    "report_id": "intel-2024",
+    "page": 67,
+    "title": "balance",
+    "region": {
+      "page": 67,
+      "left": 24,
+      "top": 58,
+      "right": 576,
+      "bottom": 601,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      24,
+      435,
+      504,
+      576
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 58,
+        "bottom": 72.6,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 58,
+        "bottom": 72.6,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 58,
+        "bottom": 72.6,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In Millions, Except Par Value)"
+    ],
+    "joins": [
+      [
+        492.3,
+        505.3
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../artifacts/annotation/intel-2024-visible.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "intel-2024-equity",
+    "report_id": "intel-2024",
+    "page": 69,
+    "title": "equity",
+    "region": {
+      "page": 69,
+      "left": 24,
+      "top": 60,
+      "right": 576,
+      "bottom": 526,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      24,
+      215,
+      272,
+      339,
+      416,
+      468,
+      525,
+      576
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "row_span": 2,
+        "top": 60,
+        "bottom": 106,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 2,
+        "top": 60,
+        "bottom": 85
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 85,
+        "bottom": 106
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 85,
+        "bottom": 106
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "row_span": 2,
+        "top": 60,
+        "bottom": 106
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "row_span": 2,
+        "top": 60,
+        "bottom": 106
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "row_span": 2,
+        "top": 60,
+        "bottom": 106
+      },
+      {
+        "row": 0,
+        "col": 6,
+        "row_span": 2,
+        "top": 60,
+        "bottom": 106
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In Millions, Except Per Share Amounts)"
+    ],
+    "joins": [
+      [
+        154.8,
+        167.9
+      ],
+      [
+        220.8,
+        234.7
+      ],
+      [
+        285.3,
+        298.4
+      ],
+      [
+        351.3,
+        365.2
+      ],
+      [
+        488.6,
+        502.4
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../artifacts/annotation/intel-2024-visible.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "intel-2024-cashflow",
+    "report_id": "intel-2024",
+    "page": 68,
+    "title": "cashflow",
+    "region": {
+      "page": 68,
+      "left": 24,
+      "top": 58,
+      "right": 576,
+      "bottom": 727,
+      "page_width": 594.0,
+      "page_height": 774.0
+    },
+    "columns": [
+      24,
+      366,
+      435,
+      504,
+      576
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 58,
+        "bottom": 69.7,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 58,
+        "bottom": 69.7,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 58,
+        "bottom": 69.7,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 58,
+        "bottom": 69.7,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In Millions)"
+    ],
+    "joins": [
+      [
+        112.1,
+        126.1
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../artifacts/annotation/intel-2024-visible.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "intel-2025-ars-income",
+    "report_id": "intel-2025-ars",
+    "page": 66,
+    "title": "income",
+    "region": {
+      "page": 66,
+      "left": 33,
+      "top": 64,
+      "right": 585,
+      "bottom": 373,
+      "page_width": 612.0,
+      "page_height": 792.0
+    },
+    "columns": [
+      33,
+      375,
+      444,
+      513,
+      585
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 64,
+        "bottom": 83.6,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 64,
+        "bottom": 83.6,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 64,
+        "bottom": 83.6,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 64,
+        "bottom": 83.6,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In Millions, Except Per Share Amounts)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../artifacts/annotation/intel-2025-ars-visible.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "intel-2025-ars-comprehensive",
+    "report_id": "intel-2025-ars",
+    "page": 67,
+    "title": "comprehensive",
+    "region": {
+      "page": 67,
+      "left": 33,
+      "top": 64,
+      "right": 585,
+      "bottom": 215,
+      "page_width": 612.0,
+      "page_height": 792.0
+    },
+    "columns": [
+      33,
+      375,
+      444,
+      513,
+      585
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 64,
+        "bottom": 83.6,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 64,
+        "bottom": 83.6,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 64,
+        "bottom": 83.6,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 64,
+        "bottom": 83.6,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In Millions)"
+    ],
+    "joins": [],
+    "token_splits": [],
+    "annotation_source_path": "../artifacts/annotation/intel-2025-ars-visible.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "intel-2025-ars-balance",
+    "report_id": "intel-2025-ars",
+    "page": 68,
+    "title": "balance",
+    "region": {
+      "page": 68,
+      "left": 33,
+      "top": 64,
+      "right": 585,
+      "bottom": 608,
+      "page_width": 612.0,
+      "page_height": 792.0
+    },
+    "columns": [
+      33,
+      444,
+      513,
+      585
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 64,
+        "bottom": 83.6,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 64,
+        "bottom": 83.6,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 64,
+        "bottom": 83.6,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In Millions, Except Par Value)"
+    ],
+    "joins": [
+      [
+        503.3,
+        516.3
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../artifacts/annotation/intel-2025-ars-visible.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "intel-2025-ars-equity",
+    "report_id": "intel-2025-ars",
+    "page": 70,
+    "title": "equity",
+    "region": {
+      "page": 70,
+      "left": 33,
+      "top": 69,
+      "right": 585,
+      "bottom": 562,
+      "page_width": 612.0,
+      "page_height": 792.0
+    },
+    "columns": [
+      33,
+      224,
+      281,
+      348,
+      425,
+      477,
+      534,
+      585
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "row_span": 2,
+        "top": 69,
+        "bottom": 115,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "col_span": 2,
+        "top": 69,
+        "bottom": 94
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "top": 94,
+        "bottom": 115
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "top": 94,
+        "bottom": 115
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "row_span": 2,
+        "top": 69,
+        "bottom": 115
+      },
+      {
+        "row": 0,
+        "col": 4,
+        "row_span": 2,
+        "top": 69,
+        "bottom": 115
+      },
+      {
+        "row": 0,
+        "col": 5,
+        "row_span": 2,
+        "top": 69,
+        "bottom": 115
+      },
+      {
+        "row": 0,
+        "col": 6,
+        "row_span": 2,
+        "top": 69,
+        "bottom": 115
+      }
+    ],
+    "header_count": 2,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In Millions, Except Per Share Amounts)"
+    ],
+    "joins": [
+      [
+        165.8,
+        178.9
+      ],
+      [
+        231.8,
+        245.7
+      ],
+      [
+        369.1,
+        383.0
+      ],
+      [
+        447.8,
+        461.5
+      ],
+      [
+        472.6,
+        485.6
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../artifacts/annotation/intel-2025-ars-visible.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  },
+  {
+    "id": "intel-2025-ars-cashflow",
+    "report_id": "intel-2025-ars",
+    "page": 69,
+    "title": "cashflow",
+    "region": {
+      "page": 69,
+      "left": 33,
+      "top": 64,
+      "right": 585,
+      "bottom": 708,
+      "page_width": 612.0,
+      "page_height": 792.0
+    },
+    "columns": [
+      33,
+      375,
+      444,
+      513,
+      585
+    ],
+    "headers": [
+      {
+        "row": 0,
+        "col": 0,
+        "top": 64,
+        "bottom": 76.1,
+        "role": "data"
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "top": 64,
+        "bottom": 76.1,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "top": 64,
+        "bottom": 76.1,
+        "role": "column_header"
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "top": 64,
+        "bottom": 76.1,
+        "role": "column_header"
+      }
+    ],
+    "header_count": 1,
+    "unit_bands": [],
+    "unit_notes": [
+      "(In Millions)"
+    ],
+    "joins": [
+      [
+        570.1,
+        583.1
+      ],
+      [
+        118.4,
+        132.4
+      ]
+    ],
+    "token_splits": [],
+    "annotation_source_path": "../artifacts/annotation/intel-2025-ars-visible.pdf",
+    "source_audit": "agent_layout_and_transcription_audit"
+  }
+]

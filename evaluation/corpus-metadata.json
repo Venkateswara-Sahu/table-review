@@ -1,0 +1,1254 @@
+{
+  "version": "1",
+  "frozen_at": "2026-10-06T12:24:18.297418Z",
+  "frozen_payload_sha256": "d5cc72fff709dde5d101b585ccf41043e819a28ad22c3e270c43c76157173788",
+  "reports": [
+    {
+      "id": "ibm-2024",
+      "company": "IBM",
+      "family": "ibm-annual-financial-statements",
+      "year": 2024,
+      "split": "development",
+      "source_url": "https://www.ibm.com/downloads/documents/us-en/1227c12d3a38b173",
+      "source_path": "../data/reports/ibm-2024.pdf",
+      "sha256": "54918aa92371de4691da903c1d7e4c60626134cf3679b5a0a6a4acb615793117",
+      "accessed": "2026-10-06",
+      "access_note": "Official public source, local evaluation only. No redistribution license verified. Original PDFs, renderings and complete transcriptions stay ignored.",
+      "pretrained_exposure": "unknown"
+    },
+    {
+      "id": "ibm-2025",
+      "company": "IBM",
+      "family": "ibm-annual-financial-statements",
+      "year": 2025,
+      "split": "development",
+      "source_url": "https://www.ibm.com/downloads/documents/us-en/15db52348fc203a4",
+      "source_path": "../data/reports/ibm-2025.pdf",
+      "sha256": "2d31534fce2e7cc0a462ebaac864677a465bf0491c9871cd862586e1b0543114",
+      "accessed": "2026-10-05",
+      "access_note": "Official public source, local evaluation only. No redistribution license verified. Original PDFs, renderings and complete transcriptions stay ignored.",
+      "pretrained_exposure": "unknown"
+    },
+    {
+      "id": "nvidia-2024",
+      "company": "NVIDIA",
+      "family": "nvidia-annual-financial-statements",
+      "year": 2024,
+      "split": "development",
+      "source_url": "https://s201.q4cdn.com/141608511/files/doc_financials/2024/ar/NVIDIA-2024-Annual-Report.pdf",
+      "source_path": "../data/reports/nvidia-2024.pdf",
+      "sha256": "b0de35ded9da9463d5c33dce77cf9b2158b88cf666f144646d0cc64af23c5960",
+      "accessed": "2026-10-06",
+      "access_note": "Official public source, local evaluation only. No redistribution license verified. Original PDFs, renderings and complete transcriptions stay ignored.",
+      "pretrained_exposure": "unknown"
+    },
+    {
+      "id": "nvidia-2025",
+      "company": "NVIDIA",
+      "family": "nvidia-annual-financial-statements",
+      "year": 2025,
+      "split": "development",
+      "source_url": "https://s201.q4cdn.com/141608511/files/doc_financials/2025/annual/NVIDIA-2025-Annual-Report.pdf",
+      "source_path": "../data/reports/nvidia-2025.pdf",
+      "sha256": "757b344ab62ba282f6e44e0702e8ce5f190d88fb23b5e0a2beaf4cb277a395cc",
+      "accessed": "2026-10-05",
+      "access_note": "Official public source, local evaluation only. No redistribution license verified. Original PDFs, renderings and complete transcriptions stay ignored.",
+      "pretrained_exposure": "unknown"
+    },
+    {
+      "id": "amd-2024",
+      "company": "AMD",
+      "family": "amd-annual-financial-statements",
+      "year": 2024,
+      "split": "heldout",
+      "source_url": "https://ir.amd.com/financial-information/sec-filings/content/0001193125-25-067185/0001193125-25-067185.pdf",
+      "source_path": "../data/reports/amd-2024.pdf",
+      "sha256": "28f3911e60546f90e4d98496f2f111179179ee760602ac2d1e71a313c1334567",
+      "accessed": "2026-10-06",
+      "access_note": "Official public source, local evaluation only. No redistribution license verified. Original PDFs, renderings and complete transcriptions stay ignored.",
+      "pretrained_exposure": "unknown"
+    },
+    {
+      "id": "amd-2025",
+      "company": "AMD",
+      "family": "amd-annual-financial-statements",
+      "year": 2025,
+      "split": "heldout",
+      "source_url": "https://ir.amd.com/financial-information/sec-filings/content/0001193125-26-129106/0001193125-26-129106.pdf",
+      "source_path": "../data/reports/amd-2025.pdf",
+      "sha256": "c7dac911d91ed1b38afa3fbf3b3408cbd0c105d1c820a4b6fa15f553e2892187",
+      "accessed": "2026-10-06",
+      "access_note": "Official public source, local evaluation only. No redistribution license verified. Original PDFs, renderings and complete transcriptions stay ignored.",
+      "pretrained_exposure": "unknown"
+    },
+    {
+      "id": "intel-2024",
+      "company": "Intel",
+      "family": "intel-annual-financial-statements",
+      "year": 2024,
+      "split": "heldout",
+      "source_url": "https://www.intc.com/filings-reports/annual-reports/content/0000050863-25-000052/0000050863-25-000052.pdf",
+      "source_path": "../data/reports/intel-2024.pdf",
+      "sha256": "5b9ba57e8d6025b2e78ba0e98933d006f1019dfb22f40dc3670826898a7c258d",
+      "accessed": "2026-10-06",
+      "access_note": "Official public source, local evaluation only. No redistribution license verified. Original PDFs, renderings and complete transcriptions stay ignored.",
+      "pretrained_exposure": "unknown"
+    },
+    {
+      "id": "intel-2025-ars",
+      "company": "Intel",
+      "family": "intel-annual-financial-statements",
+      "year": 2025,
+      "split": "heldout",
+      "source_url": "https://www.intc.com/filings-reports/all-sec-filings/content/0000050863-26-000060/intc014890-arsa.pdf",
+      "source_path": "../data/reports/intel-2025-ars.pdf",
+      "sha256": "4925fb2e012774ada311b8b38354002733e097910686c4929fcecef4f4483bef",
+      "accessed": "2026-10-06",
+      "access_note": "Official public source, local evaluation only. No redistribution license verified. Original PDFs, renderings and complete transcriptions stay ignored.",
+      "pretrained_exposure": "unknown"
+    }
+  ],
+  "cases": [
+    {
+      "id": "ibm-2024-income",
+      "report_id": "ibm-2024",
+      "split": "development",
+      "page": 48,
+      "title": "income",
+      "region": {
+        "page": 48,
+        "left": 86.0,
+        "top": 85.0,
+        "right": 503.0,
+        "bottom": 492.0,
+        "page_width": 585.3599853515625,
+        "page_height": 738.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "231fbb29b0730f038e841bb5521933c3e386fbf3e079e2bad72d17cde5313764",
+      "token_audit": {
+        "selected_tokens": 222,
+        "unit_tokens": 0,
+        "assigned_tokens": 222,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "ibm-2024-comprehensive",
+      "report_id": "ibm-2024",
+      "split": "development",
+      "page": 49,
+      "title": "comprehensive",
+      "region": {
+        "page": 49,
+        "left": 86.0,
+        "top": 84.0,
+        "right": 503.0,
+        "bottom": 344.0,
+        "page_width": 585.3599853515625,
+        "page_height": 738.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "b485ca64e0eb1716c9b825390a83d3f67c7cf41506661860f1187c19f19682f5",
+      "token_audit": {
+        "selected_tokens": 187,
+        "unit_tokens": 0,
+        "assigned_tokens": 187,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "ibm-2024-balance",
+      "report_id": "ibm-2024",
+      "split": "development",
+      "page": 50,
+      "title": "balance",
+      "region": {
+        "page": 50,
+        "left": 86.0,
+        "top": 81.0,
+        "right": 503.0,
+        "bottom": 630.0,
+        "page_width": 585.3599853515625,
+        "page_height": 738.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "a6ff8dce3e0ccea310af104b87664c1d574e15a7ffcf309b20ca2eb5a20beaa9",
+      "token_audit": {
+        "selected_tokens": 337,
+        "unit_tokens": 0,
+        "assigned_tokens": 337,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "ibm-2024-equity",
+      "report_id": "ibm-2024",
+      "split": "development",
+      "page": 52,
+      "title": "equity",
+      "region": {
+        "page": 52,
+        "left": 86.0,
+        "top": 82.0,
+        "right": 503.0,
+        "bottom": 316.0,
+        "page_width": 585.3599853515625,
+        "page_height": 738.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "7438cc2b6ff029ab554cd6fc4167627e683ea1e5bd92b5a3e2d186487c1560ff",
+      "token_audit": {
+        "selected_tokens": 134,
+        "unit_tokens": 0,
+        "assigned_tokens": 134,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "ibm-2024-cashflow",
+      "report_id": "ibm-2024",
+      "split": "development",
+      "page": 51,
+      "title": "cashflow",
+      "region": {
+        "page": 51,
+        "left": 86.0,
+        "top": 84.0,
+        "right": 503.0,
+        "bottom": 559.0,
+        "page_width": 585.3599853515625,
+        "page_height": 738.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "6f74cd48a5c302881837aef81ce52942fb89c61a2d55f97831a551ae15dacbf4",
+      "token_audit": {
+        "selected_tokens": 349,
+        "unit_tokens": 0,
+        "assigned_tokens": 349,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "ibm-2025-income",
+      "report_id": "ibm-2025",
+      "split": "development",
+      "page": 44,
+      "title": "income",
+      "region": {
+        "page": 44,
+        "left": 90.5,
+        "top": 103.0,
+        "right": 507.5,
+        "bottom": 510.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "721569b52fcdbbb0131121ed4943dedbca0d3163e4b38662d600806ff1cd307c",
+      "token_audit": {
+        "selected_tokens": 221,
+        "unit_tokens": 0,
+        "assigned_tokens": 221,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "ibm-2025-comprehensive",
+      "report_id": "ibm-2025",
+      "split": "development",
+      "page": 45,
+      "title": "comprehensive",
+      "region": {
+        "page": 45,
+        "left": 90.5,
+        "top": 102.0,
+        "right": 507.5,
+        "bottom": 327.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "1d6e06dbf6658a4bbfd83cae80c9183d5779e36a33c4097128a4ab227e960afd",
+      "token_audit": {
+        "selected_tokens": 165,
+        "unit_tokens": 0,
+        "assigned_tokens": 165,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "ibm-2025-balance",
+      "report_id": "ibm-2025",
+      "split": "development",
+      "page": 46,
+      "title": "balance",
+      "region": {
+        "page": 46,
+        "left": 90.5,
+        "top": 99.0,
+        "right": 507.5,
+        "bottom": 648.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "147b482c8a014b8ff354dc4b93c220741a797a78346ab3542710975b26968f78",
+      "token_audit": {
+        "selected_tokens": 342,
+        "unit_tokens": 0,
+        "assigned_tokens": 342,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "ibm-2025-equity",
+      "report_id": "ibm-2025",
+      "split": "development",
+      "page": 48,
+      "title": "equity",
+      "region": {
+        "page": 48,
+        "left": 90.5,
+        "top": 100.0,
+        "right": 507.5,
+        "bottom": 322.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "d3f64fa0ce5f4d0991f352798fcf9929ea94554ad42eac31a6b203d5c0ef9cb2",
+      "token_audit": {
+        "selected_tokens": 128,
+        "unit_tokens": 0,
+        "assigned_tokens": 128,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "ibm-2025-cashflow",
+      "report_id": "ibm-2025",
+      "split": "development",
+      "page": 47,
+      "title": "cashflow",
+      "region": {
+        "page": 47,
+        "left": 90.5,
+        "top": 102.0,
+        "right": 507.5,
+        "bottom": 577.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "eaa326e2126b69b2143e27b919163e3d1221c6902b53dc12969c40bc60779847",
+      "token_audit": {
+        "selected_tokens": 349,
+        "unit_tokens": 0,
+        "assigned_tokens": 349,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "nvidia-2024-income",
+      "report_id": "nvidia-2024",
+      "split": "development",
+      "page": 150,
+      "title": "income",
+      "region": {
+        "page": 150,
+        "left": 43.0,
+        "top": 68.0,
+        "right": 552.0,
+        "bottom": 440.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "7e2c262bab0fcd71828c619d77260d53eff5aff83ec8477d93ca01903d2cd2a1",
+      "token_audit": {
+        "selected_tokens": 139,
+        "unit_tokens": 0,
+        "assigned_tokens": 139,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "nvidia-2024-comprehensive",
+      "report_id": "nvidia-2024",
+      "split": "development",
+      "page": 151,
+      "title": "comprehensive",
+      "region": {
+        "page": 151,
+        "left": 43.0,
+        "top": 68.0,
+        "right": 552.0,
+        "bottom": 299.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "3bad17660c783c49595e63dee80e48bdb7b0d68b1c5c30f862574a197e0797a3",
+      "token_audit": {
+        "selected_tokens": 112,
+        "unit_tokens": 0,
+        "assigned_tokens": 112,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "nvidia-2024-balance",
+      "report_id": "nvidia-2024",
+      "split": "development",
+      "page": 152,
+      "title": "balance",
+      "region": {
+        "page": 152,
+        "left": 43.0,
+        "top": 68.0,
+        "right": 553.0,
+        "bottom": 602.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "f097f69efec2f9ef3b8e49429d84c73a122a90f6d44a14b0b71c48d51c1e9d60",
+      "token_audit": {
+        "selected_tokens": 205,
+        "unit_tokens": 0,
+        "assigned_tokens": 205,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "nvidia-2024-equity",
+      "report_id": "nvidia-2024",
+      "split": "development",
+      "page": 153,
+      "title": "equity",
+      "region": {
+        "page": 153,
+        "left": 43.0,
+        "top": 50.0,
+        "right": 734.0,
+        "bottom": 435.0,
+        "page_width": 774.0,
+        "page_height": 594.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "c770b45cbfd55c801d85e28b0dccf6ef68b4ec6a442cbf6f02a917232927623d",
+      "token_audit": {
+        "selected_tokens": 351,
+        "unit_tokens": 6,
+        "assigned_tokens": 345,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "nvidia-2024-cashflow",
+      "report_id": "nvidia-2024",
+      "split": "development",
+      "page": 154,
+      "title": "cashflow",
+      "region": {
+        "page": 154,
+        "left": 43.0,
+        "top": 68.0,
+        "right": 552.0,
+        "bottom": 706.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "29d5d2e515ca19c598533add425715cd6202ea3182d0b09de308b37fa6e98671",
+      "token_audit": {
+        "selected_tokens": 345,
+        "unit_tokens": 0,
+        "assigned_tokens": 345,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "nvidia-2025-income",
+      "report_id": "nvidia-2025",
+      "split": "development",
+      "page": 144,
+      "title": "income",
+      "region": {
+        "page": 144,
+        "left": 43.0,
+        "top": 68.0,
+        "right": 552.0,
+        "bottom": 446.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "4e254a32a0e0e3b1a5530c17237261f9b0076167f849457bb7ae3fa1e5d8a070",
+      "token_audit": {
+        "selected_tokens": 139,
+        "unit_tokens": 0,
+        "assigned_tokens": 139,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "nvidia-2025-comprehensive",
+      "report_id": "nvidia-2025",
+      "split": "development",
+      "page": 145,
+      "title": "comprehensive",
+      "region": {
+        "page": 145,
+        "left": 43.0,
+        "top": 68.0,
+        "right": 552.0,
+        "bottom": 290.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "2a9385ebc58721abcf41191e01357a877f60ca6d0524f34a5928c7f30f7f57bb",
+      "token_audit": {
+        "selected_tokens": 110,
+        "unit_tokens": 0,
+        "assigned_tokens": 110,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "nvidia-2025-balance",
+      "report_id": "nvidia-2025",
+      "split": "development",
+      "page": 146,
+      "title": "balance",
+      "region": {
+        "page": 146,
+        "left": 43.0,
+        "top": 68.0,
+        "right": 553.0,
+        "bottom": 602.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "94fa3066c0e44bc25c80b3d12125c4fbdf988f68a94ad62ff6c62ba541acc63d",
+      "token_audit": {
+        "selected_tokens": 206,
+        "unit_tokens": 0,
+        "assigned_tokens": 206,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "nvidia-2025-equity",
+      "report_id": "nvidia-2025",
+      "split": "development",
+      "page": 147,
+      "title": "equity",
+      "region": {
+        "page": 147,
+        "left": 49.0,
+        "top": 60.0,
+        "right": 729.0,
+        "bottom": 435.0,
+        "page_width": 774.0,
+        "page_height": 594.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "f2fa6e56ba2daf233ef9593be9e670cefd5f1bd16503673d7c7556d404a6c877",
+      "token_audit": {
+        "selected_tokens": 310,
+        "unit_tokens": 6,
+        "assigned_tokens": 304,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "nvidia-2025-cashflow",
+      "report_id": "nvidia-2025",
+      "split": "development",
+      "page": 148,
+      "title": "cashflow",
+      "region": {
+        "page": 148,
+        "left": 43.0,
+        "top": 65.0,
+        "right": 552.0,
+        "bottom": 726.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "c73b89e622f8da27b3eccf36b8552a464d43e42979bf7749724e86ebe745b7b8",
+      "token_audit": {
+        "selected_tokens": 348,
+        "unit_tokens": 0,
+        "assigned_tokens": 348,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "amd-2024-income",
+      "report_id": "amd-2024",
+      "split": "heldout",
+      "page": 75,
+      "title": "income",
+      "region": {
+        "page": 75,
+        "left": 67.0,
+        "top": 123.80000000000001,
+        "right": 528.0,
+        "bottom": 472.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "8f7d0246573b6d90d18a82d63c26749dec4cc42954b004e79df183140e7f1a03",
+      "token_audit": {
+        "selected_tokens": 181,
+        "unit_tokens": 6,
+        "assigned_tokens": 175,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "amd-2024-comprehensive",
+      "report_id": "amd-2024",
+      "split": "heldout",
+      "page": 76,
+      "title": "comprehensive",
+      "region": {
+        "page": 76,
+        "left": 67.0,
+        "top": 106.2,
+        "right": 528.0,
+        "bottom": 201.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "a3563fe6dffe27da30f212c4eb79bbd824a88b6dcac2ed42a36df3e74561698d",
+      "token_audit": {
+        "selected_tokens": 53,
+        "unit_tokens": 2,
+        "assigned_tokens": 51,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "amd-2024-balance",
+      "report_id": "amd-2024",
+      "split": "heldout",
+      "page": 77,
+      "title": "balance",
+      "region": {
+        "page": 77,
+        "left": 67.0,
+        "top": 106.0,
+        "right": 528.0,
+        "bottom": 650.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "b8f246262745f1b473dbc8f68a37477ce5403a298846d20a72a1001d76d0b79a",
+      "token_audit": {
+        "selected_tokens": 259,
+        "unit_tokens": 6,
+        "assigned_tokens": 253,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "amd-2024-equity",
+      "report_id": "amd-2024",
+      "split": "heldout",
+      "page": 78,
+      "title": "equity",
+      "region": {
+        "page": 78,
+        "left": 67.0,
+        "top": 106.4,
+        "right": 528.0,
+        "bottom": 574.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "866bc8b8f87012cb4e09bfb420ff4d4f2cf46c021cf80c678a35ee2a9afa4b85",
+      "token_audit": {
+        "selected_tokens": 275,
+        "unit_tokens": 2,
+        "assigned_tokens": 273,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "amd-2024-cashflow",
+      "report_id": "amd-2024",
+      "split": "heldout",
+      "page": 79,
+      "title": "cashflow",
+      "region": {
+        "page": 79,
+        "left": 67.0,
+        "top": 95.4,
+        "right": 527.0,
+        "bottom": 670.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "7793185c6487b2ed0bb21f162a56b004d42be92435d7fb1f29cb1b6ff9d91ee6",
+      "token_audit": {
+        "selected_tokens": 541,
+        "unit_tokens": 2,
+        "assigned_tokens": 539,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "amd-2025-income",
+      "report_id": "amd-2025",
+      "split": "heldout",
+      "page": 72,
+      "title": "income",
+      "region": {
+        "page": 72,
+        "left": 67.0,
+        "top": 119.4,
+        "right": 528.0,
+        "bottom": 575.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "bb24b218416a4cf4dab26526eef063642e0808c24b1b24163fd3b2e7a9a5f0b8",
+      "token_audit": {
+        "selected_tokens": 259,
+        "unit_tokens": 6,
+        "assigned_tokens": 253,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "amd-2025-comprehensive",
+      "report_id": "amd-2025",
+      "split": "heldout",
+      "page": 73,
+      "title": "comprehensive",
+      "region": {
+        "page": 73,
+        "left": 67.0,
+        "top": 105.8,
+        "right": 528.0,
+        "bottom": 201.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "125659522e758cebc762fe2df7fa889fd86b9bd8dcc216d0ef7dbb13f478584d",
+      "token_audit": {
+        "selected_tokens": 53,
+        "unit_tokens": 2,
+        "assigned_tokens": 51,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "amd-2025-balance",
+      "report_id": "amd-2025",
+      "split": "heldout",
+      "page": 74,
+      "title": "balance",
+      "region": {
+        "page": 74,
+        "left": 67.0,
+        "top": 105.0,
+        "right": 528.0,
+        "bottom": 600.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "ad140cc3c279cd0136bf08b831e977aec3228ef4a717413915088722ebe8ddda",
+      "token_audit": {
+        "selected_tokens": 231,
+        "unit_tokens": 6,
+        "assigned_tokens": 225,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "amd-2025-equity",
+      "report_id": "amd-2025",
+      "split": "heldout",
+      "page": 75,
+      "title": "equity",
+      "region": {
+        "page": 75,
+        "left": 67.0,
+        "top": 106.2,
+        "right": 528.0,
+        "bottom": 538.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "ff9b4d63f06cf4f121c4df0a6c4b860bdd76a001caedfb93e9fed259a43a1f7f",
+      "token_audit": {
+        "selected_tokens": 242,
+        "unit_tokens": 2,
+        "assigned_tokens": 240,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "amd-2025-cashflow",
+      "report_id": "amd-2025",
+      "split": "heldout",
+      "page": 76,
+      "title": "cashflow",
+      "region": {
+        "page": 76,
+        "left": 67.0,
+        "top": 99.3,
+        "right": 527.0,
+        "bottom": 670.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "8d369967e03ed2ca7454bae8a1220d20c740c696048675ca9082da961dcfafbe",
+      "token_audit": {
+        "selected_tokens": 609,
+        "unit_tokens": 2,
+        "assigned_tokens": 607,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "intel-2024-income",
+      "report_id": "intel-2024",
+      "split": "heldout",
+      "page": 65,
+      "title": "income",
+      "region": {
+        "page": 65,
+        "left": 24.0,
+        "top": 58.0,
+        "right": 576.0,
+        "bottom": 370.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "ddfa08e302ac0eb0adc260276d4ef94bb6658c89de030fa7529ccb45f90ae433",
+      "token_audit": {
+        "selected_tokens": 168,
+        "unit_tokens": 0,
+        "assigned_tokens": 168,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "intel-2024-comprehensive",
+      "report_id": "intel-2024",
+      "split": "heldout",
+      "page": 66,
+      "title": "comprehensive",
+      "region": {
+        "page": 66,
+        "left": 24.0,
+        "top": 58.0,
+        "right": 576.0,
+        "bottom": 208.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "1974df4dfd670c201d08da398f8f2952cc215ecc6fdc10425d69baff6b8933e7",
+      "token_audit": {
+        "selected_tokens": 97,
+        "unit_tokens": 0,
+        "assigned_tokens": 97,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "intel-2024-balance",
+      "report_id": "intel-2024",
+      "split": "heldout",
+      "page": 67,
+      "title": "balance",
+      "region": {
+        "page": 67,
+        "left": 24.0,
+        "top": 58.0,
+        "right": 576.0,
+        "bottom": 601.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "2cd317d4544aa509b13e8ca690984ba293a774f66a6c4086e9d0c3ceccf027ac",
+      "token_audit": {
+        "selected_tokens": 202,
+        "unit_tokens": 0,
+        "assigned_tokens": 202,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "intel-2024-equity",
+      "report_id": "intel-2024",
+      "split": "heldout",
+      "page": 69,
+      "title": "equity",
+      "region": {
+        "page": 69,
+        "left": 24.0,
+        "top": 60.0,
+        "right": 576.0,
+        "bottom": 526.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "fa3b8fb7b2b34f4c4247b882f666f4a3dc0fce341a21d78d703efa3406b142a9",
+      "token_audit": {
+        "selected_tokens": 338,
+        "unit_tokens": 0,
+        "assigned_tokens": 338,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "intel-2024-cashflow",
+      "report_id": "intel-2024",
+      "split": "heldout",
+      "page": 68,
+      "title": "cashflow",
+      "region": {
+        "page": 68,
+        "left": 24.0,
+        "top": 58.0,
+        "right": 576.0,
+        "bottom": 727.0,
+        "page_width": 594.0,
+        "page_height": 774.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "70e19992def235c98928bba621f737bcb297151f38fb328456f04116352551d6",
+      "token_audit": {
+        "selected_tokens": 421,
+        "unit_tokens": 0,
+        "assigned_tokens": 421,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "intel-2025-ars-income",
+      "report_id": "intel-2025-ars",
+      "split": "heldout",
+      "page": 66,
+      "title": "income",
+      "region": {
+        "page": 66,
+        "left": 33.0,
+        "top": 64.0,
+        "right": 585.0,
+        "bottom": 373.0,
+        "page_width": 612.0,
+        "page_height": 792.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "9c1d67d83e4fdad27487fc4ac5a80dafbd2a6702b6a50154e917a7121328a4e6",
+      "token_audit": {
+        "selected_tokens": 168,
+        "unit_tokens": 0,
+        "assigned_tokens": 168,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "intel-2025-ars-comprehensive",
+      "report_id": "intel-2025-ars",
+      "split": "heldout",
+      "page": 67,
+      "title": "comprehensive",
+      "region": {
+        "page": 67,
+        "left": 33.0,
+        "top": 64.0,
+        "right": 585.0,
+        "bottom": 215.0,
+        "page_width": 612.0,
+        "page_height": 792.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "db6ed6e58db2a4decbc6628efb9f4c54180021215a4beba6656c582e3ef446a1",
+      "token_audit": {
+        "selected_tokens": 97,
+        "unit_tokens": 0,
+        "assigned_tokens": 97,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "intel-2025-ars-balance",
+      "report_id": "intel-2025-ars",
+      "split": "heldout",
+      "page": 68,
+      "title": "balance",
+      "region": {
+        "page": 68,
+        "left": 33.0,
+        "top": 64.0,
+        "right": 585.0,
+        "bottom": 608.0,
+        "page_width": 612.0,
+        "page_height": 792.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "6f43e53ad3afd9ff35b27975263fef728729928ae6940600b6ee158a95ed9a97",
+      "token_audit": {
+        "selected_tokens": 202,
+        "unit_tokens": 0,
+        "assigned_tokens": 202,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "intel-2025-ars-equity",
+      "report_id": "intel-2025-ars",
+      "split": "heldout",
+      "page": 70,
+      "title": "equity",
+      "region": {
+        "page": 70,
+        "left": 33.0,
+        "top": 69.0,
+        "right": 585.0,
+        "bottom": 562.0,
+        "page_width": 612.0,
+        "page_height": 792.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "7dffaa1298599576753c946231a7ef1d0a7501d12fc08da280dbe64cb02de5a4",
+      "token_audit": {
+        "selected_tokens": 354,
+        "unit_tokens": 0,
+        "assigned_tokens": 354,
+        "unassigned_tokens": 0
+      }
+    },
+    {
+      "id": "intel-2025-ars-cashflow",
+      "report_id": "intel-2025-ars",
+      "split": "heldout",
+      "page": 69,
+      "title": "cashflow",
+      "region": {
+        "page": 69,
+        "left": 33.0,
+        "top": 64.0,
+        "right": 585.0,
+        "bottom": 708.0,
+        "page_width": 612.0,
+        "page_height": 792.0
+      },
+      "annotation_method": "Source glyph transcription assisted by authored column/header/join rules, agent layout and complete transcription audit; no extractor output used as reference.",
+      "annotation_status": "complete",
+      "annotation_limitations": [
+        "No independent human verification."
+      ],
+      "content_sha256": "b116d76d0a4e08c72d303bdbc1941bc63c8a91409dabff7112335ba99acf6d24",
+      "token_audit": {
+        "selected_tokens": 430,
+        "unit_tokens": 0,
+        "assigned_tokens": 430,
+        "unassigned_tokens": 0
+      }
+    }
+  ],
+  "annotation_protocol": "evaluation/annotation-layout.json + evaluation/annotation.py; all content local and hash-frozen, replayed by evaluation/rebuild.py. Freeze before heldout extraction. See limitations for annotation and sampling scope.",
+  "limitations": [
+    "Source-assisted agent annotations, not independent human or double annotations. All selected grid slots including blanks transcribed; layouts and full transcriptions inspected before any heldout extraction. Remaining annotation error is possible.",
+    "PDFium native glyphs assist reference transcription and also support production checks, so check-usefulness evidence is correlated with that source decoder.",
+    "English digital financial statements from four technology companies, two reports per company, five selected table regions per report; curated, correlated and not representative of all business reports.",
+    "Company and report families are split disjointly; model pretrained exposure is unknown and this is not an established unseen-pretraining benchmark.",
+    "Geometry is glyph-envelope precision for nonblank reference cells; blank positions have only table precision and do not enter geometry denominators.",
+    "Whitespace is normalized only. Authored signs, currency, footnotes, digits, punctuation and units remain literal. Dot leaders are alignment decoration and omitted; broken U+FFFE mappings in audited hyphens are transcribed as hyphens.",
+    "Unit metadata records scale captions, not every surrounding explanatory footnote; cell footnote markers are preserved. Entire report accuracy is not measured.",
+    "Invisible OCR text is omitted only for independent Intel reference transcription. The extractor and production checks receive original unchanged files.",
+    "IBM equity case is the complete upper yearly table on a page with two separate tables, not the entire equity statement spanning years."
+  ],
+  "annotation_provenance": {
+    "layout_sha256": "3e16f4d66b9cd5f410a5a8f311207c0d0de4dd46814290533be56377190591a1",
+    "tool_sha256": "4396869bb91503f62de9aeeec3e306ed6348c0af9c0db470e03d1054566938c4",
+    "pypdfium2": "5.14.0",
+    "pypdf": "6.19.0",
+    "audit_kind": "agent_source_assisted_single_audit",
+    "independent_human_annotation": "absent"
+  },
+  "metadata_version": "1"
+}

@@ -1,0 +1,462 @@
+{
+  "$defs": {
+    "CaseTruth": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "report_id": {
+          "title": "Report Id",
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "development",
+            "heldout"
+          ],
+          "title": "Split",
+          "type": "string"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "title": {
+          "default": "",
+          "title": "Title",
+          "type": "string"
+        },
+        "region": {
+          "$ref": "#/$defs/PageBox"
+        },
+        "content": {
+          "$ref": "#/$defs/TableContent"
+        },
+        "annotation_method": {
+          "title": "Annotation Method",
+          "type": "string"
+        },
+        "annotation_status": {
+          "const": "complete",
+          "title": "Annotation Status",
+          "type": "string"
+        },
+        "annotation_limitations": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Annotation Limitations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "report_id",
+        "split",
+        "page",
+        "region",
+        "content",
+        "annotation_method",
+        "annotation_status"
+      ],
+      "title": "CaseTruth",
+      "type": "object"
+    },
+    "CellContent": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "row": {
+          "minimum": 0,
+          "title": "Row",
+          "type": "integer"
+        },
+        "col": {
+          "minimum": 0,
+          "title": "Col",
+          "type": "integer"
+        },
+        "row_span": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Row Span",
+          "type": "integer"
+        },
+        "col_span": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Col Span",
+          "type": "integer"
+        },
+        "raw_text": {
+          "title": "Raw Text",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/CellRole",
+          "default": "data"
+        },
+        "interpretation": {
+          "$ref": "#/$defs/ValueInterpretation",
+          "default": "en_us_number"
+        },
+        "reference": {
+          "$ref": "#/$defs/SourceReference"
+        },
+        "source_references": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SourceReference"
+          },
+          "title": "Source References",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "row",
+        "col",
+        "raw_text",
+        "text",
+        "reference"
+      ],
+      "title": "CellContent",
+      "type": "object"
+    },
+    "CellRole": {
+      "enum": [
+        "data",
+        "column_header",
+        "row_header",
+        "section",
+        "value",
+        "label",
+        "header"
+      ],
+      "type": "string"
+    },
+    "PageBox": {
+      "additionalProperties": false,
+      "description": "Top-left coordinates in points on the displayed, cropped and rotated PDF page.",
+      "properties": {
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "left": {
+          "minimum": 0,
+          "title": "Left",
+          "type": "number"
+        },
+        "top": {
+          "minimum": 0,
+          "title": "Top",
+          "type": "number"
+        },
+        "right": {
+          "minimum": 0,
+          "title": "Right",
+          "type": "number"
+        },
+        "bottom": {
+          "minimum": 0,
+          "title": "Bottom",
+          "type": "number"
+        },
+        "page_width": {
+          "exclusiveMinimum": 0,
+          "title": "Page Width",
+          "type": "number"
+        },
+        "page_height": {
+          "exclusiveMinimum": 0,
+          "title": "Page Height",
+          "type": "number"
+        }
+      },
+      "required": [
+        "page",
+        "left",
+        "top",
+        "right",
+        "bottom",
+        "page_width",
+        "page_height"
+      ],
+      "title": "PageBox",
+      "type": "object"
+    },
+    "Report": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "company": {
+          "title": "Company",
+          "type": "string"
+        },
+        "family": {
+          "title": "Family",
+          "type": "string"
+        },
+        "year": {
+          "title": "Year",
+          "type": "integer"
+        },
+        "split": {
+          "enum": [
+            "development",
+            "heldout"
+          ],
+          "title": "Split",
+          "type": "string"
+        },
+        "source_url": {
+          "title": "Source Url",
+          "type": "string"
+        },
+        "source_path": {
+          "title": "Source Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "accessed": {
+          "title": "Accessed",
+          "type": "string"
+        },
+        "access_note": {
+          "title": "Access Note",
+          "type": "string"
+        },
+        "pretrained_exposure": {
+          "default": "unknown",
+          "title": "Pretrained Exposure",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "company",
+        "family",
+        "year",
+        "split",
+        "source_url",
+        "source_path",
+        "sha256",
+        "accessed",
+        "access_note"
+      ],
+      "title": "Report",
+      "type": "object"
+    },
+    "SourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "precision": {
+          "enum": [
+            "cell",
+            "table",
+            "page"
+          ],
+          "title": "Precision",
+          "type": "string"
+        },
+        "origin": {
+          "default": "extractor",
+          "enum": [
+            "extractor",
+            "user"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "box": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PageBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "page",
+        "precision"
+      ],
+      "title": "SourceReference",
+      "type": "object"
+    },
+    "TableContent": {
+      "additionalProperties": false,
+      "properties": {
+        "rows": {
+          "minimum": 1,
+          "title": "Rows",
+          "type": "integer"
+        },
+        "columns": {
+          "minimum": 1,
+          "title": "Columns",
+          "type": "integer"
+        },
+        "cells": {
+          "items": {
+            "$ref": "#/$defs/CellContent"
+          },
+          "title": "Cells",
+          "type": "array"
+        },
+        "header_rows": {
+          "default": [],
+          "items": {
+            "type": "integer"
+          },
+          "title": "Header Rows",
+          "type": "array"
+        },
+        "row_label_columns": {
+          "default": [],
+          "items": {
+            "type": "integer"
+          },
+          "title": "Row Label Columns",
+          "type": "array"
+        },
+        "unit_notes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Unit Notes",
+          "type": "array"
+        },
+        "source_reference": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceReference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "rows",
+        "columns",
+        "cells"
+      ],
+      "title": "TableContent",
+      "type": "object"
+    },
+    "ValueInterpretation": {
+      "enum": [
+        "text",
+        "en_us_number",
+        "percent",
+        "uncertain"
+      ],
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "default": "1",
+      "title": "Version",
+      "type": "string"
+    },
+    "frozen_at": {
+      "format": "date-time",
+      "title": "Frozen At",
+      "type": "string"
+    },
+    "frozen_payload_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Frozen Payload Sha256",
+      "type": "string"
+    },
+    "reports": {
+      "items": {
+        "$ref": "#/$defs/Report"
+      },
+      "title": "Reports",
+      "type": "array"
+    },
+    "cases": {
+      "items": {
+        "$ref": "#/$defs/CaseTruth"
+      },
+      "title": "Cases",
+      "type": "array"
+    },
+    "annotation_protocol": {
+      "title": "Annotation Protocol",
+      "type": "string"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "annotation_provenance": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Annotation Provenance",
+      "type": "object"
+    },
+    "manifest_path": {
+      "anyOf": [
+        {
+          "format": "path",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Manifest Path"
+    }
+  },
+  "required": [
+    "frozen_at",
+    "frozen_payload_sha256",
+    "reports",
+    "cases",
+    "annotation_protocol",
+    "limitations"
+  ],
+  "title": "CorpusManifest",
+  "type": "object"
+}
