@@ -20,6 +20,7 @@ import { History } from "./History";
 import { IssueList } from "./IssueList";
 import { ExportControls } from "../exports/ExportControls";
 import type { components } from "../../api/types";
+import { useStudy } from "./StudyRecorder";
 
 function firstCell(view: TableView) {
   return view.revision.content.cells.reduce<
@@ -46,6 +47,14 @@ export function ReviewScreen({
   onRevision: (revision: Revision) => void;
 }) {
   const [revision, setRevision] = useState(view.revision);
+  const study = useStudy();
+  useEffect(() => {
+    try {
+      study?.observe(revision);
+    } catch (error) {
+      setError((error as Error).message);
+    }
+  }, [study, revision]);
   const initial = firstCell(view);
   const position = { row: initial?.row ?? 0, col: initial?.col ?? 0 };
   const [selection, setSelection] = useState<Selection>({
@@ -321,7 +330,7 @@ export function ReviewScreen({
     <div className="review-screen">
       <div className="review-status">
         <strong>
-          {review?.current_approval
+          {!study && review?.current_approval
             ? review.current_approval.label === "reviewed"
               ? "Reviewed"
               : "Reviewed with warnings"
@@ -365,6 +374,7 @@ export function ReviewScreen({
         </button>
       )}
       <ReviewActions
+        study={!!study}
         review={review}
         cells={content.cells}
         selected={selectedCells(content, selection)}
@@ -385,30 +395,38 @@ export function ReviewScreen({
         busy={busy}
         dirty={dirty}
       />
-      <History
-        table={view.table}
-        revision={revision}
-        busy={busy || dirty}
-        onRestore={(id) => void restore(id)}
-      />
-      <ExportControls
-        tableId={view.table.id}
-        revisionId={revision.id}
-        disabled={busy || dirty || !review}
-      />
-      {review && (
-        <IssueList
-          key={revision.id}
-          review={review}
+      {!study && (
+        <History
+          table={view.table}
+          revision={revision}
           busy={busy || dirty}
-          onSource={onSource}
-          onDecision={(id, kind, reason) => void decide(id, kind, reason)}
+          onRestore={(id) => void restore(id)}
         />
       )}
-      <details>
-        <summary>Run details</summary>
-        <pre>{JSON.stringify(revision.extraction_manifest, null, 2)}</pre>
-      </details>
+      {!study && (
+        <ExportControls
+          tableId={view.table.id}
+          revisionId={revision.id}
+          disabled={busy || dirty || !review}
+        />
+      )}
+      {review &&
+        study?.config.condition !== "review_without_checks" &&
+        study?.config.condition !== "spreadsheet_baseline" && (
+          <IssueList
+            key={revision.id}
+            review={review}
+            busy={busy || dirty}
+            onSource={onSource}
+            onDecision={(id, kind, reason) => void decide(id, kind, reason)}
+          />
+        )}
+      {!study && (
+        <details>
+          <summary>Run details</summary>
+          <pre>{JSON.stringify(revision.extraction_manifest, null, 2)}</pre>
+        </details>
+      )}
     </div>
   );
 }

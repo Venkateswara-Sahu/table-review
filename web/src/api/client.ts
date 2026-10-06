@@ -1,3 +1,5 @@
+import { setActiveStudy } from "../features/review/StudyRecorder";
+
 let csrfToken = "";
 let sessionGeneration = 0;
 const requests = new Set<AbortController>();
@@ -18,6 +20,7 @@ export function setCsrf(token: string) {
 }
 
 export function clearPrivateState() {
+  setActiveStudy(null);
   csrfToken = "";
   sessionGeneration++;
   for (const controller of requests) controller.abort();

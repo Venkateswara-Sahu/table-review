@@ -9,8 +9,12 @@ import type { Actor, Document, Session } from "./api/models";
 import { SignIn } from "./features/auth/SignIn";
 import { ReportList } from "./features/reports/ReportList";
 import { ReportPages } from "./features/reports/ReportPages";
+import { StudyPanel } from "./features/review/StudyPanel";
 
 export default function App() {
+  const [studyEnabled] = useState(
+    () => new URLSearchParams(window.location.search).get("study") === "1",
+  );
   const [actor, setActor] = useState<Actor | null>(null);
   const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,6 +102,7 @@ export default function App() {
   }
   return (
     <>
+      {studyEnabled && actor && <StudyPanel key={`study-${actor.id}`} />}
       <header className="app-header">
         <a
           href="/"

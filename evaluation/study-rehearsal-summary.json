@@ -1,0 +1,45 @@
+{
+  "groups": [
+    {
+      "evidence_kind": "developer_rehearsal",
+      "condition": "review_with_checks",
+      "task_count": 1,
+      "failed_count": 1,
+      "ungraded_count": 1,
+      "median_full_seconds": 0.365,
+      "processing_seconds": 0.0,
+      "audited_counts": {
+        "values_correct": 0,
+        "values_total": 0,
+        "headers_correct": 0,
+        "headers_total": 0,
+        "units_correct": 0,
+        "units_total": 0
+      }
+    },
+    {
+      "evidence_kind": "developer_rehearsal",
+      "condition": "review_without_checks",
+      "task_count": 1,
+      "failed_count": 1,
+      "ungraded_count": 1,
+      "median_full_seconds": 0.383,
+      "processing_seconds": 0.0,
+      "audited_counts": {
+        "values_correct": 0,
+        "values_total": 0,
+        "headers_correct": 0,
+        "headers_total": 0,
+        "units_correct": 0,
+        "units_total": 0
+      }
+    }
+  ],
+  "external_participant_count": 0,
+  "developer_participant_count": 2,
+  "claim_status": "developer_rehearsal",
+  "median_savings": null,
+  "exploratory_bootstrap_interval": null,
+  "target_status": "unmeasured",
+  "matched_external_blocks": 0
+}

@@ -11,6 +11,7 @@ import type {
 } from "../../api/models";
 import { SourcePage } from "../review/SourcePage";
 import { ReviewScreen } from "../review/ReviewScreen";
+import { useStudy } from "../review/StudyRecorder";
 
 export function ReportPages({
   document,
@@ -57,6 +58,11 @@ export function ReportPages({
   const active = tasks.filter(
     (task) => task.state === "queued" || task.state === "running",
   );
+  const study = useStudy();
+  useEffect(() => {
+    study?.processing(active.length > 0);
+    return () => study?.processing(false);
+  }, [study, active.length]);
   useEffect(() => {
     const controller = new AbortController();
     let live = true;
