@@ -201,6 +201,70 @@ def test_edit_retry_is_exact_and_changed_retry_conflicts(client, owned_table):
     assert edit(client, table, operation, key=key).status_code == 409
 
 
+@pytest.mark.parametrize("kind", ["insert_row", "insert_column", "split"])
+def test_structural_edit_retry_returns_saved_ids_and_rejects_changed_payload(
+    client, app, owned_table, kind
+):
+    _, _, table = owned_table
+    base = table.current_revision_id
+    if kind == "split":
+        merged = edit(client, table, {"kind": "merge", "row": 0, "col": 0, "rows": 1, "columns": 2})
+        assert merged.status_code == 200
+        base = merged.json()["id"]
+        operation = {"kind": "split", "cell_id": merged.json()["content"]["cells"][0]["id"]}
+    else:
+        operation = {"kind": kind, "index": 1}
+    key = uuid4()
+    first = edit(client, table, operation, base=base, key=key)
+    assert first.status_code == 200
+    count = app.state.repository.revision_count(table.id)
+    retry = edit(client, table, operation, base=base, key=key)
+    assert retry.status_code == 200
+    assert retry.json() == first.json()
+    assert app.state.repository.revision_count(table.id) == count
+    changed = (
+        {**operation, "index": 0}
+        if kind != "split"
+        else {"kind": "set_text", "cell_id": operation["cell_id"], "text": "changed"}
+    )
+    assert edit(client, table, changed, base=base, key=key).status_code == 409
+
+
+def test_concurrent_identical_insert_retry_creates_one_revision(app, owned_table, monkeypatch):
+    from threading import Barrier
+
+    from table_review.tables.grid import parse_edit
+
+    actor, _, table = owned_table
+    barrier = Barrier(2)
+    original = app.state.repository.get_edit_retry
+
+    def lookup(*args):
+        result = original(*args)
+        barrier.wait(timeout=5)
+        return result
+
+    monkeypatch.setattr(app.state.repository, "get_edit_retry", lookup)
+    key = uuid4()
+    operation = parse_edit({"kind": "insert_row", "index": 1})
+    with ThreadPoolExecutor(2) as pool:
+        futures = [
+            pool.submit(
+                app.state.tables.edit,
+                actor,
+                table.id,
+                table.current_revision_id,
+                operation,
+                idempotency_key=key,
+            )
+            for _ in range(2)
+        ]
+        results = [future.result(timeout=10) for future in futures]
+    assert results[0].id == results[1].id
+    assert results[0].content == results[1].content
+    assert app.state.repository.revision_count(table.id) == 2
+
+
 def test_competing_browser_revisions_do_not_overwrite(client, app, owned_table):
     actor, _, table = owned_table
     from table_review.storage.repository import RevisionConflict

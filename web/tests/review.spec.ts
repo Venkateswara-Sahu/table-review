@@ -303,3 +303,41 @@ test("a pending save prevents editing fields that its response would overwrite",
   }
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 });
+
+test("a lost successful insertion response retries the exact saved structural revision", async ({
+  page,
+}) => {
+  const table = await manual(page);
+  await cell(page, 0, 0);
+  await page.getByText("Table structure", { exact: true }).click();
+  const keys: string[] = [];
+  let first = true;
+  await page.route(`**/api/v1/tables/${table.id}/edits`, async (route) => {
+    keys.push(route.request().headers()["idempotency-key"]);
+    if (first) {
+      first = false;
+      const committed = await route.fetch();
+      expect(committed.status()).toBe(200);
+      await route.abort("connectionfailed");
+    } else await route.continue();
+  });
+  await page
+    .getByRole("button", { name: "Insert row after", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toBeVisible();
+  const saved = await (
+    await page.request.get(`/api/v1/tables/${table.id}`)
+  ).json();
+  expect(saved.revision.content.rows).toBe(3);
+  await page
+    .getByRole("button", { name: "Insert row after", exact: true })
+    .click();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  const reopened = await (
+    await page.request.get(`/api/v1/tables/${table.id}`)
+  ).json();
+  expect(reopened.revision.id).toBe(saved.revision.id);
+  expect(reopened.revision.content).toEqual(saved.revision.content);
+  expect(keys).toHaveLength(2);
+  expect(keys[0]).toBe(keys[1]);
+});

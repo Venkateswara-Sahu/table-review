@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from uuid import uuid4
+from uuid import uuid4, uuid5
 
 from sqlalchemy import or_, select
 
@@ -28,12 +28,19 @@ class TableService:
 
     def edit(self, actor: Actor, table_id, base_revision_id, operation, *, idempotency_key=None):
         base = self.repository.get_revision(actor.id, table_id, base_revision_id)
+        key = idempotency_key or uuid4()
+        prior = self.repository.get_edit_retry(
+            actor.id, table_id, base_revision_id, operation.model_dump(mode="json"), key
+        )
+        if prior:
+            return prior
         try:
-            changed = apply_edit(base.content, operation)
+            namespace = uuid5(actor.id, f"{table_id}/{base_revision_id}/{key}")
+            changed = apply_edit(base.content, operation, cell_namespace=namespace)
         except ValueError as error:
             raise TableInputError(str(error)) from error
         event = EditEventInput(
-            idempotency_key=idempotency_key or uuid4(),
+            idempotency_key=key,
             operation=operation.model_dump(mode="json"),
             affected_cell_ids=changed.affected_cell_ids,
             structural_change=changed.structural_change,

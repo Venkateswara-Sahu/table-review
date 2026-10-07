@@ -1,0 +1,142 @@
+{
+  "evidence_kind": "local_packaged_postreview_acceptance",
+  "recorded_at": "2026-10-07T14:22:07.259138+00:00",
+  "test_command": ".venv/Scripts/python.exe -m pytest tests/acceptance/test_fresh_deploy.py -q -p no:cacheprovider --basetemp .cache/final-packaged-postreview",
+  "passed": 10,
+  "failed": 0,
+  "skipped": 0,
+  "elapsed_seconds": 262.72,
+  "deployment": {
+    "project": "table-review-acceptance-d08f21440eda47d09150e01b169e4c8e",
+    "port": 52898,
+    "url": "http://127.0.0.1:52898",
+    "initialized_at": "2026-10-07T14:04:20.000954+00:00",
+    "worker_network": "none",
+    "worker_memory_bytes": 6442450944,
+    "worker_uid": 10001,
+    "fresh_deployment": true,
+    "initial_deployment_fresh": true,
+    "verified_at": "2026-10-07T14:06:33.056965+00:00",
+    "images": {
+      "api": "sha256:6149285012f3f1c1280bf0b6e01b0b1dbf441896352613ad3d9528cbdfdd56dd",
+      "worker": "sha256:50438b9aaf3b7492accb8f124be258788173c4598f4488f62d9f5ba995729a68",
+      "db": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537"
+    }
+  },
+  "results": {
+    "fresh_boundary": {
+      "ready": {
+        "ready": true,
+        "components": {
+          "database": true,
+          "journal": true,
+          "worker": true,
+          "models": true
+        }
+      },
+      "worker_uid": 10001,
+      "worker_network": "none",
+      "hard_memory_bytes": 6442450944,
+      "db_exposed": false
+    },
+    "absent_models": {
+      "ready": false,
+      "components": {
+        "database": true,
+        "journal": true,
+        "worker": true,
+        "models": false
+      }
+    },
+    "worker_network_probe": {
+      "interfaces": [
+        "lo"
+      ],
+      "outbound_denied": true
+    },
+    "real_parser": {
+      "elapsed_to_terminal_after_ready_probe": 32.95300000000134,
+      "ready_responses": 8,
+      "original_page": 2,
+      "table_count": 1,
+      "bounded_runner": {
+        "cgroup_version": 1,
+        "elapsed_seconds": 33.00823176799895,
+        "hard_memory_scope": "whole_container_including_controller",
+        "sampled_peak_rss_bytes": 1373650944,
+        "hard_memory_enforcement": true,
+        "rss_sample_interval_seconds": 0.1,
+        "container_memory_limit_bytes": 6442450944
+      },
+      "source_sha256": "a4111e6f1dfe3cc3e8835e6f9f0458ab961046b6ed8ec645066f85c03134ad1a",
+      "code_revision": "71be1e394a2661676623d92f318d3244f279466d45f325284ef6ae53395ffc93"
+    },
+    "queue_limit": {
+      "accepted": 3,
+      "fourth_status": 429,
+      "all_cancelled": true
+    },
+    "kill_restart": {
+      "attempt_count": 2,
+      "published_tables": 1,
+      "recovered": true
+    },
+    "process_isolation": {
+      "timeout_code": "timeout",
+      "timeout_descendant_alive": false,
+      "parent_death_descendants_alive": 0,
+      "parent_death_descendant_count": 3
+    },
+    "kernel_memory_probe": {
+      "failure_code": "resource_exhaustion",
+      "oom_kill_delta": 1,
+      "memory_contract": {
+        "hard_memory_enforcement": true,
+        "container_memory_limit_bytes": 6442450944,
+        "hard_memory_scope": "whole_container_including_controller",
+        "cgroup_version": 1
+      },
+      "ready_after": true
+    },
+    "api_pdf_boundary": {
+      "codes": [
+        "pdf_timeout",
+        "resource_exhaustion"
+      ],
+      "memory_bytes": 536870912,
+      "probe_process_survived": true,
+      "ready_responses": 8,
+      "linux_limit": "RLIMIT_AS",
+      "fixture": "injected sleeping and oversized allocation child commands",
+      "fixture_timeout_seconds": 4,
+      "api_kernel_oom_claimed": false
+    },
+    "packaged_restore": {
+      "result": {
+        "ready": true,
+        "deleted_documents": 1,
+        "revoked_accounts": 1,
+        "reset_accounts": 0,
+        "recovered_blobs": 6,
+        "recovery_seconds": 0.303
+      },
+      "original_sha256": "cdcb5057cbcad35f3cd4de30925171b4ec4db462874168987f8175bf318c9b40",
+      "restored_sha256": "cdcb5057cbcad35f3cd4de30925171b4ec4db462874168987f8175bf318c9b40",
+      "regenerated_sha256": "cdcb5057cbcad35f3cd4de30925171b4ec4db462874168987f8175bf318c9b40",
+      "approval_preserved": true,
+      "deleted_files_removed": true,
+      "later_session_denied": true,
+      "differing_members": {}
+    },
+    "real_annual_workflow": {
+      "source_sha256": "54918aa92371de4691da903c1d7e4c60626134cf3679b5a0a6a4acb615793117",
+      "original_page": 48,
+      "cell_count": 133,
+      "revision_preserved": true,
+      "raw_text_preserved": true,
+      "export_sha256": "14b89ef9e4ab219ac99e7ad61c29308e552fca1daced1bdbe40265281d70d26e",
+      "automated_checking_only": true,
+      "financial_correctness_audited": false
+    }
+  }
+}

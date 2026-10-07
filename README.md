@@ -35,6 +35,9 @@ Evidence and claim boundaries:
 - [Claims and limitations](docs/evidence/claims.md)
 - [Extraction evaluation](docs/evidence/extraction-evaluation.md)
 - [Review-study status](docs/evidence/review-study-status.md)
+- [Final branch review](docs/evidence/final-branch-review.md)
+- [Execution decisions and verification](docs/evidence/execution-ledger.md)
+- [All implementation decisions and costs](docs/evidence/implementation-decisions.md)
 - [Backup and recovery](docs/runbooks/backup-restore.md)
 
 Human review-time savings, the proposed 20% improvement, demand and adoption are

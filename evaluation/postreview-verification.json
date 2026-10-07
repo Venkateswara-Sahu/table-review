@@ -1,0 +1,139 @@
+{
+  "evidence_kind": "local_postreview_verification",
+  "recorded_at": "2026-10-07T14:22:07.320364+00:00",
+  "source": {
+    "code_revision": "71be1e394a2661676623d92f318d3244f279466d45f325284ef6ae53395ffc93",
+    "code_revision_kind": "installed_python_source_sha256",
+    "environment": {
+      "python": "3.12.14",
+      "system": "Windows",
+      "machine": "AMD64"
+    }
+  },
+  "native": {
+    "passed": 271,
+    "packaged_deselected": 10,
+    "upstream_warnings": 11,
+    "elapsed_seconds": 236.12
+  },
+  "browser": {
+    "passed": 23,
+    "fixture_mode": "real_parser",
+    "reported_elapsed": "2.3m"
+  },
+  "packaged": {
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "aggregate": "evaluation/runtime-postreview-acceptance.json"
+  },
+  "targeted_api": {
+    "passed": 25,
+    "elapsed_seconds": 35.96
+  },
+  "structural_browser_contract": {
+    "passed": 1,
+    "elapsed_seconds": 18.9
+  },
+  "typecheck_build_format_ruff": "passed",
+  "first_native_run": {
+    "passed": 270,
+    "failed": 1,
+    "cause": "1:1 backup substring matched only an account timestamp; corrected parsed absence assertions"
+  },
+  "review": {
+    "kind": "one_fresh_read_only_review",
+    "verdict_before_fixes": "With fixes",
+    "important_findings": 2,
+    "minor_findings": 0,
+    "fix_passes": 1,
+    "rereview_performed": false
+  },
+  "raw_logs": [
+    {
+      "path": "artifacts/final-verification/final-acceptance-stop.log",
+      "sha256": "38bc6f3d3f3026194a1c23848b6d71c1838d85d5f1ede66dd1f057cbb9ace0b1"
+    },
+    {
+      "path": "artifacts/final-verification/final-boundaries-green.log",
+      "sha256": "9c7fbfd9df5638d5499cf38d68c694b824c914a7bca7523f4a22c8b117be0515"
+    },
+    {
+      "path": "artifacts/final-verification/final-boundaries-green2.log",
+      "sha256": "2ddaaea1c165de67b329600dbf1f9a3a3854c371e0c45aff5a1a1cebf088e043"
+    },
+    {
+      "path": "artifacts/final-verification/final-fix-format.log",
+      "sha256": "ece7654c5ce1dac62e6aa7c9f3a748ba86e6d406d10ed9ce23f7cf017cf69d3e"
+    },
+    {
+      "path": "artifacts/final-verification/final-fix-lint.log",
+      "sha256": "aac3a0503d8b95052cc85fb9f1717dc82b74aa55853a5aa9749b41e30275d472"
+    },
+    {
+      "path": "artifacts/final-verification/final-local-restored.log",
+      "sha256": "00398a34d9c0e65295930dce365715453fa277e154f469bdba2e05f174526d86"
+    },
+    {
+      "path": "artifacts/final-verification/final-local-stop.log",
+      "sha256": "38bc6f3d3f3026194a1c23848b6d71c1838d85d5f1ede66dd1f057cbb9ace0b1"
+    },
+    {
+      "path": "artifacts/final-verification/final-native-postreview.log",
+      "sha256": "5862813df5fc8a80483d9e9fec476799121452be7469a78fd0d12d321847c9a7"
+    },
+    {
+      "path": "artifacts/final-verification/final-native-postreview2.log",
+      "sha256": "bd9ece4b97f1227fbeed998a2862ebb4af3a308c42fd39d800805496e53d9cf8"
+    },
+    {
+      "path": "artifacts/final-verification/final-packaged-postreview.log",
+      "sha256": "f2c06db92e71716e8d5ac422d8c1101d1f1eca6ef9a3152cf3c966b6a2e21c9b"
+    },
+    {
+      "path": "artifacts/final-verification/final-pdf-red.log",
+      "sha256": "457cafaa7bb3f674d8135fa3cee343c98f467fbbd33ba065c6e4f2c8c4b6dd62"
+    },
+    {
+      "path": "artifacts/final-verification/final-real-browser-postreview.log",
+      "sha256": "3dc3dd0c5866fbb715417cfe0297bf42fd6d44557692267e9a39b71d96a7f196"
+    },
+    {
+      "path": "artifacts/final-verification/final-review-browser-format.log",
+      "sha256": "86baf9c02abeb70b7ae5c0790dba596793ffd6287d28334fb960d86940217743"
+    },
+    {
+      "path": "artifacts/final-verification/final-review-deploy.log",
+      "sha256": "0fab42e64ce844ab777f42a925bea35a60e166bf156d65680f4976473b8ba1ec"
+    },
+    {
+      "path": "artifacts/final-verification/final-structural-browser-green.log",
+      "sha256": "b7c076ecbd267e29a1dd6806bb2a5b5fa82d4bbfc3ca6fdaa173793d282a038b"
+    },
+    {
+      "path": "artifacts/final-verification/final-structural-browser-red.log",
+      "sha256": "0763858c7f824490a9218ed238861f7e7fb2000afe5f2bccc660d28eb369ec36"
+    },
+    {
+      "path": "artifacts/final-verification/final-structural-browser-red2.log",
+      "sha256": "ef13d464431908468e1d1bf7dbf055e231a32c79b489d35c1ab0be77e7735fd9"
+    },
+    {
+      "path": "artifacts/final-verification/final-structural-red.log",
+      "sha256": "a3e333859083d52628122140fe86be32da4cf42d17e05346f83d90f20ffcdfb6"
+    },
+    {
+      "path": "artifacts/final-verification/final-web-build.log",
+      "sha256": "0f2b8a6928f6c868f993f5039a2940641d2f250b1c0198074809df218b9a7368"
+    },
+    {
+      "path": "artifacts/final-verification/final-web-format.log",
+      "sha256": "17ed556bb3f73c253cbb41147e9a980e25ffb727cb48f8887419156a020e59d5"
+    },
+    {
+      "path": "artifacts/final-verification/final-web-typecheck.log",
+      "sha256": "709ded490ce07cb71312861f399363dbea2d3275d94645e5126ba9ddb724fa83"
+    }
+  ],
+  "scope": "Local engineering verification; no financial audit, human review-time result or hosted security/reliability claim"
+}

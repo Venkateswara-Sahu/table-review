@@ -6,7 +6,7 @@ from pathlib import Path
 
 from pypdf.errors import PdfReadError
 
-from table_review.documents.service import DocumentError, DocumentService
+from table_review.documents.errors import DocumentError
 from table_review.extraction.types import ExtractionRequest
 from table_review.settings import Settings
 
@@ -22,13 +22,9 @@ def process(payload):
             ExportInput.model_validate(payload["snapshot"]), Path(payload["target"])
         ).model_dump(mode="json")
     if payload["kind"] == "prepare":
-        from table_review.storage.blobs import PrivateBlobStore
-        from table_review.storage.repository import Repository
+        from table_review.documents.pdf_child import inspect_supported
 
-        service = DocumentService(
-            Repository(None), PrivateBlobStore(Path(payload["scratch"])), Settings()
-        )
-        return service._inspect(Path(payload["source_path"])).model_dump(mode="json")
+        return inspect_supported(Path(payload["source_path"]), Settings()).model_dump(mode="json")
     if payload["kind"] == "extract":
         from table_review.extraction.docling_adapter import DoclingExtractor
 

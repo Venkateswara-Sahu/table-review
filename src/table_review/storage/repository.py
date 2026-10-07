@@ -255,6 +255,24 @@ class Repository:
                 raise NotFound("Revision not found")
             return _record(RevisionRecord, row)
 
+    def get_edit_retry(self, owner_id, table_id, base_revision_id, operation, key):
+        with self.session_factory() as session:
+            self._table(session, owner_id, table_id)
+            prior = session.scalar(
+                select(EditEventRow).where(
+                    EditEventRow.owner_id == owner_id, EditEventRow.idempotency_key == key
+                )
+            )
+            if prior is None:
+                return None
+            if (
+                prior.table_id != table_id
+                or prior.base_revision_id != base_revision_id
+                or prior.operation != operation
+            ):
+                raise RevisionConflict()
+            return _record(RevisionRecord, session.get(RevisionRow, prior.result_revision_id))
+
     def _duplicate(self, session, owner_id, table_id, expected_revision_id, checksum, event):
         prior = session.scalar(
             select(EditEventRow).where(

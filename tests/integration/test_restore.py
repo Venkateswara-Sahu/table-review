@@ -1,6 +1,7 @@
 # ruff: noqa: F811
 # Imported pytest fixtures are intentionally reused as parameter names.
 import io
+import json
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -276,8 +277,18 @@ def test_new_backup_does_not_extend_retention_of_deleted_content(app, owned_tabl
     archive, manifest = _read_backup(backup, app.state.settings, now)
     try:
         assert manifest.blob_count == 0
-        assert b"review.pdf" not in archive.read("database.json")
-        assert b"1:1" not in archive.read("database.json")
+        database = json.loads(archive.read("database.json"))
+        assert all(row["filename"] != "review.pdf" for row in database["documents"])
+        for table in (
+            "table_revisions",
+            "review_tables",
+            "edit_events",
+            "cell_review_events",
+            "review_snapshots",
+            "page_artifacts",
+            "tasks",
+        ):
+            assert database[table] == []
     finally:
         archive.close()
 

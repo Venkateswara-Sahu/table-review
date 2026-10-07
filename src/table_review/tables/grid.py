@@ -1,5 +1,5 @@
 from typing import Annotated, Literal
-from uuid import uuid4
+from uuid import UUID, uuid4, uuid5
 
 from pydantic import Field, TypeAdapter
 
@@ -113,12 +113,13 @@ def expand_grid(content: TableContent):
     return tuple(tuple(row) for row in slots)
 
 
-def _blank(row, col, reference):
+def _blank(row, col, reference, namespace=None):
     box = reference.box if reference.precision == "table" else None
     coarse = SourceReference(
         page=reference.page, precision="table" if box else "page", origin="user", box=box
     )
-    return CellContent(id=str(uuid4()), row=row, col=col, raw_text="", text="", reference=coarse)
+    identity = uuid5(namespace, f"{row}:{col}") if namespace else uuid4()
+    return CellContent(id=str(identity), row=row, col=col, raw_text="", text="", reference=coarse)
 
 
 def _merged_reference(cells):
@@ -138,7 +139,9 @@ def _merged_reference(cells):
     return SourceReference(page=first.page, precision="page", origin="user")
 
 
-def apply_edit(content: TableContent, operation: EditOperation) -> EditResult:
+def apply_edit(
+    content: TableContent, operation: EditOperation, *, cell_namespace: UUID | None = None
+) -> EditResult:
     validate_grid(content)
     cells = list(content.cells)
     structural = False
@@ -170,7 +173,7 @@ def apply_edit(content: TableContent, operation: EditOperation) -> EditResult:
             for r in range(target.row, target.row + target.row_span):
                 for c in range(target.col, target.col + target.col_span):
                     if (r, c) != (target.row, target.col):
-                        cells.append(_blank(r, c, target.reference))
+                        cells.append(_blank(r, c, target.reference, cell_namespace))
     elif isinstance(operation, AxisEdit):
         structural = True
         axis, dimension, span = (
@@ -219,7 +222,7 @@ def apply_edit(content: TableContent, operation: EditOperation) -> EditResult:
             for i in range(content.columns if axis == "row" else content.rows):
                 r, c = (operation.index, i) if axis == "row" else (i, operation.index)
                 if grid[r][c] is None:
-                    cells.append(_blank(r, c, reference))
+                    cells.append(_blank(r, c, reference, cell_namespace))
     elif isinstance(operation, Merge):
         structural = True
         endr, endc = operation.row + operation.rows, operation.col + operation.columns

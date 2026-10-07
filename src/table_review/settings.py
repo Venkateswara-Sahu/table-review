@@ -8,6 +8,9 @@ class Settings(BaseModel):
     model_config = ConfigDict(frozen=True)
     max_pdf_bytes: int = 50 * 1024 * 1024
     max_json_bytes: int = 2 * 1024 * 1024
+    pdf_timeout_seconds: float = 30
+    pdf_memory_bytes: int = 512 * 1024 * 1024
+    pdf_wait_seconds: float = 2
     max_pdf_pages: int = 500
     max_selected_pages: int = 5
     max_rows: int = 500

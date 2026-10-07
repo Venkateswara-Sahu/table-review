@@ -60,16 +60,14 @@ def test_page_metadata_and_original_geometry(client, owned_document):
 def test_render_cache_and_rotated_pages(client, tmp_path, app, monkeypatch):
     from PIL import Image
 
-    from table_review.documents import service
-
-    actual_render = service.render_page
+    actual_render = app.state.documents.pdf.render
     renders = []
 
     def tracked_render(*args):
         renders.append(args)
         return actual_render(*args)
 
-    monkeypatch.setattr(service, "render_page", tracked_render)
+    monkeypatch.setattr(app.state.documents.pdf, "render", tracked_render)
     response = upload(client, rotated_cropped_report(tmp_path / "rotated.pdf"))
     id = response.json()["id"]
     first = client.get(f"/api/v1/documents/{id}/pages/1/image?scale=1")

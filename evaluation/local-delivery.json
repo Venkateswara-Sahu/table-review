@@ -1,0 +1,51 @@
+{
+  "evidence_kind": "private_local_delivery_check",
+  "ready": {
+    "ready": true,
+    "components": {
+      "database": true,
+      "journal": true,
+      "worker": true,
+      "models": true
+    }
+  },
+  "url": "http://127.0.0.1:8000",
+  "saved_volumes_reused": true,
+  "existing_private_login_verified": true,
+  "probe_signed_out": true,
+  "source_matches_fresh_acceptance": true,
+  "dependency_lock_matches_native": true,
+  "images_match_fresh_acceptance": false,
+  "installed_identities": {
+    "api": {
+      "source": {
+        "code_revision": "71be1e394a2661676623d92f318d3244f279466d45f325284ef6ae53395ffc93",
+        "code_revision_kind": "installed_python_source_sha256",
+        "environment": {
+          "python": "3.12.15",
+          "system": "Linux",
+          "machine": "x86_64"
+        }
+      },
+      "lock_sha256": "693b39157c2a2c69331885cefa6f9b2a30b94e542dfe936f3e0223187b83eff1"
+    },
+    "worker": {
+      "source": {
+        "code_revision": "71be1e394a2661676623d92f318d3244f279466d45f325284ef6ae53395ffc93",
+        "code_revision_kind": "installed_python_source_sha256",
+        "environment": {
+          "python": "3.12.15",
+          "system": "Linux",
+          "machine": "x86_64"
+        }
+      },
+      "lock_sha256": "693b39157c2a2c69331885cefa6f9b2a30b94e542dfe936f3e0223187b83eff1"
+    }
+  },
+  "images": {
+    "api": "sha256:bf26a1972faa143a8245a9363572d4957cc3ebfd0834d086ed1199ca59a58587",
+    "worker": "sha256:c33b648412a28e21b9f308101740533f04f3a7466689465bd673905999e50800",
+    "db": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537"
+  },
+  "verified_at": "2026-10-07T14:17:31.268391+00:00"
+}

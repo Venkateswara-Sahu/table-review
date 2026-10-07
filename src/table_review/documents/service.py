@@ -4,13 +4,12 @@ from pathlib import Path
 from typing import BinaryIO
 from uuid import UUID, uuid4
 
-from pypdf.errors import PdfReadError
-from pypdfium2 import PdfiumError
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 from table_review.accounts.types import Actor
-from table_review.documents.pdf import inspect_pdf, page_info, render_page
+from table_review.documents.bounded import PdfOperations
+from table_review.documents.errors import DocumentError
 from table_review.documents.types import PageBox, PdfInfo, RenderedPage
 from table_review.settings import Settings
 from table_review.storage.blobs import PrivateBlobStore
@@ -19,18 +18,13 @@ from table_review.storage.repository import Repository
 from table_review.storage.scratch import upload_scratch
 
 
-class DocumentError(ValueError):
-    def __init__(self, code: str, message: str, status: int = 422):
-        super().__init__(message)
-        self.code, self.message, self.status = code, message, status
-
-
 class DocumentService:
     def __init__(self, repository: Repository, blobs: PrivateBlobStore, settings: Settings):
         self.repository, self.blobs, self.settings = repository, blobs, settings
         self.preparation_queue = None
         self.staging = blobs.root / ".staging"
         self.staging.mkdir(exist_ok=True, mode=0o700)
+        self.pdf = PdfOperations(settings, self.staging)
 
     def upload(
         self, actor: Actor, stream: BinaryIO, filename: str, idempotency_key: str
@@ -78,29 +72,7 @@ class DocumentService:
             return result
 
     def _inspect(self, path: Path) -> PdfInfo:
-        try:
-            info = inspect_pdf(path)
-        except PdfReadError as error:
-            raise DocumentError("invalid_pdf", "The PDF could not be read") from error
-        except ValueError as error:
-            if "500 page" in str(error):
-                raise DocumentError(
-                    "page_limit", "PDF exceeds the configured page limit"
-                ) from error
-            if "50 MiB" in str(error):
-                raise DocumentError(
-                    "byte_limit", "PDF exceeds the configured file limit", 413
-                ) from error
-            raise DocumentError("invalid_pdf", "The PDF could not be read") from error
-        if info.encrypted:
-            raise DocumentError(
-                "encrypted_pdf", "Encrypted PDFs are unsupported; upload an unencrypted copy"
-            )
-        if not info.page_count:
-            raise DocumentError("invalid_pdf", "PDF contains no pages")
-        if info.page_count > self.settings.max_pdf_pages:
-            raise DocumentError("page_limit", "PDF exceeds the configured page limit")
-        return info
+        return self.pdf.inspect(path)
 
     def source_path(self, actor: Actor, document_id: UUID) -> Path:
         document = self.repository.get_document(actor.id, document_id)
@@ -123,10 +95,7 @@ class DocumentService:
         document = self.repository.get_document(actor.id, document_id)
         if not 1 <= page_no <= document.page_count:
             raise DocumentError("invalid_page", "Select an original page number in this report")
-        try:
-            return page_info(self.source_path(actor, document_id), page_no)
-        except PdfiumError as error:
-            raise DocumentError("page_unavailable", "This PDF page could not be read") from error
+        return self.pdf.info(self.source_path(actor, document_id), page_no)
 
     def page(self, actor: Actor, document_id: UUID, page_no: int, scale: float) -> RenderedPage:
         if not math.isfinite(scale) or not 0 < scale <= 4:
@@ -175,43 +144,38 @@ class DocumentService:
                         )
                 except FileNotFoundError:
                     pass
-        try:
-            rendered = render_page(self.source_path(actor, document_id), page_no, scale)
-        except (ValueError, PdfiumError) as error:
-            raise DocumentError(
-                "page_unavailable", "This page could not be rendered at the selected scale"
-            ) from error
-        key = f"{document.id.hex}/{uuid4().hex}"
-        try:
-            with self.repository.session_factory.begin() as session:
-                self.repository._lock_document(session, actor.id, document_id)
-                with rendered.image_path.open("rb") as image:
-                    blob = self.blobs.put(actor.id, key, image)
-                session.execute(
-                    insert(PageArtifactRow)
-                    .values(
-                        id=uuid4(),
-                        owner_id=actor.id,
-                        document_id=document_id,
-                        page_no=page_no,
-                        scale=scale,
-                        source_sha256=document.source_sha256,
-                        blob_key=key,
-                        sha256=blob.sha256,
-                        width=info.width,
-                        height=info.height,
-                        pixel_width=rendered.pixel_width,
-                        pixel_height=rendered.pixel_height,
+        with self.pdf.render(self.source_path(actor, document_id), page_no, scale) as rendered:
+            key = f"{document.id.hex}/{uuid4().hex}"
+            try:
+                with self.repository.session_factory.begin() as session:
+                    self.repository._lock_document(session, actor.id, document_id)
+                    with rendered.image_path.open("rb") as image:
+                        blob = self.blobs.put(actor.id, key, image)
+                    session.execute(
+                        insert(PageArtifactRow)
+                        .values(
+                            id=uuid4(),
+                            owner_id=actor.id,
+                            document_id=document_id,
+                            page_no=page_no,
+                            scale=scale,
+                            source_sha256=document.source_sha256,
+                            blob_key=key,
+                            sha256=blob.sha256,
+                            width=info.width,
+                            height=info.height,
+                            pixel_width=rendered.pixel_width,
+                            pixel_height=rendered.pixel_height,
+                        )
+                        .on_conflict_do_update(
+                            constraint="uq_page_render",
+                            set_={"blob_key": key, "sha256": blob.sha256},
+                        )
                     )
-                    .on_conflict_do_update(
-                        constraint="uq_page_render",
-                        set_={"blob_key": key, "sha256": blob.sha256},
-                    )
-                )
-        finally:
-            rendered.image_path.unlink(missing_ok=True)
-        with self.blobs.open(actor.id, key) as image:
-            return rendered.model_copy(update={"image_path": Path(image.name)})
+            finally:
+                rendered.image_path.unlink(missing_ok=True)
+            with self.blobs.open(actor.id, key) as image:
+                return rendered.model_copy(update={"image_path": Path(image.name)})
 
     def foreground_open(self, actor: Actor, document_id: UUID) -> DocumentRecord:
         return self.repository.foreground_open(actor.id, document_id)

@@ -338,6 +338,61 @@ print(json.dumps({'failure_code':outcome,'oom_kill_delta':_oom_count()-before,'m
     runtime.evidence["kernel_memory_probe"] = result | {"ready_after": True}
 
 
+def test_api_pdf_children_are_bounded_without_stopping_the_serving_process(runtime):
+    marker = "/tmp/pdf-probe-" + uuid4().hex
+    code = r"""
+import json,sys,tempfile
+from pathlib import Path
+from table_review.documents.bounded import PdfOperations
+from table_review.documents.errors import DocumentError
+from table_review.settings import Settings
+
+with tempfile.TemporaryDirectory(dir='/tmp') as temporary:
+    boundary=PdfOperations(Settings.from_env(),Path(temporary))
+    boundary.timeout_seconds=4
+    codes=[]
+    commands=[
+        "import time; time.sleep(60)",
+        "import json,sys; from pathlib import Path; from table_review.documents.pdf_child import apply_memory_limit; apply_memory_limit(512*1024**2)\ntry: allocation=bytearray(1024**3)\nexcept MemoryError: Path(sys.argv[1]).write_text(json.dumps({'failure_code':'resource_exhaustion','status':422}))\nelse: raise SystemExit(9)",
+    ]
+    for command in commands:
+        Path(MARKER).touch()
+        boundary.command=lambda request,result: [sys.executable,'-c',command,str(result)]
+        try:
+            with boundary._operation('inspect',Path('/unused-fixture.pdf')):
+                raise AssertionError('Expected bounded rejection')
+        except DocumentError as error:
+            codes.append(error.code)
+    print(json.dumps({'codes':codes,'memory_bytes':boundary.settings.pdf_memory_bytes,'probe_process_survived':True}))
+    Path(MARKER).unlink()
+"""
+    code = code.replace("MARKER", repr(marker))
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        probe = pool.submit(runtime.python, code, timeout=20)
+        runtime.wait(
+            lambda: runtime.python(
+                "import json; from pathlib import Path; print(json.dumps(Path("
+                + repr(marker)
+                + ").exists()))"
+            ),
+            timeout=5,
+        )
+        assert not probe.done()
+        responses = [httpx.get(runtime.url + "/api/v1/health/ready", timeout=5) for _ in range(8)]
+        result = probe.result()
+    assert result["codes"] == ["pdf_timeout", "resource_exhaustion"]
+    assert result["memory_bytes"] == 512 * 1024**2
+    assert result["probe_process_survived"] is True
+    assert all(response.status_code == 200 for response in responses)
+    runtime.evidence["api_pdf_boundary"] = result | {
+        "ready_responses": len(responses),
+        "linux_limit": "RLIMIT_AS",
+        "fixture": "injected sleeping and oversized allocation child commands",
+        "fixture_timeout_seconds": 4,
+        "api_kernel_oom_claimed": False,
+    }
+
+
 def test_packaged_restore_reproduces_reviewed_export_and_honors_later_deletion_revocation(
     runtime, tmp_path
 ):

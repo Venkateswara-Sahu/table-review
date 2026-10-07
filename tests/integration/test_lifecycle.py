@@ -237,23 +237,24 @@ def test_independent_journal_survives_restart_and_at_least_eight_days(app, owned
 
 def test_late_render_cannot_publish_a_blob_after_deletion(app, owned_table, monkeypatch):  # noqa: F811
     from concurrent.futures import ThreadPoolExecutor
+    from contextlib import contextmanager
     from threading import Event
 
-    from table_review.documents import service as document_module
     from table_review.storage.repository import NotFound
 
     actor, doc, _ = owned_table
     clock = Clock()
     rendered, finish = Event(), Event()
-    original = document_module.render_page
+    original = app.state.documents.pdf.render
 
+    @contextmanager
     def paused_render(*args):
-        result = original(*args)
-        rendered.set()
-        assert finish.wait(5)
-        return result
+        with original(*args) as result:
+            rendered.set()
+            assert finish.wait(5)
+            yield result
 
-    monkeypatch.setattr(document_module, "render_page", paused_render)
+    monkeypatch.setattr(app.state.documents.pdf, "render", paused_render)
     with ThreadPoolExecutor(1) as pool:
         rendering = pool.submit(app.state.documents.page, actor, doc.id, 2, 1.5)
         assert rendered.wait(5)
