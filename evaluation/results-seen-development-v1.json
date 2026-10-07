@@ -1,0 +1,218 @@
+{
+  "manifest_sha256": "fba7d5f82fb411d5e170680aaee642dd3a9eafcf87039e4c8219ad56bf1c1f5c",
+  "frozen_payload_sha256": "d5cc72fff709dde5d101b585ccf41043e819a28ad22c3e270c43c76157173788",
+  "split": "development",
+  "started_at": "2026-10-07T10:09:03.530518+00:00",
+  "finished_at": "2026-10-07T10:26:41.730416+00:00",
+  "check_version": "1",
+  "evaluation_code_sha256": {
+    "annotation.py": "4396869bb91503f62de9aeeec3e306ed6348c0af9c0db470e03d1054566938c4",
+    "manifest.py": "d3ca625b3ab4cd28c7aa4d405c49b7becd610d93f074d674c69ccf1244be7ad5",
+    "metrics.py": "b3cd0ec016424f4388d535a044348759bdc695e4e7c46a5d3321894f78fc299f",
+    "rebuild.py": "e14602de77ec6cc2fda24c3af4cf4a134e8ac5b3ba5d2349f49c5e1e528e53ea",
+    "run.py": "1ec943f877ecb3bd23c7388a116974af352514e9b227808f8e4b8e1e67644b9e",
+    "study.py": "fe1b5a646ab74feb21730596f1e3630001edd5c33ef055b8e33de90c27064bdf"
+  },
+  "code_revision": "b231c5142536f7512d26531252565805023faf2c819f11f7975f25ed14923407",
+  "code_revision_kind": "installed_python_source_sha256",
+  "environment": {
+    "python": "3.12.14",
+    "system": "Windows",
+    "machine": "AMD64"
+  },
+  "groups": {
+    "full_page-matching-on": {
+      "summary": {
+        "literal_occurrence_correct": 2078,
+        "literal_occurrence_total": 2328,
+        "predicted_literal_occurrences": 2339,
+        "literal_occurrence_recall": 0.8926116838487973,
+        "case_count": 20,
+        "failure_count": 0,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 1746,
+        "literal_total": 2787,
+        "literal_accuracy": 0.6264800861141012,
+        "association_correct": 1140,
+        "association_total": 1643,
+        "association_accuracy": 0.6938527084601339,
+        "geometry_correct": 1609,
+        "geometry_total": 2328,
+        "geometry_accuracy": 0.6911512027491409,
+        "role_correct": 2213,
+        "role_total": 2787,
+        "unit_correct_count": 0,
+        "structure_correct_count": 0,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 277.2970000000023,
+        "peak_rss_bytes": 2799222784
+      },
+      "process_metrics": {
+        "elapsed_seconds": 282.15699999999924,
+        "sampled_peak_rss_bytes": 2803486720,
+        "rss_sample_interval_seconds": 0.1,
+        "hard_memory_enforcement": false
+      },
+      "process_failure": null
+    },
+    "full_page-matching-off": {
+      "summary": {
+        "literal_occurrence_correct": 1805,
+        "literal_occurrence_total": 2328,
+        "predicted_literal_occurrences": 2186,
+        "literal_occurrence_recall": 0.7753436426116839,
+        "case_count": 20,
+        "failure_count": 0,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 1984,
+        "literal_total": 2787,
+        "literal_accuracy": 0.7118765697883028,
+        "association_correct": 647,
+        "association_total": 1643,
+        "association_accuracy": 0.39379184418746194,
+        "geometry_correct": 1537,
+        "geometry_total": 2328,
+        "geometry_accuracy": 0.6602233676975945,
+        "role_correct": 2404,
+        "role_total": 2787,
+        "unit_correct_count": 0,
+        "structure_correct_count": 8,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 284.2180000000044,
+        "peak_rss_bytes": 1366790144
+      },
+      "process_metrics": {
+        "elapsed_seconds": 289.89000000000124,
+        "sampled_peak_rss_bytes": 1369120768,
+        "rss_sample_interval_seconds": 0.1,
+        "hard_memory_enforcement": false
+      },
+      "process_failure": null
+    },
+    "crop-matching-on": {
+      "summary": {
+        "literal_occurrence_correct": 2011,
+        "literal_occurrence_total": 2328,
+        "predicted_literal_occurrences": 2324,
+        "literal_occurrence_recall": 0.863831615120275,
+        "case_count": 20,
+        "failure_count": 0,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 1598,
+        "literal_total": 2787,
+        "literal_accuracy": 0.5733763903839254,
+        "association_correct": 1080,
+        "association_total": 1643,
+        "association_accuracy": 0.657334144856969,
+        "geometry_correct": 1554,
+        "geometry_total": 2328,
+        "geometry_accuracy": 0.6675257731958762,
+        "role_correct": 2209,
+        "role_total": 2787,
+        "unit_correct_count": 0,
+        "structure_correct_count": 0,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 266.6750000000029,
+        "peak_rss_bytes": 2644242432
+      },
+      "process_metrics": {
+        "elapsed_seconds": 272.1710000000003,
+        "sampled_peak_rss_bytes": 2648502272,
+        "rss_sample_interval_seconds": 0.1,
+        "hard_memory_enforcement": false
+      },
+      "process_failure": null
+    },
+    "crop-matching-off": {
+      "summary": {
+        "literal_occurrence_correct": 1731,
+        "literal_occurrence_total": 2328,
+        "predicted_literal_occurrences": 2158,
+        "literal_occurrence_recall": 0.7435567010309279,
+        "case_count": 20,
+        "failure_count": 0,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 1836,
+        "literal_total": 2787,
+        "literal_accuracy": 0.658772874058127,
+        "association_correct": 619,
+        "association_total": 1643,
+        "association_accuracy": 0.3767498478393183,
+        "geometry_correct": 1475,
+        "geometry_total": 2328,
+        "geometry_accuracy": 0.6335910652920962,
+        "role_correct": 2423,
+        "role_total": 2787,
+        "unit_correct_count": 0,
+        "structure_correct_count": 11,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 205.12700000000223,
+        "peak_rss_bytes": 2358038528
+      },
+      "process_metrics": {
+        "elapsed_seconds": 210.0,
+        "sampled_peak_rss_bytes": 2363822080,
+        "rss_sample_interval_seconds": 0.1,
+        "hard_memory_enforcement": false
+      },
+      "process_failure": null
+    }
+  },
+  "limits": {
+    "group_timeout_seconds": 600,
+    "sampled_rss_limit_bytes": 6442450944,
+    "hard_memory_enforcement": false
+  },
+  "metric_scope": "matched annotated regions; slot metrics are strict physical cells; unordered occurrences do not establish associations; exact table excludes geometry, which is reported separately",
+  "cost_scope": "local CPU, zero model/API requests; energy and monetary hardware costs unmeasured",
+  "evidence_kind": "seen_corpus_validation",
+  "original_split_label": "development",
+  "independent_holdout_estimate": false,
+  "reference_independent_human_gold": false,
+  "provenance_note": "Reports previously inspected. Original baseline is retained; reference/parser/checks/evaluator were frozen during this repeat. Unrelated API/lifecycle changes occurred while the parent ran; its recorded loaded Python-source identity is retained. Timings/RSS are observations, not a controlled performance comparison. Source PDF bytes are unchanged.",
+  "raw_artifact_paths": {
+    "comparison": "artifacts/evaluation-seen-final-development/comparison.json",
+    "injected": "artifacts/evaluation-seen-final-development/injected-checks.json"
+  },
+  "raw_artifact_sha256": {
+    "comparison": "d877432a4b03da323038aec92a0cdbb895f048a9402dcb999e39598b53c6b088",
+    "injected": "229a4a0b13e0f96a068107c2ff16ebb0c90a93f2c5e0aea21c6cacf1d7a8c9be"
+  },
+  "failure_cases": {
+    "full_page-matching-on": [],
+    "full_page-matching-off": [],
+    "crop-matching-on": [],
+    "crop-matching-off": []
+  },
+  "injected_summary": {
+    "digit": {
+      "eligible": 20,
+      "detected_new_target_issue": 20,
+      "inconclusive": 0
+    },
+    "sign": {
+      "eligible": 19,
+      "detected_new_target_issue": 19,
+      "inconclusive": 0
+    },
+    "header_swap": {
+      "eligible": 20,
+      "detected_new_target_issue": 16,
+      "inconclusive": 0
+    },
+    "unit": {
+      "eligible": 20,
+      "detected_new_target_issue": 0,
+      "inconclusive": 0
+    }
+  },
+  "injected_unavailable_cases": []
+}

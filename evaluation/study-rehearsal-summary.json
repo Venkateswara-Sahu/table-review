@@ -6,7 +6,7 @@
       "task_count": 1,
       "failed_count": 1,
       "ungraded_count": 1,
-      "median_full_seconds": 0.365,
+      "median_full_seconds": 0.564,
       "processing_seconds": 0.0,
       "audited_counts": {
         "values_correct": 0,
@@ -23,7 +23,7 @@
       "task_count": 1,
       "failed_count": 1,
       "ungraded_count": 1,
-      "median_full_seconds": 0.383,
+      "median_full_seconds": 0.596,
       "processing_seconds": 0.0,
       "audited_counts": {
         "values_correct": 0,
@@ -41,5 +41,21 @@
   "median_savings": null,
   "exploratory_bootstrap_interval": null,
   "target_status": "unmeasured",
-  "matched_external_blocks": 0
+  "matched_external_blocks": 0,
+  "record_provenance": [
+    {
+      "path": "artifacts/study-rehearsal/synthetic-contract-review_without_checks-1791368184946.json",
+      "sha256": "d5da60086387cbc1bba83125b435b4b9c7baa5cb1fc0e3f6804a0d0653ec939c",
+      "fixture_kind": "synthetic_browser_contract",
+      "parser_executed": false
+    },
+    {
+      "path": "artifacts/study-rehearsal/synthetic-contract-review_with_checks-1791368187194.json",
+      "sha256": "6836904b7d9c446bb40ed97eeefc615536272f011645f73c5a8b5f08ebcafdaa",
+      "fixture_kind": "synthetic_browser_contract",
+      "parser_executed": false
+    }
+  ],
+  "human_participant_count": 0,
+  "identity_count_note": "Developer participant IDs in this rehearsal are automated fixtures, not people."
 }

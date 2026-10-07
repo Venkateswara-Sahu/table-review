@@ -150,7 +150,7 @@ def test_fresh_packaged_app_is_ready_with_private_worker_boundary(runtime):
     assert inspect["HostConfig"]["CapDrop"] == ["ALL"]
     db = json.loads(runtime.docker("inspect", runtime.container("db")))[0]
     assert all(value is None for value in db["NetworkSettings"]["Ports"].values())
-    assert runtime.state.get("initial_deployment_fresh", runtime.state["fresh_deployment"]) is True
+    assert runtime.state["fresh_deployment"] is True
     runtime.evidence["fresh_boundary"] = {
         "ready": response.json(),
         "worker_uid": 10001,
@@ -448,3 +448,97 @@ finally:
         and result["deleted_files_removed"]
         and result["later_session_denied"]
     )
+
+
+def test_real_annual_report_moves_through_source_review_and_exact_export(runtime):
+    import hashlib
+    import io
+
+    from openpyxl import load_workbook
+
+    metadata = json.loads(Path("evaluation/corpus-metadata.json").read_text(encoding="utf-8"))
+    report = next(row for row in metadata["reports"] if row["id"] == "ibm-2024")
+    case = next(row for row in metadata["cases"] if row["report_id"] == report["id"])
+    path = (Path("evaluation") / report["source_path"]).resolve()
+    if not path.is_file():
+        pytest.skip(
+            "Local copyrighted annual-report source is required; synthetic runtime tests are separate"
+        )
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == report["sha256"]
+    doc = runtime.upload(runtime.owner, path, filename="annual-report.pdf")
+    completed = runtime.finish(
+        runtime.owner, runtime.extract(runtime.owner, doc, page=case["page"])
+    )
+    table_id = completed["result"]["table_ids"][0]
+    table = runtime.owner.get("/api/v1/tables/" + table_id).json()
+    revision = table["revision"]
+    assert all(cell["reference"]["page"] == case["page"] for cell in revision["content"]["cells"])
+    assert revision["extraction_manifest"]["source_sha256"] == report["sha256"]
+    edited = runtime.owner.post(
+        "/api/v1/tables/" + table_id + "/edits",
+        json={
+            "base_revision_id": revision["id"],
+            "operation": {
+                "kind": "set_notes",
+                "unit_notes": [
+                    "Source scale must be compared with the original page; no conversion applied."
+                ],
+            },
+        },
+        headers={"Idempotency-Key": uuid4().hex},
+    )
+    assert edited.status_code == 200
+    saved = edited.json()
+    assert (
+        runtime.owner.post(
+            "/api/v1/revisions/" + saved["id"] + "/checked",
+            json={"cell_ids": [cell["id"] for cell in saved["content"]["cells"]], "checked": True},
+        ).status_code
+        == 200
+    )
+    approved = runtime.owner.post(
+        "/api/v1/revisions/" + saved["id"] + "/approval", json={"allow_warnings": True}
+    )
+    assert approved.status_code == 200
+    requested = runtime.owner.post(
+        "/api/v1/tables/" + table_id + "/exports",
+        json={"revision_id": saved["id"], "format": "workbook"},
+        headers={"Idempotency-Key": uuid4().hex},
+    )
+    assert requested.status_code == 202
+    export_id = requested.json()["id"]
+    runtime.wait(
+        lambda: (
+            runtime.owner.get("/api/v1/exports/" + export_id).json()["state"]
+            in ("succeeded", "failed")
+        )
+    )
+    final = runtime.owner.get("/api/v1/exports/" + export_id).json()
+    assert final["state"] == "succeeded"
+    assert final["manifest"]["approval_id"] == approved.json()["id"]
+    assert final["manifest"]["content_checksum"] == saved["checksum"]
+    blob = runtime.owner.get("/api/v1/exports/" + export_id + "/download")
+    assert blob.status_code == 200
+    workbook = load_workbook(io.BytesIO(blob.content), read_only=True, data_only=False)
+    try:
+        assert workbook.sheetnames == ["Table", "Source", "Changes", "Manifest"]
+        sources = list(workbook["Source"].iter_rows(min_row=2, values_only=True))
+        assert len(sources) == len(saved["content"]["cells"])
+        assert [(row[0], row[4] or "", row[5] or "") for row in sources] == [
+            (cell["id"], cell["raw_text"], cell["text"]) for cell in saved["content"]["cells"]
+        ]
+    finally:
+        workbook.close()
+    reopened = runtime.owner.get("/api/v1/tables/" + table_id).json()
+    assert reopened["revision"]["id"] == saved["id"]
+    assert runtime.other.get("/api/v1/exports/" + export_id + "/download").status_code == 404
+    runtime.evidence["real_annual_workflow"] = {
+        "source_sha256": report["sha256"],
+        "original_page": case["page"],
+        "cell_count": len(sources),
+        "revision_preserved": True,
+        "raw_text_preserved": True,
+        "export_sha256": hashlib.sha256(blob.content).hexdigest(),
+        "automated_checking_only": True,
+        "financial_correctness_audited": False,
+    }

@@ -1,0 +1,129 @@
+{
+  "evidence_kind": "local_packaged_acceptance",
+  "test_command": ".venv/Scripts/python.exe -m pytest tests/acceptance/test_fresh_deploy.py -q -p no:cacheprovider --basetemp .cache/packaged-final17",
+  "passed": 9,
+  "failed": 0,
+  "skipped": 0,
+  "elapsed_seconds": 266.67,
+  "deployment": {
+    "project": "table-review-acceptance-7da308680e9140ca86e3944a67f8c053",
+    "port": 55098,
+    "url": "http://127.0.0.1:55098",
+    "initialized_at": "2026-10-07T10:33:33.158756+00:00",
+    "worker_network": "none",
+    "worker_memory_bytes": 6442450944,
+    "worker_uid": 10001,
+    "fresh_deployment": true,
+    "initial_deployment_fresh": true,
+    "verified_at": "2026-10-07T10:36:42.696390+00:00",
+    "images": {
+      "api": "sha256:edc2de05ea6da695ced87b4909eb997d0b32b709a3f9454a2239b0e55b76fb91",
+      "worker": "sha256:01219f8b968807b6189f627ab97806c1dd5cc1f43418c5d5e3039ff17797e957",
+      "db": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537"
+    }
+  },
+  "results": {
+    "fresh_boundary": {
+      "ready": {
+        "ready": true,
+        "components": {
+          "database": true,
+          "journal": true,
+          "worker": true,
+          "models": true
+        }
+      },
+      "worker_uid": 10001,
+      "worker_network": "none",
+      "hard_memory_bytes": 6442450944,
+      "db_exposed": false
+    },
+    "absent_models": {
+      "ready": false,
+      "components": {
+        "database": true,
+        "journal": true,
+        "worker": true,
+        "models": false
+      }
+    },
+    "worker_network_probe": {
+      "interfaces": [
+        "lo"
+      ],
+      "outbound_denied": true
+    },
+    "real_parser": {
+      "elapsed_to_terminal_after_ready_probe": 36.75,
+      "ready_responses": 8,
+      "original_page": 2,
+      "table_count": 1,
+      "bounded_runner": {
+        "cgroup_version": 1,
+        "elapsed_seconds": 36.725071820001176,
+        "hard_memory_scope": "whole_container_including_controller",
+        "sampled_peak_rss_bytes": 1390739456,
+        "hard_memory_enforcement": true,
+        "rss_sample_interval_seconds": 0.1,
+        "container_memory_limit_bytes": 6442450944
+      },
+      "source_sha256": "a4111e6f1dfe3cc3e8835e6f9f0458ab961046b6ed8ec645066f85c03134ad1a",
+      "code_revision": "07f22e2679c8ef560cc8aa44435a4a84585b5aa9333c4cdf7d3a4d4191f02aff"
+    },
+    "queue_limit": {
+      "accepted": 3,
+      "fourth_status": 429,
+      "all_cancelled": true
+    },
+    "kill_restart": {
+      "attempt_count": 2,
+      "published_tables": 1,
+      "recovered": true
+    },
+    "process_isolation": {
+      "timeout_code": "timeout",
+      "timeout_descendant_alive": false,
+      "parent_death_descendants_alive": 0,
+      "parent_death_descendant_count": 3
+    },
+    "kernel_memory_probe": {
+      "failure_code": "resource_exhaustion",
+      "oom_kill_delta": 1,
+      "memory_contract": {
+        "hard_memory_enforcement": true,
+        "container_memory_limit_bytes": 6442450944,
+        "hard_memory_scope": "whole_container_including_controller",
+        "cgroup_version": 1
+      },
+      "ready_after": true
+    },
+    "packaged_restore": {
+      "result": {
+        "ready": true,
+        "deleted_documents": 1,
+        "revoked_accounts": 1,
+        "reset_accounts": 0,
+        "recovered_blobs": 6,
+        "recovery_seconds": 0.303
+      },
+      "original_sha256": "62c1e4a3220c497789b238f16b5309ca7240e8228720e5e6575664a411b7d96c",
+      "restored_sha256": "62c1e4a3220c497789b238f16b5309ca7240e8228720e5e6575664a411b7d96c",
+      "regenerated_sha256": "62c1e4a3220c497789b238f16b5309ca7240e8228720e5e6575664a411b7d96c",
+      "approval_preserved": true,
+      "deleted_files_removed": true,
+      "later_session_denied": true,
+      "differing_members": {}
+    },
+    "real_annual_workflow": {
+      "source_sha256": "54918aa92371de4691da903c1d7e4c60626134cf3679b5a0a6a4acb615793117",
+      "original_page": 48,
+      "cell_count": 133,
+      "revision_preserved": true,
+      "raw_text_preserved": true,
+      "export_sha256": "cef60397c6728196f14faa82c2b7e435b24db7aa008b586efe4cb1fd6a3945c8",
+      "automated_checking_only": true,
+      "financial_correctness_audited": false
+    }
+  },
+  "scope_note": "Private CPU deployment. Synthetic accounts/fixtures plus the identified original IBM report. Automated checked flags are not a financial correctness audit; hosted reliability and user benefit unestablished."
+}

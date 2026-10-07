@@ -36,7 +36,7 @@ jobs:
         with: {node-version: '24'}
       - run: uv sync --frozen --group dev
       - run: uv run --frozen --group dev ruff check src evaluation tests scripts
-      - run: uv run --frozen --group dev pytest tests/domain tests/integration tests/acceptance/test_runtime.py -m 'not extraction' -q
+      - run: uv run --frozen --group dev pytest tests/domain tests/integration tests/acceptance -m 'not extraction and not packaged' -q
       - working-directory: web
         run: npm ci --ignore-scripts && npm run build
       - working-directory: web

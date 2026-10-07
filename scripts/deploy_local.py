@@ -4,6 +4,7 @@ import argparse
 import json
 import re
 import secrets
+import shutil
 import socket
 import subprocess
 import time
@@ -26,8 +27,13 @@ def command(args, *, timeout=600):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--acceptance", action="store_true")
+    parser.add_argument("--fresh-acceptance", action="store_true")
     parser.add_argument("--stop", action="store_true")
     args = parser.parse_args()
+    if args.fresh_acceptance:
+        if args.stop:
+            parser.error("Fresh initialization and stopping are separate actions")
+        args.acceptance = True
     root = Path(__file__).resolve().parents[1]
     import os
 
@@ -37,6 +43,34 @@ def main():
     prefix = "runtime" if args.acceptance else "local"
     project_file = cache / (prefix + "-project.json")
     env_file = cache / (prefix + ".env")
+    if args.fresh_acceptance and project_file.exists():
+        prior = json.loads(project_file.read_text(encoding="utf-8"))
+        if not re.fullmatch(r"table-review-acceptance-[a-f0-9]{32}", prior["project"]):
+            raise SystemExit("Invalid isolated acceptance project")
+        saved = cache / "runtime-history" / uuid4().hex
+        saved.mkdir(parents=True, mode=0o700)
+        records = [project_file, env_file, cache / "runtime-state.json"]
+        for path in records:
+            if path.exists():
+                shutil.copyfile(path, saved / path.name)
+                (saved / path.name).chmod(0o600)
+        command(
+            [
+                "docker",
+                "compose",
+                "--env-file",
+                str(saved / env_file.name),
+                "-p",
+                prior["project"],
+                "-f",
+                "infra/compose.yaml",
+                "stop",
+            ]
+        )
+        # Only pointers to the archived test deployment are replaced. Its
+        # named volumes and private configuration remain recoverable.
+        for path in records:
+            path.unlink(missing_ok=True)
     if not project_file.exists():
         if args.stop:
             raise SystemExit("No recorded local project to stop")
@@ -111,6 +145,7 @@ def main():
     if not models_available(root / "models"):
         raise SystemExit("Preload recorded models first")
     command(compose + ["build", "api", "worker"], timeout=900)
+    command(compose + ["stop", "api", "worker"])
     command(compose + ["up", "-d", "db"])
     command(compose + ["run", "--rm", "initialize"])
     command(compose + ["up", "-d", "api", "worker"])

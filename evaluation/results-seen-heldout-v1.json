@@ -1,0 +1,223 @@
+{
+  "manifest_sha256": "fba7d5f82fb411d5e170680aaee642dd3a9eafcf87039e4c8219ad56bf1c1f5c",
+  "frozen_payload_sha256": "d5cc72fff709dde5d101b585ccf41043e819a28ad22c3e270c43c76157173788",
+  "split": "heldout",
+  "started_at": "2026-10-07T10:26:43.147915+00:00",
+  "finished_at": "2026-10-07T10:41:13.088169+00:00",
+  "check_version": "1",
+  "evaluation_code_sha256": {
+    "annotation.py": "4396869bb91503f62de9aeeec3e306ed6348c0af9c0db470e03d1054566938c4",
+    "manifest.py": "d3ca625b3ab4cd28c7aa4d405c49b7becd610d93f074d674c69ccf1244be7ad5",
+    "metrics.py": "b3cd0ec016424f4388d535a044348759bdc695e4e7c46a5d3321894f78fc299f",
+    "rebuild.py": "e14602de77ec6cc2fda24c3af4cf4a134e8ac5b3ba5d2349f49c5e1e528e53ea",
+    "run.py": "1ec943f877ecb3bd23c7388a116974af352514e9b227808f8e4b8e1e67644b9e",
+    "study.py": "fe1b5a646ab74feb21730596f1e3630001edd5c33ef055b8e33de90c27064bdf"
+  },
+  "code_revision": "07f22e2679c8ef560cc8aa44435a4a84585b5aa9333c4cdf7d3a4d4191f02aff",
+  "code_revision_kind": "installed_python_source_sha256",
+  "environment": {
+    "python": "3.12.14",
+    "system": "Windows",
+    "machine": "AMD64"
+  },
+  "groups": {
+    "full_page-matching-on": {
+      "summary": {
+        "literal_occurrence_correct": 1473,
+        "literal_occurrence_total": 2246,
+        "predicted_literal_occurrences": 2243,
+        "literal_occurrence_recall": 0.6558325912733749,
+        "case_count": 20,
+        "failure_count": 0,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 1046,
+        "literal_total": 2476,
+        "literal_accuracy": 0.42245557350565427,
+        "association_correct": 734,
+        "association_total": 1573,
+        "association_accuracy": 0.46662428480610296,
+        "geometry_correct": 1023,
+        "geometry_total": 2246,
+        "geometry_accuracy": 0.45547640249332144,
+        "role_correct": 2114,
+        "role_total": 2476,
+        "unit_correct_count": 0,
+        "structure_correct_count": 0,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 190.51800000000003,
+        "peak_rss_bytes": 1584455680
+      },
+      "process_metrics": {
+        "elapsed_seconds": 194.59399999999914,
+        "sampled_peak_rss_bytes": 1594302464,
+        "rss_sample_interval_seconds": 0.1,
+        "hard_memory_enforcement": false
+      },
+      "process_failure": null
+    },
+    "full_page-matching-off": {
+      "summary": {
+        "literal_occurrence_correct": 1429,
+        "literal_occurrence_total": 2246,
+        "predicted_literal_occurrences": 1822,
+        "literal_occurrence_recall": 0.6362422083704363,
+        "case_count": 20,
+        "failure_count": 0,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 991,
+        "literal_total": 2476,
+        "literal_accuracy": 0.40024232633279483,
+        "association_correct": 0,
+        "association_total": 1573,
+        "association_accuracy": 0.0,
+        "geometry_correct": 1008,
+        "geometry_total": 2246,
+        "geometry_accuracy": 0.44879786286731965,
+        "role_correct": 2130,
+        "role_total": 2476,
+        "unit_correct_count": 0,
+        "structure_correct_count": 8,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 186.3299999999981,
+        "peak_rss_bytes": 1643749376
+      },
+      "process_metrics": {
+        "elapsed_seconds": 190.53099999999904,
+        "sampled_peak_rss_bytes": 1625341952,
+        "rss_sample_interval_seconds": 0.1,
+        "hard_memory_enforcement": false
+      },
+      "process_failure": null
+    },
+    "crop-matching-on": {
+      "summary": {
+        "literal_occurrence_correct": 1472,
+        "literal_occurrence_total": 2246,
+        "predicted_literal_occurrences": 2251,
+        "literal_occurrence_recall": 0.655387355298308,
+        "case_count": 20,
+        "failure_count": 0,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 1043,
+        "literal_total": 2476,
+        "literal_accuracy": 0.4212439418416801,
+        "association_correct": 682,
+        "association_total": 1573,
+        "association_accuracy": 0.43356643356643354,
+        "geometry_correct": 1024,
+        "geometry_total": 2246,
+        "geometry_accuracy": 0.45592163846838824,
+        "role_correct": 2122,
+        "role_total": 2476,
+        "unit_correct_count": 0,
+        "structure_correct_count": 0,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 279.85799999999836,
+        "peak_rss_bytes": 2523688960
+      },
+      "process_metrics": {
+        "elapsed_seconds": 284.8600000000006,
+        "sampled_peak_rss_bytes": 2516238336,
+        "rss_sample_interval_seconds": 0.1,
+        "hard_memory_enforcement": false
+      },
+      "process_failure": null
+    },
+    "crop-matching-off": {
+      "summary": {
+        "literal_occurrence_correct": 1282,
+        "literal_occurrence_total": 2246,
+        "predicted_literal_occurrences": 1650,
+        "literal_occurrence_recall": 0.5707925200356189,
+        "case_count": 20,
+        "failure_count": 1,
+        "missing_count": 0,
+        "exact_table_count": 0,
+        "literal_correct": 811,
+        "literal_total": 2476,
+        "literal_accuracy": 0.32754442649434573,
+        "association_correct": 0,
+        "association_total": 1573,
+        "association_accuracy": 0.0,
+        "geometry_correct": 852,
+        "geometry_total": 2246,
+        "geometry_accuracy": 0.37934105075690117,
+        "role_correct": 1946,
+        "role_total": 2476,
+        "unit_correct_count": 0,
+        "structure_correct_count": 7,
+        "natural_case_count": 20,
+        "injected_case_count": 0,
+        "elapsed_seconds": 170.329000000007,
+        "peak_rss_bytes": 1457979392
+      },
+      "process_metrics": {
+        "elapsed_seconds": 196.17200000000048,
+        "sampled_peak_rss_bytes": null,
+        "hard_memory_enforcement": false,
+        "peak_status": "unavailable_after_interruption"
+      },
+      "process_failure": "infrastructure_interruption"
+    }
+  },
+  "limits": {
+    "group_timeout_seconds": 600,
+    "sampled_rss_limit_bytes": 6442450944,
+    "hard_memory_enforcement": false
+  },
+  "metric_scope": "matched annotated regions; slot metrics are strict physical cells; unordered occurrences do not establish associations; exact table excludes geometry, which is reported separately",
+  "cost_scope": "local CPU, zero model/API requests; energy and monetary hardware costs unmeasured",
+  "evidence_kind": "seen_corpus_validation",
+  "original_split_label": "heldout",
+  "independent_holdout_estimate": false,
+  "reference_independent_human_gold": false,
+  "provenance_note": "Reports previously inspected. Original baseline is retained; reference/parser/checks/evaluator were frozen during this repeat. Unrelated API/lifecycle changes occurred while the parent ran; its recorded loaded Python-source identity is retained. Timings/RSS are observations, not a controlled performance comparison. Source PDF bytes are unchanged.",
+  "raw_artifact_paths": {
+    "comparison": "artifacts/evaluation-seen-final-heldout/comparison.json",
+    "injected": "artifacts/evaluation-seen-final-heldout/injected-checks.json"
+  },
+  "raw_artifact_sha256": {
+    "comparison": "d11be0b5db3ce5cfcba7aeeea94bd33da90ea0aee3f52dc377ec565f928e9c82",
+    "injected": "2791f6a766ea903ddc0a54b2ce9e941432a9295ae9d14bee684f57d28cfbafaa"
+  },
+  "failure_cases": {
+    "full_page-matching-on": [],
+    "full_page-matching-off": [],
+    "crop-matching-on": [],
+    "crop-matching-off": [
+      {
+        "case_id": "intel-2025-ars-cashflow",
+        "failure_code": "infrastructure_interruption"
+      }
+    ]
+  },
+  "injected_summary": {
+    "digit": {
+      "eligible": 20,
+      "detected_new_target_issue": 20,
+      "inconclusive": 0
+    },
+    "sign": {
+      "eligible": 20,
+      "detected_new_target_issue": 20,
+      "inconclusive": 0
+    },
+    "header_swap": {
+      "eligible": 20,
+      "detected_new_target_issue": 18,
+      "inconclusive": 0
+    },
+    "unit": {
+      "eligible": 20,
+      "detected_new_target_issue": 0,
+      "inconclusive": 0
+    }
+  },
+  "injected_unavailable_cases": []
+}

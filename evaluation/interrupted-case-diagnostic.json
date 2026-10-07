@@ -1,0 +1,21 @@
+{
+  "kind": "single_seen_case_interruption_diagnostic",
+  "replaces_corpus_result": false,
+  "case_id": "intel-2025-ars-cashflow",
+  "mode": "crop",
+  "matching": false,
+  "process_metrics": {
+    "elapsed_seconds": 20.73400000000038,
+    "sampled_peak_rss_bytes": 1134166016,
+    "rss_sample_interval_seconds": 0.1,
+    "hard_memory_enforcement": false
+  },
+  "records": [
+    {
+      "case_id": "intel-2025-ars-cashflow",
+      "table_detected": true,
+      "failure_code": null
+    }
+  ],
+  "process_exit_code": 0
+}
