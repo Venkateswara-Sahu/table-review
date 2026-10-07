@@ -1,20 +1,101 @@
-name: table-review-dev
+name: table-review-local
+x-common: &common
+  user: "10001:10001"
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: ["/tmp:size=256m,mode=1777"]
+  environment: &env
+    TABLE_REVIEW_DATABASE_URL: postgresql+psycopg://table_review:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db/table_review
+    TABLE_REVIEW_BLOB_ROOT: /data/blobs
+    TABLE_REVIEW_JOURNAL_PATH: /journal/journal.sqlite3
+    TABLE_REVIEW_BACKUP_KEY_PATH: /keys/backup.key
+    TABLE_REVIEW_BACKUP_ROOT: /backups
+    TABLE_REVIEW_MODEL_PATH: /models
+    TABLE_REVIEW_WORKER_PULSE_PATH: /runtime/worker-pulse.json
+    TABLE_REVIEW_PUBLIC_ORIGIN: ${TABLE_REVIEW_PUBLIC_ORIGIN:-http://127.0.0.1:8000}
+    TABLE_REVIEW_SECURE_COOKIES: ${TABLE_REVIEW_SECURE_COOKIES:-false}
+  volumes: &mounts
+    - blobs:/data
+    - journal:/journal
+    - keys:/keys:ro
+    - backups:/backups
+    - pulse:/runtime
+    - ${TABLE_REVIEW_MODELS:?Set absolute preloaded model path}:/models:ro
 services:
   db:
     image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
     environment:
       POSTGRES_USER: table_review
       POSTGRES_DB: table_review
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a local database password in .env}
-    ports:
-      - "127.0.0.1:15432:5432"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: --auth-local=scram-sha-256 --auth-host=scram-sha-256
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db:/var/lib/postgresql/data
+      - pg-socket:/var/run/postgresql
+    networks: [private]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U table_review -d table_review"]
-      interval: 3s
+      test: [CMD-SHELL, pg_isready -U table_review -d table_review]
+      interval: 2s
       timeout: 3s
-      retries: 20
+      retries: 30
     restart: unless-stopped
+  initialize:
+    <<: *common
+    profiles: [operator]
+    build: {context: .., dockerfile: infra/Dockerfile.api}
+    image: table-review-api:local
+    command: [python, -m, table_review.runtime, initialize]
+    volumes:
+      - blobs:/data
+      - journal:/journal
+      - keys:/keys
+      - backups:/backups
+      - pulse:/runtime
+      - ${TABLE_REVIEW_MODELS}:/models:ro
+    networks: [private]
+    depends_on: {db: {condition: service_healthy}}
+  api:
+    <<: *common
+    build: {context: .., dockerfile: infra/Dockerfile.api}
+    image: table-review-api:local
+    ports: ["127.0.0.1:${TABLE_REVIEW_PORT:-8000}:8000"]
+    networks: [private, entry]
+    depends_on: {db: {condition: service_healthy}}
+    mem_limit: 768m
+    pids_limit: 128
+    restart: unless-stopped
+  worker:
+    <<: *common
+    build: {context: .., dockerfile: infra/Dockerfile.worker}
+    image: table-review-worker:local
+    network_mode: none
+    environment:
+      <<: *env
+      TABLE_REVIEW_DATABASE_URL: postgresql+psycopg://table_review:${POSTGRES_PASSWORD}@/table_review?host=/var/run/postgresql
+    volumes:
+      - blobs:/data
+      - journal:/journal
+      - keys:/keys:ro
+      - backups:/backups
+      - pulse:/runtime
+      - pg-socket:/var/run/postgresql:ro
+      - ${TABLE_REVIEW_MODELS}:/models:ro
+    depends_on: {db: {condition: service_healthy}}
+    mem_limit: 6g
+    memswap_limit: 6g
+    pids_limit: 128
+    cpus: 4
+    restart: unless-stopped
+networks:
+  private: {internal: true}
+  entry: {}
 volumes:
-  db-data:
+  db: {}
+  blobs: {}
+  journal: {}
+  keys: {}
+  backups: {}
+  pulse: {}
+  pg-socket: {}

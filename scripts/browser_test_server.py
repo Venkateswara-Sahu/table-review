@@ -56,6 +56,10 @@ def main():
             model_path=ROOT / "models",
         )
     )
+    if os.environ.get("TABLE_REVIEW_BROWSER_FIXTURE_MODE") == "contract":
+        from scripts.browser_contract_fixture import contract_extractor
+        app.state.queue.handlers["extract"] = contract_extractor(app.state.queue)
+
     (fixtures / "active.json").write_text(
         json.dumps({"pid": os.getpid(), "schema": schema}), encoding="utf-8"
     )

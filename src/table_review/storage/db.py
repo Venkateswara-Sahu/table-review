@@ -7,7 +7,7 @@ type SessionFactory = sessionmaker[Session]
 
 
 def create_session_factory(database_url: str, *, schema: str | None = None) -> SessionFactory:
-    connect_args = {}
+    connect_args = {"connect_timeout": 3}
     if schema is not None:
         if not re.fullmatch(r"test_[0-9a-f]{32}", schema):
             raise ValueError("Invalid isolated test schema")

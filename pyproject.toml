@@ -17,11 +17,12 @@ dependencies = [
   "argon2-cffi>=25,<26",
   "python-multipart>=0.0.20,<1",
   "openpyxl>=3.1,<4",
+  "lxml==6.1.3",
   "cryptography>=46,<51",
 ]
 
 [project.optional-dependencies]
-extraction = ["docling>=2.132,<3"]
+extraction = ["docling>=2.132,<3", "torch==2.14.1", "torchvision==0.29.1"]
 
 [dependency-groups]
 dev = ["pytest>=8,<10", "ruff>=0.13,<1", "reportlab>=4,<5", "httpx>=0.28,<1"]
@@ -36,7 +37,16 @@ packages = ["src/table_review"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "."]
-markers = ["extraction: requires cached real extraction models"]
+markers = ["extraction: requires cached real extraction models", "packaged: requires the isolated Docker deployment"]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+torchvision = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 
 [tool.ruff]
 line-length = 100

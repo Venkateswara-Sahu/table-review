@@ -1,6 +1,8 @@
 import argparse
+import json
 import logging
 import os
+import signal
 import tempfile
 import time
 from datetime import UTC, datetime
@@ -33,10 +35,12 @@ def run_once(queue, worker_id: str) -> bool:
     lease = queue.claim(datetime.now(UTC), worker_id)
     if lease is None:
         return False
+    started, started_at = time.monotonic(), datetime.now(UTC)
     settings = queue.settings
     remaining = queue.remaining_seconds(lease)
     if remaining <= 0:
         queue.complete(lease, TaskOutcome(status="failed", failure_code="timeout"))
+        log_task_metric(queue, lease, started, started_at)
         return True
     limits = ProcessingLimits(
         timeout_seconds=remaining,
@@ -108,42 +112,63 @@ def run_once(queue, worker_id: str) -> bool:
         )
     finally:
         queue.acknowledge_stopped(lease)
+        log_task_metric(queue, lease, started, started_at)
     return True
 
 
+def log_task_metric(queue, lease, started, started_at):
+    from table_review.jobs.models import TaskRow
+
+    try:
+        with queue.session_factory() as session:
+            row = session.get(TaskRow, lease.task_id)
+            if row is None:
+                return
+            value = {
+                "kind": row.kind if row.kind in {"prepare", "extract", "export"} else "unknown",
+                "state": row.state
+                if row.state in {"queued", "running", "succeeded", "failed", "cancelled"}
+                else "unknown",
+                "attempt": lease.attempt_no,
+                "duration_seconds": round(time.monotonic() - started, 3),
+                "queue_age_seconds": round(
+                    max(0, (started_at - row.created_at).total_seconds()), 3
+                ),
+            }
+        logging.getLogger(__name__).info("task_metric %s", json.dumps(value, sort_keys=True))
+    except Exception:  # noqa: BLE001 - telemetry failure must not stop the durable worker
+        logging.getLogger(__name__).warning("task_metric_unavailable")
+
+
 def main():
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
+
+    def shutdown(*args):
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGTERM, shutdown)
     from table_review.app import create_app
     from table_review.settings import Settings
 
-    app = create_app(
-        Settings(
-            database_url=os.environ["TABLE_REVIEW_DATABASE_URL"],
-            database_schema=os.environ.get("TABLE_REVIEW_DATABASE_SCHEMA"),
-            blob_root=Path(os.environ.get("TABLE_REVIEW_BLOB_ROOT", "data/blobs")),
-            journal_path=Path(os.environ["TABLE_REVIEW_JOURNAL_PATH"])
-            if "TABLE_REVIEW_JOURNAL_PATH" in os.environ
-            else None,
-            backup_key_path=Path(os.environ["TABLE_REVIEW_BACKUP_KEY_PATH"])
-            if "TABLE_REVIEW_BACKUP_KEY_PATH" in os.environ
-            else None,
-            backup_root=Path(os.environ.get("TABLE_REVIEW_BACKUP_ROOT", "data/backups")),
-        )
-    )
+    app = create_app(Settings.from_env())
+    from table_review.runtime import WorkerPulse
+
     try:
-        next_maintenance = 0
-        while True:
-            if time.monotonic() >= next_maintenance:
-                # Fail closed if current journal is unavailable; never recreate it here.
-                maintain(app.state.queue, datetime.now(UTC))
-                next_maintenance = time.monotonic() + 60
-            worked = run_once(app.state.queue, f"worker-{os.getpid()}")
-            if args.once:
-                return
-            if not worked:
-                time.sleep(1)
+        with WorkerPulse(app.state.settings.pulse_path):
+            next_maintenance = 0
+            while True:
+                if time.monotonic() >= next_maintenance:
+                    # Fail closed if current journal is unavailable; never recreate it here.
+                    maintain(app.state.queue, datetime.now(UTC))
+                    next_maintenance = time.monotonic() + 60
+                worked = run_once(app.state.queue, f"worker-{os.getpid()}")
+                if args.once:
+                    return
+                if not worked:
+                    time.sleep(1)
     finally:
         app.state.session_factory.kw["bind"].dispose()
 

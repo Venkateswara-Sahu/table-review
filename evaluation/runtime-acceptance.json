@@ -1,0 +1,106 @@
+{
+  "scope": "local Docker Desktop synthetic operational fixtures; no hosted deployment or external-user validation",
+  "test_count": 8,
+  "elapsed_seconds": 224.21,
+  "images": {
+    "api": "sha256:f9aa8d76fbdbae6633c746a5ae475edfc81b3acd9403af5e479ed499c74bfa12",
+    "worker": "sha256:f6cf1ffc0de32c47b504d3aa9c0aecd9232a6e3bfdb6e8f36133830ef74e9e5d",
+    "db": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537"
+  },
+  "initial_deployment_fresh": true,
+  "latest_start_fresh": false,
+  "verified_at": "2026-10-07T09:49:12.237045+00:00",
+  "evidence": {
+    "fresh_boundary": {
+      "ready": {
+        "ready": true,
+        "components": {
+          "database": true,
+          "journal": true,
+          "worker": true,
+          "models": true
+        }
+      },
+      "worker_uid": 10001,
+      "worker_network": "none",
+      "hard_memory_bytes": 6442450944,
+      "db_exposed": false
+    },
+    "absent_models": {
+      "ready": false,
+      "components": {
+        "database": true,
+        "journal": true,
+        "worker": true,
+        "models": false
+      }
+    },
+    "worker_network_probe": {
+      "interfaces": [
+        "lo"
+      ],
+      "outbound_denied": true
+    },
+    "real_parser": {
+      "elapsed_to_terminal_after_ready_probe": 38.79700000000048,
+      "ready_responses": 8,
+      "original_page": 2,
+      "table_count": 1,
+      "bounded_runner": {
+        "cgroup_version": 1,
+        "elapsed_seconds": 38.48056884899961,
+        "hard_memory_scope": "whole_container_including_controller",
+        "sampled_peak_rss_bytes": 1391038464,
+        "hard_memory_enforcement": true,
+        "rss_sample_interval_seconds": 0.1,
+        "container_memory_limit_bytes": 6442450944
+      },
+      "source_sha256": "a4111e6f1dfe3cc3e8835e6f9f0458ab961046b6ed8ec645066f85c03134ad1a",
+      "code_revision": "d81f36b45027d7ac5aca059571ccb33d3b45d305ba3c96339b1f467b59b52832"
+    },
+    "queue_limit": {
+      "accepted": 3,
+      "fourth_status": 429,
+      "all_cancelled": true
+    },
+    "kill_restart": {
+      "attempt_count": 2,
+      "published_tables": 1,
+      "recovered": true
+    },
+    "process_isolation": {
+      "timeout_code": "timeout",
+      "timeout_descendant_alive": false,
+      "parent_death_descendants_alive": 0,
+      "parent_death_descendant_count": 3
+    },
+    "kernel_memory_probe": {
+      "failure_code": "resource_exhaustion",
+      "oom_kill_delta": 1,
+      "memory_contract": {
+        "hard_memory_enforcement": true,
+        "container_memory_limit_bytes": 6442450944,
+        "hard_memory_scope": "whole_container_including_controller",
+        "cgroup_version": 1
+      },
+      "ready_after": true
+    },
+    "packaged_restore": {
+      "result": {
+        "ready": true,
+        "deleted_documents": 1,
+        "revoked_accounts": 3,
+        "reset_accounts": 0,
+        "recovered_blobs": 6,
+        "recovery_seconds": 0.472
+      },
+      "original_sha256": "a72132338420ebd38bd105f1140f1b0ff8916ef45beb576934992abe18ba5e75",
+      "restored_sha256": "a72132338420ebd38bd105f1140f1b0ff8916ef45beb576934992abe18ba5e75",
+      "regenerated_sha256": "a72132338420ebd38bd105f1140f1b0ff8916ef45beb576934992abe18ba5e75",
+      "approval_preserved": true,
+      "deleted_files_removed": true,
+      "later_session_denied": true,
+      "differing_members": {}
+    }
+  }
+}

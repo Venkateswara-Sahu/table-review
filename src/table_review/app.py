@@ -14,7 +14,7 @@ from table_review.accounts.service import (
     InvalidAccount,
     SignInThrottled,
 )
-from table_review.api_types import ErrorEnvelope
+from table_review.api_types import ErrorEnvelope, ReadinessView
 from table_review.checks.persistence import RevisionChecker
 from table_review.documents.api import router as documents_router
 from table_review.documents.service import DocumentError, DocumentService
@@ -117,7 +117,10 @@ def create_app(settings: Settings) -> FastAPI:
                         "csrf_rejected" if status == 403 else "unauthenticated",
                         "Request verification failed" if status == 403 else "Sign in required",
                     )
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception:  # noqa: BLE001 - suppress ASGI tracebacks containing private driver data
+            return error_response(request, 500, "internal_error", "Request could not be completed")
         response.headers["X-Request-ID"] = request.state.request_id
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -204,6 +207,17 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(tables_router)
     app.include_router(reviews_router)
     app.include_router(exports_router)
+
+    @app.get(
+        "/api/v1/health/ready",
+        response_model=ReadinessView,
+        responses={503: {"model": ReadinessView}},
+    )
+    async def health_ready():
+        from table_review.runtime import readiness
+
+        state = await run_in_threadpool(readiness, app)
+        return JSONResponse(state, status_code=200 if state["ready"] else 503)
 
     @app.exception_handler(ReviewIncomplete)
     async def review_incomplete(request, error):

@@ -34,6 +34,18 @@ class ErrorEnvelope(APIModel):
     details: dict[str, Any] = Field(default_factory=dict)
 
 
+class ReadinessComponents(APIModel):
+    database: bool
+    journal: bool
+    worker: bool
+    models: bool
+
+
+class ReadinessView(APIModel):
+    ready: bool
+    components: ReadinessComponents
+
+
 class SessionView(APIModel):
     actor: Actor
     csrf_token: str

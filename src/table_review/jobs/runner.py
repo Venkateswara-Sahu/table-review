@@ -21,6 +21,33 @@ class ProcessingFailure(RuntimeError):
         self.code = code
 
 
+def memory_contract(root=Path("/sys/fs/cgroup")):
+    for version, relative in ((2, "memory.max"), (1, "memory/memory.limit_in_bytes")):
+        try:
+            value = int((Path(root) / relative).read_text().strip())
+            if value <= 0 or value >= 2**60:
+                continue  # cgroup v1 uses a near-int64 maximum for unlimited.
+            return {
+                "hard_memory_enforcement": True,
+                "container_memory_limit_bytes": value,
+                "hard_memory_scope": "whole_container_including_controller",
+                "cgroup_version": version,
+            }
+        except (OSError, ValueError):
+            continue
+    return {"hard_memory_enforcement": False}
+
+
+def _oom_count():
+    for relative in ("memory.events", "memory/memory.oom_control"):
+        try:
+            rows = (Path("/sys/fs/cgroup") / relative).read_text().splitlines()
+            return int(dict(line.split() for line in rows)["oom_kill"])
+        except (OSError, ValueError, KeyError):
+            continue
+    return 0
+
+
 def code_identity(root=None):
     root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
     digest = hashlib.sha256()
@@ -156,6 +183,9 @@ def run_child(command, limits, *, work_dir, cancelled=lambda: False, heartbeat=l
     elif "HOME" in os.environ:
         env["HOME"] = os.environ["HOME"]
     env["DOCLING_CACHE_DIR"] = str(work_dir / "docling")
+    if sys.platform == "linux":
+        command = [sys.executable, "-m", "table_review.jobs.linux_exec", str(os.getpid()), *command]
+    oom_before = _oom_count()
     process = subprocess.Popen(
         command,
         env=env,
@@ -194,12 +224,16 @@ def run_child(command, limits, *, work_dir, cancelled=lambda: False, heartbeat=l
         if cancelled():
             raise ProcessingFailure("cancelled")
         if process.returncode:
-            raise ProcessingFailure("infrastructure_interruption")
+            raise ProcessingFailure(
+                "resource_exhaustion"
+                if _oom_count() > oom_before
+                else "infrastructure_interruption"
+            )
         return {
             "elapsed_seconds": time.monotonic() - started,
             "sampled_peak_rss_bytes": peak,
             "rss_sample_interval_seconds": limits.poll_seconds,
-            "hard_memory_enforcement": False,
+            **memory_contract(),
         }
     finally:
         _terminate(process)

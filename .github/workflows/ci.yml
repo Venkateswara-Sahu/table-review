@@ -1,0 +1,66 @@
+name: Table Review checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      real_parser:
+        type: boolean
+        default: false
+        description: Run recorded real parser and packaged resource checks
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+        env:
+          POSTGRES_USER: table_review
+          POSTGRES_DB: table_review
+          POSTGRES_PASSWORD: ci-fixture-password
+        ports: [5432:5432]
+        options: --health-cmd "pg_isready -U table_review -d table_review" --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      TABLE_REVIEW_TEST_DATABASE_URL: postgresql+psycopg://table_review:ci-fixture-password@127.0.0.1:5432/table_review
+      TABLE_REVIEW_BROWSER_FIXTURE_MODE: contract
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with: {python-version: '3.12'}
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9
+        with: {version: '0.10.11'}
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with: {node-version: '24'}
+      - run: uv sync --frozen --group dev
+      - run: uv run --frozen --group dev ruff check src evaluation tests scripts
+      - run: uv run --frozen --group dev pytest tests/domain tests/integration tests/acceptance/test_runtime.py -m 'not extraction' -q
+      - working-directory: web
+        run: npm ci --ignore-scripts && npm run build
+      - working-directory: web
+        run: PLAYWRIGHT_BROWSERS_PATH=../.cache/ms-playwright npx playwright install --with-deps chromium
+      - working-directory: web
+        run: npm run test:e2e
+  real-parser-and-runtime:
+    if: github.event_name == 'workflow_dispatch' && inputs.real_parser
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with: {python-version: '3.12'}
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9
+        with: {version: '0.10.11'}
+      - run: uv sync --frozen --extra extraction --group dev
+      - run: uv run --frozen --extra extraction python scripts/preload_models.py
+      - run: uv run --frozen --extra extraction python scripts/deploy_local.py --acceptance
+      - run: uv run --frozen --group dev pytest tests/acceptance/test_fresh_deploy.py -q
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: runtime-aggregate-evidence
+          path: artifacts/runtime/evidence.json
+      - if: always()
+        run: uv run --frozen python scripts/deploy_local.py --acceptance --stop

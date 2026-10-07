@@ -271,6 +271,7 @@ def test_private_run_api_and_selected_page_limits(client, client_b, app, tmp_pat
     assert client_b.get(f"/api/v1/documents/{doc['id']}/runs").status_code == 404
 
 
+@pytest.mark.extraction
 def test_worker_real_extraction_rerun_retains_existing_tables(app, owner, tmp_path):
     from table_review.accounts.types import Actor
     from table_review.jobs.worker import run_once
@@ -296,6 +297,7 @@ def test_worker_real_extraction_rerun_retains_existing_tables(app, owner, tmp_pa
     assert all(run["manifest"]["device"] == "cpu" for run in runs)
 
 
+@pytest.mark.extraction
 def test_worker_death_kills_descendants_and_restart_publishes_once(app, owner, tmp_path):
     import json
     import subprocess
