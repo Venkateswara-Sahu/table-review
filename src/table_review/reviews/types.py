@@ -33,3 +33,18 @@ class ReviewState(ImmutableModel):
     unresolved_count: int = 1
     generation: int = 0
     current_approval: ReviewSnapshot | None = None
+
+
+class CellReviewEvent(ImmutableModel):
+    id: UUID
+    revision_id: UUID
+    actor_id: UUID
+    cell_ids: tuple[str, ...]
+    checked: bool
+    created_at: datetime
+
+
+class CellReviewHistory(ImmutableModel):
+    items: tuple[CellReviewEvent, ...]
+    offset: int
+    has_more: bool

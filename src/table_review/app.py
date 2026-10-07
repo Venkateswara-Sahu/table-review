@@ -94,7 +94,11 @@ def create_app(settings: Settings) -> FastAPI:
         app.state.repository, app.state.blobs, app.state.journal, settings
     )
     app.state.queue.deletion = app.state.deletion
-    app.add_middleware(UploadSizeLimit, max_pdf_bytes=settings.max_pdf_bytes)
+    app.add_middleware(
+        UploadSizeLimit,
+        max_pdf_bytes=settings.max_pdf_bytes,
+        max_json_bytes=settings.max_json_bytes,
+    )
 
     @app.middleware("http")
     async def boundaries(request: Request, call_next):
@@ -185,6 +189,10 @@ def create_app(settings: Settings) -> FastAPI:
 
     @app.exception_handler(HTTPException)
     async def http_error(request, error):
+        if getattr(request.state, "request_size_exceeded", False):
+            return error_response(
+                request, 413, "request_limit", "Request exceeds the configured size limit"
+            )
         if getattr(request.state, "upload_size_exceeded", False):
             return error_response(
                 request, 413, "byte_limit", "Upload exceeds the configured size limit"

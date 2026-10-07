@@ -70,6 +70,9 @@ export function ReviewScreen({
   const [conflict, setConflict] = useState(false);
   const [busy, setBusy] = useState(false);
   const pending = useRef<{ signature: string; key: string } | null>(null);
+  const acknowledged = useRef<{ revisionId: string; message: string } | null>(
+    null,
+  );
   const content = revision.content;
   const cell = content.cells.find(
     (cell) =>
@@ -99,9 +102,20 @@ export function ReviewScreen({
     apiRequest<ReviewState>(`/api/v1/revisions/${revision.id}/review`, {
       signal: controller.signal,
     })
-      .then(setReview)
+      .then((value) => {
+        setReview(value);
+        if (acknowledged.current?.revisionId === revision.id)
+          acknowledged.current = null;
+      })
       .catch((error) => {
-        if (!controller.signal.aborted) setError(errorMessage(error));
+        if (!controller.signal.aborted) {
+          if (acknowledged.current?.revisionId === revision.id) {
+            setStatus(
+              `${acknowledged.current.message}; review status unavailable`,
+            );
+            setError("Your change is saved. Reload to refresh review status.");
+          } else setError(errorMessage(error));
+        }
       });
     return () => controller.abort();
   }, [revision.id]);
@@ -127,11 +141,7 @@ export function ReviewScreen({
     if (next) onSource(next.reference);
     setStatus("");
   }
-  async function accept(
-    next: Revision,
-    message: string,
-    preserveDraft = false,
-  ) {
+  function accept(next: Revision, message: string, preserveDraft = false) {
     const position = {
       row: Math.min(selection.focus.row, next.content.rows - 1),
       col: Math.min(selection.focus.col, next.content.columns - 1),
@@ -143,16 +153,13 @@ export function ReviewScreen({
         cell.col <= position.col &&
         cell.col + cell.col_span > position.col,
     );
+    acknowledged.current = { revisionId: next.id, message };
     setRevision(next);
     onRevision(next);
     setSelection({ anchor: position, focus: position });
     if (!preserveDraft) setDraft(draftFor(next.content, selected));
     if (selected) onSource(selected.reference);
     setReview(null);
-    const state = await apiRequest<ReviewState>(
-      `/api/v1/revisions/${next.id}/review`,
-    );
-    setReview(state);
     setStatus(message);
     setConflict(false);
     pending.current = null;

@@ -1,6 +1,5 @@
 import hashlib
 import math
-import tempfile
 from pathlib import Path
 from typing import BinaryIO
 from uuid import UUID, uuid4
@@ -17,6 +16,7 @@ from table_review.settings import Settings
 from table_review.storage.blobs import PrivateBlobStore
 from table_review.storage.models import DocumentRecord, PageArtifactRow
 from table_review.storage.repository import Repository
+from table_review.storage.scratch import upload_scratch
 
 
 class DocumentError(ValueError):
@@ -39,7 +39,7 @@ class DocumentService:
             raise DocumentError("unsupported_file", "Choose a PDF file")
         if not idempotency_key or len(idempotency_key) > 128:
             raise DocumentError("invalid_upload_key", "Supply a valid upload retry key")
-        with tempfile.TemporaryDirectory(dir=self.staging) as temporary:
+        with upload_scratch(self.staging) as temporary:
             staged = Path(temporary) / "source.pdf"
             count = 0
             with staged.open("wb") as output:

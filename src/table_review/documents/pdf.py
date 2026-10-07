@@ -7,12 +7,19 @@ from pathlib import Path
 from threading import RLock
 
 import pypdfium2 as pdfium
+import pypdfium2.raw as pdfium_raw
 from pypdf import PdfReader
 
 from table_review.documents.types import PageBox, PageInfo, PdfInfo, RenderedPage, SourceReference
 from table_review.settings import Settings
 
 _PDFIUM_LOCK = RLock()
+
+
+def _visible_char(text, index):
+    obj = pdfium_raw.FPDFText_GetTextObject(text, index)
+    # Generated whitespace may have no text object; it is never positive evidence.
+    return bool(obj) and pdfium_raw.FPDFTextObj_GetTextRenderMode(obj) not in (3, 7)
 
 
 def _serialized_pdfium(function):
@@ -48,7 +55,10 @@ def page_info(path: Path, page_no: int) -> PageInfo:
     with pdfium.PdfDocument(path) as document, closing(_page(document, page_no)) as page:
         width, height = page.get_size()
         with closing(page.get_textpage()) as text:
-            digital = bool(text.get_text_range().strip())
+            digital = any(
+                _visible_char(text, i) and text.get_text_range(i, 1).strip()
+                for i in range(text.count_chars())
+            )
         return PageInfo(page_no=page_no, width=width, height=height, digital_text_present=digital)
 
 
@@ -128,6 +138,10 @@ def source_tokens(path: Path, page_no: int):
 
             for i in range(textpage.count_chars()):
                 character = textpage.get_text_range(i, 1)
+                if not _visible_char(textpage, i):
+                    flush()
+                    chars, boxes = [], []
+                    continue
                 if not character or character.isspace():
                     flush()
                     chars, boxes = [], []

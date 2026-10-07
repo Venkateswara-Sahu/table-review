@@ -76,6 +76,8 @@ class DoclingExtractor:
             from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode
             from docling.document_converter import DocumentConverter, PdfFormatOption
 
+            from table_review.extraction.visible_backend import VisiblePdfBackend
+
             options = PdfPipelineOptions(
                 artifacts_path=config.artifacts_path.resolve(),
                 do_ocr=False,
@@ -92,7 +94,9 @@ class DoclingExtractor:
             options.table_structure_options.do_cell_matching = config.cell_matching
             self._converters[key] = DocumentConverter(
                 format_options={
-                    InputFormat.PDF: PdfFormatOption(pipeline_options=options),
+                    InputFormat.PDF: PdfFormatOption(
+                        pipeline_options=options, backend=VisiblePdfBackend
+                    ),
                 }
             )
         return self._converters[key]
@@ -277,6 +281,7 @@ class DoclingExtractor:
                 "peak_rss_bytes": peak[0],
                 "pages": request.pages,
                 "ocr": False,
+                "text_visibility_policy": "pdf_rendering_modes_3_and_7_excluded_v1",
                 "remote_services": False,
                 "coordinate_transforms": transforms,
                 "region_transform": transforms[0] if request.region and transforms else None,

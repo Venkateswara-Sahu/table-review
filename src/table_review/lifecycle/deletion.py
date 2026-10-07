@@ -10,7 +10,12 @@ from table_review.documents.types import ImmutableModel
 from table_review.jobs.models import AttemptRow, ExtractionRunRow, TaskRow
 from table_review.lifecycle.journal import LifecycleEvent
 from table_review.lifecycle.models import mirror_event
-from table_review.reviews.models import IssueDecisionRow, ReviewSnapshotRow, ReviewStateRow
+from table_review.reviews.models import (
+    CellReviewEventRow,
+    IssueDecisionRow,
+    ReviewSnapshotRow,
+    ReviewStateRow,
+)
 from table_review.storage.models import (
     DocumentRow,
     EditEventRow,
@@ -19,6 +24,7 @@ from table_review.storage.models import (
     TableRow,
 )
 from table_review.storage.repository import NotFound
+from table_review.storage.scratch import exclusive_lock
 
 
 class DeletionReceipt(ImmutableModel):
@@ -121,6 +127,9 @@ class DeletionService:
             delete(ReviewSnapshotRow).where(ReviewSnapshotRow.revision_id.in_(revisions))
         )
         session.execute(delete(IssueDecisionRow).where(IssueDecisionRow.revision_id.in_(revisions)))
+        session.execute(
+            delete(CellReviewEventRow).where(CellReviewEventRow.revision_id.in_(revisions))
+        )
         session.execute(delete(EditEventRow).where(EditEventRow.table_id.in_(tables)))
         # Self-referencing revision parents are removed in one statement.
         session.execute(delete(RevisionRow).where(RevisionRow.id.in_(revisions)))
@@ -242,6 +251,57 @@ class DeletionService:
                     removed += 1
             return removed
 
+    def _clean_upload_scratch(self, now):
+        cutoff = now.timestamp() - self.settings.task_timeout_seconds - self.settings.lease_seconds
+        removed = 0
+        staging = self.blobs.root / ".staging"
+        if staging.is_dir() and not staging.is_symlink():
+            for path in staging.iterdir():
+                resolved = path.resolve()
+                if (
+                    not re.fullmatch(r"upload-[0-9a-f]{32}-.+", path.name)
+                    or path.is_symlink()
+                    or not resolved.is_relative_to(staging.resolve())
+                    or not path.is_dir()
+                    or path.stat().st_mtime > cutoff
+                ):
+                    continue
+                marker = path / ".active"
+                if marker.is_symlink():
+                    continue
+                if marker.is_file():
+                    try:
+                        with marker.open("r+b") as stream, exclusive_lock(stream):
+                            pass
+                    except BlockingIOError:
+                        continue
+                # Exact old opaque directory is confined and its active lock released.
+                shutil.rmtree(resolved)
+                removed += 1
+        for owner in self.blobs.root.iterdir():
+            if (
+                not re.fullmatch(r"[0-9a-f]{32}", owner.name)
+                or owner.is_symlink()
+                or not owner.is_dir()
+            ):
+                continue
+            for path in owner.rglob("*.tmp"):
+                if (
+                    path.is_symlink()
+                    or not path.resolve().is_relative_to(owner.resolve())
+                    or not re.fullmatch(r"[0-9a-f]{32}\.tmp", path.name)
+                    or path.stat().st_mtime > cutoff
+                ):
+                    continue
+                try:
+                    with path.open("r+b") as stream, exclusive_lock(stream):
+                        pass
+                except BlockingIOError:
+                    continue
+                path.unlink()
+                removed += 1
+        return removed
+
     def sweep(self, now: datetime) -> CleanupSummary:
         if now.tzinfo is None:
             raise ValueError("Cleanup time must include its timezone")
@@ -294,7 +354,7 @@ class DeletionService:
                 failed += result == "failed"
                 overdue += result != "cleaned" and doc.deleted_at + timedelta(hours=24) < now
         try:
-            temporary = self._clean_attempts(now)
+            temporary = self._clean_attempts(now) + self._clean_upload_scratch(now)
         except OSError:
             temporary, failed = 0, failed + 1
         try:

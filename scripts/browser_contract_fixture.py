@@ -68,8 +68,11 @@ def contract_extractor(queue):
             ),
             page_info=(info,),
             warnings=("synthetic_contract_fixture",),
-            manifest={"evidence_kind": "synthetic_browser_contract", "parser_executed": False,
-                "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest()},
+            manifest={
+                "evidence_kind": "synthetic_browser_contract",
+                "parser_executed": False,
+                "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+            },
         )
         return TaskOutcome(status="succeeded", extraction=result.model_dump(mode="json"))
 

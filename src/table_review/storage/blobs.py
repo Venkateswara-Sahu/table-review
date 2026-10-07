@@ -7,6 +7,7 @@ from typing import BinaryIO
 from uuid import UUID, uuid4
 
 from table_review.storage.models import BlobRecord
+from table_review.storage.scratch import exclusive_lock
 
 
 class PrivateBlobStore:
@@ -36,7 +37,7 @@ class PrivateBlobStore:
         temporary = path.with_name(uuid4().hex + ".tmp")
         try:
             fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(fd, "wb") as output:
+            with os.fdopen(fd, "wb") as output, exclusive_lock(output):
                 shutil.copyfileobj(source, output, length=1024 * 1024)
                 output.flush()
                 os.fsync(output.fileno())

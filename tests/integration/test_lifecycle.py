@@ -114,6 +114,31 @@ def test_attempt_and_orphan_cleanup_preserves_live_inputs(app, owned_table):  # 
     assert app.state.blobs._path(actor.id, doc.blob_key).exists()
 
 
+def test_crashed_upload_scratch_is_removed_but_locked_input_survives(app, owned_table):  # noqa: F811
+    import os
+
+    from table_review.storage.scratch import exclusive_lock
+
+    actor, _, _ = owned_table
+    clock = Clock()
+    old = clock.now().timestamp() - 800
+    staged = app.state.documents.staging / ("upload-" + uuid4().hex + "-crashed")
+    staged.mkdir()
+    (staged / "source.pdf").write_bytes(b"private crashed upload")
+    marker = staged / ".active"
+    marker.write_bytes(b"")
+    temporary = app.state.blobs.root / actor.id.hex / (uuid4().hex + ".tmp")
+    temporary.write_bytes(b"private interrupted publication")
+    for path in (staged, temporary):
+        os.utime(path, (old, old))
+    with marker.open("r+b") as stream, exclusive_lock(stream):
+        result = app.state.deletion.sweep(clock.now())
+        assert staged.is_dir() and not temporary.exists()
+        assert result.temporary_artifacts_removed >= 1
+    result = app.state.deletion.sweep(clock.now())
+    assert not staged.exists() and result.temporary_artifacts_removed >= 1
+
+
 def test_missing_current_journal_denies_access_and_is_not_recreated(app, client):
     journal_path = app.state.journal.path
     journal_path.unlink()

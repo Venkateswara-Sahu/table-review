@@ -113,6 +113,9 @@ def test_real_restore_reconciles_current_journal_and_reproduces_retained_export(
         assert restored.state.reviews.current_approval(
             actor, table.current_revision_id
         ).id.hex == approval["id"].replace("-", "")
+        history = restored.state.reviews.checked_history(actor, table.current_revision_id, 0)
+        assert len(history.items) == 1 and history.items[0].checked
+        assert history.items[0].actor_id == actor.id
         assert restored.state.exports.download(actor, export["id"]).read_bytes() == expected_bytes
         with restored.state.session_factory() as session:
             captured = session.get(TaskRow, export["id"]).input["snapshot"]
@@ -153,7 +156,11 @@ def test_restore_requires_current_journal_before_touching_target(app, target, tm
 def test_backup_refuses_live_processing_attempt(app, owned_table, tmp_path):
     app.state.queue.claim(datetime.now(UTC))
     with pytest.raises(BackupError, match="active"):
-        create_backup(app.state.settings, app.state.settings.backup_root / "active.trbackup", datetime.now(UTC))
+        create_backup(
+            app.state.settings,
+            app.state.settings.backup_root / "active.trbackup",
+            datetime.now(UTC),
+        )
 
 
 @pytest.mark.parametrize("kind", ["source", "page"])
@@ -166,7 +173,11 @@ def test_backup_rejects_corrupted_referenced_blobs(app, owned_table, tmp_path, k
     )
     path.write_bytes(b"tampered")
     with pytest.raises(BackupError, match="integrity"):
-        create_backup(app.state.settings, app.state.settings.backup_root / "corrupt.trbackup", datetime.now(UTC))
+        create_backup(
+            app.state.settings,
+            app.state.settings.backup_root / "corrupt.trbackup",
+            datetime.now(UTC),
+        )
 
 
 def test_tampered_backup_and_wrong_key_do_not_create_target(app, target, tmp_path):

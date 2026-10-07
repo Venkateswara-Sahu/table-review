@@ -119,6 +119,13 @@ export function TableGrid({
   const selected = new Set(
     selectedCells(content, selection).map((cell) => cell.id),
   );
+  const visible = content.cells.filter(
+    (cell) =>
+      cell.row < lastRow &&
+      cell.row + cell.row_span > firstRow &&
+      cell.col < lastCol &&
+      cell.col + cell.col_span > firstCol,
+  );
   return (
     <div
       className="review-grid-scroll"
@@ -139,57 +146,63 @@ export function TableGrid({
         className="review-grid"
         style={{ width: content.columns * COL, height: content.rows * ROW }}
       >
-        {content.cells
-          .filter(
-            (cell) =>
-              cell.row < lastRow &&
-              cell.row + cell.row_span > firstRow &&
-              cell.col < lastCol &&
-              cell.col + cell.col_span > firstCol,
-          )
-          .map((cell) => {
-            const focused =
-              cell.row <= selection.focus.row &&
-              cell.row + cell.row_span > selection.focus.row &&
-              cell.col <= selection.focus.col &&
-              cell.col + cell.col_span > selection.focus.col;
-            return (
-              <div
-                key={cell.id}
-                role="gridcell"
-                aria-rowindex={cell.row + 1}
-                aria-colindex={cell.col + 1}
-                aria-rowspan={cell.row_span}
-                aria-colspan={cell.col_span}
-                aria-selected={selected.has(cell.id)}
-                className={`review-cell ${checked.has(cell.id) ? "checked" : ""} ${cell.role === "column_header" || cell.role === "row_header" ? "header-cell" : ""}`}
-                style={{
-                  top: cell.row * ROW,
-                  left: cell.col * COL,
-                  width: cell.col_span * COL,
-                  height: cell.row_span * ROW,
-                }}
-              >
-                <button
-                  data-cell-id={cell.id}
-                  data-row={cell.row}
-                  data-col={cell.col}
-                  tabIndex={focused ? 0 : -1}
-                  aria-label={`Source: ${cell.text || "blank cell"}`}
-                  title={`Row ${cell.row + 1}, column ${cell.col + 1} · ${checked.has(cell.id) ? "checked" : "unchecked"}\n${cell.text}`}
-                  onClick={(event) =>
-                    onSelect({ row: cell.row, col: cell.col }, event.shiftKey)
-                  }
-                  onKeyDown={(event) => navigate(event, cell)}
-                >
-                  {cell.text || <span className="blank-label">blank</span>}
-                  <span className="cell-check" aria-hidden="true">
-                    {checked.has(cell.id) ? "✓" : ""}
-                  </span>
-                </button>
-              </div>
-            );
-          })}
+        {[...new Set(visible.map((cell) => cell.row))].map((row) => (
+          <div
+            key={row}
+            role="row"
+            aria-rowindex={row + 1}
+            style={{ display: "contents" }}
+          >
+            {visible
+              .filter((cell) => cell.row === row)
+              .map((cell) => {
+                const focused =
+                  cell.row <= selection.focus.row &&
+                  cell.row + cell.row_span > selection.focus.row &&
+                  cell.col <= selection.focus.col &&
+                  cell.col + cell.col_span > selection.focus.col;
+                return (
+                  <div
+                    key={cell.id}
+                    role="gridcell"
+                    aria-rowindex={cell.row + 1}
+                    aria-colindex={cell.col + 1}
+                    aria-rowspan={cell.row_span}
+                    aria-colspan={cell.col_span}
+                    aria-selected={selected.has(cell.id)}
+                    className={`review-cell ${checked.has(cell.id) ? "checked" : ""} ${cell.role === "column_header" || cell.role === "row_header" ? "header-cell" : ""}`}
+                    style={{
+                      top: cell.row * ROW,
+                      left: cell.col * COL,
+                      width: cell.col_span * COL,
+                      height: cell.row_span * ROW,
+                    }}
+                  >
+                    <button
+                      data-cell-id={cell.id}
+                      data-row={cell.row}
+                      data-col={cell.col}
+                      tabIndex={focused ? 0 : -1}
+                      aria-label={`Source: ${cell.text || "blank cell"}`}
+                      title={`Row ${cell.row + 1}, column ${cell.col + 1} · ${checked.has(cell.id) ? "checked" : "unchecked"}\n${cell.text}`}
+                      onClick={(event) =>
+                        onSelect(
+                          { row: cell.row, col: cell.col },
+                          event.shiftKey,
+                        )
+                      }
+                      onKeyDown={(event) => navigate(event, cell)}
+                    >
+                      {cell.text || <span className="blank-label">blank</span>}
+                      <span className="cell-check" aria-hidden="true">
+                        {checked.has(cell.id) ? "✓" : ""}
+                      </span>
+                    </button>
+                  </div>
+                );
+              })}
+          </div>
+        ))}
       </div>
     </div>
   );

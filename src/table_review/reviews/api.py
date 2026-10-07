@@ -1,14 +1,14 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import Field
 
 from table_review.accounts.api import require_actor
 from table_review.accounts.types import Actor
 from table_review.checks.types import IssueDecisionInput
 from table_review.documents.types import ImmutableModel
-from table_review.reviews.types import ReviewSnapshot, ReviewState
+from table_review.reviews.types import CellReviewHistory, ReviewSnapshot, ReviewState
 
 router = APIRouter(prefix="/api/v1")
 
@@ -48,6 +48,16 @@ def checked(
     return request.app.state.reviews.mark_checked(
         actor, revision_id, payload.cell_ids, payload.checked
     )
+
+
+@router.get("/revisions/{revision_id}/checked-history", response_model=CellReviewHistory)
+def checked_history(
+    revision_id: UUID,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+    offset: Annotated[int, Query(ge=0)] = 0,
+):
+    return request.app.state.reviews.checked_history(actor, revision_id, offset)
 
 
 @router.post("/revisions/{revision_id}/approval", response_model=ReviewSnapshot)

@@ -4,8 +4,18 @@ from uuid import UUID
 from sqlalchemy import select
 
 from table_review.checks.types import IssueDecisionRecord
-from table_review.reviews.models import IssueDecisionRow, ReviewSnapshotRow, ReviewStateRow
-from table_review.reviews.types import ReviewSnapshot, ReviewState
+from table_review.reviews.models import (
+    CellReviewEventRow,
+    IssueDecisionRow,
+    ReviewSnapshotRow,
+    ReviewStateRow,
+)
+from table_review.reviews.types import (
+    CellReviewEvent,
+    CellReviewHistory,
+    ReviewSnapshot,
+    ReviewState,
+)
 from table_review.storage.models import DocumentRow, RevisionRow, TableRow
 from table_review.storage.repository import NotFound, RevisionConflict, _record
 
@@ -116,10 +126,37 @@ class ReviewService:
             saved = set(state.checked_cell_ids)
             updated = saved | set(cell_ids) if checked else saved - set(cell_ids)
             if saved != updated:
+                session.add(
+                    CellReviewEventRow(
+                        revision_id=revision.id,
+                        actor_id=actor.id,
+                        cell_ids=sorted(saved ^ updated),
+                        checked=checked,
+                    )
+                )
                 state.checked_cell_ids = sorted(updated)
                 state.current_approval_id = None
                 state.generation += 1
             return self._view(session, table, state)
+
+    def checked_history(self, actor, revision_id, offset):
+        with self.session_factory.begin() as session:
+            self._context(session, actor, revision_id)
+            rows = session.scalars(
+                select(CellReviewEventRow)
+                .where(
+                    CellReviewEventRow.revision_id == revision_id,
+                    CellReviewEventRow.actor_id == actor.id,
+                )
+                .order_by(CellReviewEventRow.created_at, CellReviewEventRow.id)
+                .offset(offset)
+                .limit(101)
+            ).all()
+            return CellReviewHistory(
+                items=tuple(_record(CellReviewEvent, row) for row in rows[:100]),
+                offset=offset,
+                has_more=len(rows) > 100,
+            )
 
     def set_checks(self, actor, revision_id, issues, check_versions):
         """Trusted check-engine integration, never a user-controlled API endpoint."""

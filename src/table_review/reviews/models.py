@@ -49,3 +49,13 @@ class IssueDecisionRow(Base):
     fingerprint: Mapped[str] = mapped_column(String(64))
     decision: Mapped[dict] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CellReviewEventRow(Base):
+    __tablename__ = "cell_review_events"
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    revision_id: Mapped[UUID] = mapped_column(ForeignKey("table_revisions.id"), index=True)
+    actor_id: Mapped[UUID] = mapped_column(index=True)
+    cell_ids: Mapped[list] = mapped_column(JSONB)
+    checked: Mapped[bool]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

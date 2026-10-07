@@ -50,6 +50,7 @@ def main():
             database_url=url,
             database_schema=schema,
             blob_root=blob_root,
+            journal_path=fixtures / (schema + "-lifecycle") / "journal.sqlite3",
             public_origin="http://127.0.0.1:5173",
             secure_cookies=False,
             initialize_journal=True,
@@ -58,6 +59,7 @@ def main():
     )
     if os.environ.get("TABLE_REVIEW_BROWSER_FIXTURE_MODE") == "contract":
         from scripts.browser_contract_fixture import contract_extractor
+
         app.state.queue.handlers["extract"] = contract_extractor(app.state.queue)
 
     (fixtures / "active.json").write_text(

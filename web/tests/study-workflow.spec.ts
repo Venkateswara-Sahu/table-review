@@ -72,7 +72,7 @@ for (const condition of [
     expect(Date.parse(record.end)).toBeGreaterThan(Date.parse(record.start));
     await fs.mkdir("../artifacts/study-rehearsal", { recursive: true });
     await fs.writeFile(
-      `../artifacts/study-rehearsal/${condition}.json`,
+      `../artifacts/study-rehearsal/${process.env.TABLE_REVIEW_BROWSER_FIXTURE_MODE === "contract" ? "synthetic-contract" : "real-parser"}-${condition}-${Date.now()}.json`,
       JSON.stringify(record, null, 2),
     );
     await page.getByRole("button", { name: "Sign out", exact: true }).click();

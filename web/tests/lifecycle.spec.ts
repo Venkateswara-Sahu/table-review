@@ -11,14 +11,12 @@ test("delete report requires confirmation and removes access after reload", asyn
     mimeType: "application/pdf",
     buffer: await fs.readFile(fixturePath()),
   });
-  const row = page
-    .getByRole("article")
-    .filter({
-      has: page.getByRole("heading", {
-        name: "delete-report.pdf",
-        exact: true,
-      }),
-    });
+  const row = page.getByRole("article").filter({
+    has: page.getByRole("heading", {
+      name: "delete-report.pdf",
+      exact: true,
+    }),
+  });
   await expect(row).toBeVisible();
   page.once("dialog", (dialog) => dialog.dismiss());
   await row
