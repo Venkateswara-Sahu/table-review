@@ -2,17 +2,25 @@ import hashlib
 import io
 import json
 import math
+import re
+import textwrap
 import zipfile
 from decimal import Decimal
-from xml.etree import ElementTree as ET
 
+from lxml import etree as ET
 from openpyxl import Workbook
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
-from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 from table_review.documents.service import DocumentError
-from table_review.exports.types import ExportArtifact, ExportInput, export_manifest
+from table_review.exports.context import context_package, context_records
+from table_review.exports.types import (
+    ExportArtifact,
+    ExportInput,
+    cell_review_metadata,
+    export_manifest,
+)
 from table_review.tables.grid import validate_grid
 from table_review.tables.numbers import interpret_value
 
@@ -61,8 +69,98 @@ def _records(sheet, headers, rows):
     for row, values in enumerate(rows, 2):
         for column, value in enumerate(values, 1):
             text_cell(sheet, row, column, value)
-    sheet.freeze_panes = "A2"
     sheet.auto_filter.ref = sheet.dimensions
+
+
+def _display_number(text):
+    # Alignment only: unsupported currency literals remain exact, inert text.
+    return bool(re.fullmatch(r"[\s$£€()\d,.+%−–—-]+", text))
+
+
+def _wrapped_lines(text, width):
+    return sum(
+        max(1, len(textwrap.wrap(line, width=max(1, int(width))))) for line in str(text).split("\n")
+    )
+
+
+def _style_table(sheet, content, note_column):
+    labels = set(content.row_label_columns or (0,))
+    headers = set(content.header_rows)
+    for column in range(content.columns):
+        body = [
+            cell.text
+            for cell in content.cells
+            if cell.col == column and cell.row not in headers and cell.text
+        ]
+        if column in labels:
+            width = min(56, max(42, max(map(len, body), default=0) * 0.7))
+        elif body and sum(_display_number(text) for text in body) >= len(body) * 0.6:
+            width = min(20, max(16, max(map(len, body)) + 2))
+        else:
+            width = 24
+        sheet.column_dimensions[get_column_letter(column + 1)].width = width
+    rule = Side(style="hair", color="DCE3E9")
+    section_rule = Side(style="thin", color="9FAFBE")
+    balance_rows = {
+        cell.row
+        for cell in content.cells
+        if cell.col in labels
+        and (
+            cell.role == "section"
+            or re.match(r"^(?:total\b|balance as of\b)", cell.text, re.IGNORECASE)
+        )
+    }
+    for row in range(content.rows):
+        sheet.row_dimensions[row + 1].height = 20
+        for col in range(content.columns):
+            target = sheet.cell(row + 1, col + 1)
+            target.font = Font(name="Arial", size=10, color="233342")
+            target.border = Border(bottom=rule)
+            if row in headers:
+                target.font = Font(name="Arial", size=10, bold=True, color="233342")
+                target.fill = PatternFill("solid", fgColor="EAF0F5")
+                target.border = Border(top=section_rule, bottom=section_rule)
+            elif row in balance_rows:
+                target.font = Font(name="Arial", size=10, bold=True, color="233342")
+                target.fill = PatternFill("solid", fgColor="F5F7F9")
+                target.border = Border(top=section_rule, bottom=rule)
+    for cell in content.cells:
+        target = sheet.cell(cell.row + 1, cell.col + 1)
+        header = cell.row in headers or cell.role in ("column_header", "header")
+        target.alignment = Alignment(
+            horizontal="center"
+            if header and cell.col not in labels
+            else ("right" if cell.col not in labels and _display_number(cell.text) else "left"),
+            vertical="center",
+            wrap_text=True,
+            indent=1,
+        )
+        width = sum(
+            sheet.column_dimensions[get_column_letter(c + 1)].width
+            for c in range(cell.col, cell.col + cell.col_span)
+        )
+        height = max(20, (_wrapped_lines(cell.text, width - 3) * 12 + 7) / cell.row_span)
+        for row in range(cell.row + 1, cell.row + cell.row_span + 1):
+            sheet.row_dimensions[row].height = min(
+                409, max(sheet.row_dimensions[row].height, height)
+            )
+    sheet.column_dimensions[get_column_letter(note_column)].width = 48
+    for row in sheet.iter_rows(min_col=note_column, max_col=note_column):
+        cell = row[0]
+        if cell.value is not None:
+            cell.font = Font(name="Arial", size=10, color="607485", italic=True)
+            cell.alignment = Alignment(vertical="center", wrap_text=False)
+    sheet.sheet_view.showGridLines = False
+    sheet.sheet_view.zoomScale = 90
+    sheet.sheet_view.selection[0].activeCell = "A1"
+    sheet.sheet_view.selection[0].sqref = "A1"
+    sheet.page_setup.orientation = "landscape"
+    sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
+    sheet.page_setup.scale = 100
+    sheet.print_options.horizontalCentered = True
+    sheet.print_area = (
+        f"A1:{get_column_letter(note_column)}{max(content.rows, len(content.unit_notes) + 3, 2)}"
+    )
 
 
 def write_workbook(data: ExportInput, target) -> ExportArtifact:
@@ -74,8 +172,45 @@ def write_workbook(data: ExportInput, target) -> ExportArtifact:
         wb.create_sheet(name) for name in ("Source", "Changes", "Manifest")
     ]
     manifest = export_manifest(data, "workbook")
+    context_sheet = wb.create_sheet("Context")
+    timeline_sheet = wb.create_sheet("Timeline")
+    subtotal_sheets = []
+    if data.content.subtotal_groups:
+        sheet = wb.create_sheet("Subtotals")
+        subtotal_sheets.append(sheet)
+        _records(
+            sheet,
+            ["Group", "Part", "Value (JSON)"],
+            (
+                [result["group"]["id"], part + 1, encoded[start : start + 600]]
+                for result in data.subtotal_results
+                for encoded in [json.dumps(result, ensure_ascii=True, sort_keys=True)]
+                for part, start in enumerate(range(0, len(encoded), 600))
+            ),
+        )
+    _records(
+        timeline_sheet,
+        ["Event", "Part", "Value (JSON)"],
+        (
+            [event.get("id"), index + 1, encoded[start : start + 600]]
+            for event in data.timeline_events
+            for encoded in [json.dumps(event, ensure_ascii=True, sort_keys=True)]
+            for index, start in enumerate(range(0, len(encoded), 600))
+        ),
+    )
+    _records(
+        context_sheet,
+        ["Evidence", "Part", "Value (JSON)"],
+        (
+            [identity, part + 1, encoded[start : start + 600]]
+            for identity, value in context_records(context_package(data.content))
+            for encoded in [json.dumps(value, ensure_ascii=True, sort_keys=True)]
+            for part, start in enumerate(range(0, len(encoded), 600))
+        ),
+    )
     for cell in data.content.cells:
-        value, format = typed_value(cell)
+        review = cell_review_metadata(data, cell)
+        value, format = (cell.text, "@") if review["verdict"] == "unreadable" else typed_value(cell)
         target_cell = (
             text_cell(table, cell.row + 1, cell.col + 1, value)
             if format == "@"
@@ -120,6 +255,7 @@ def write_workbook(data: ExportInput, target) -> ExportArtifact:
             "Interpretation",
             "Source references",
             "Export type",
+            "Cell review",
         ],
         (
             [
@@ -135,7 +271,11 @@ def write_workbook(data: ExportInput, target) -> ExportArtifact:
                     "primary": c.reference.model_dump(mode="json"),
                     "all": [r.model_dump(mode="json") for r in c.source_references],
                 },
-                "text" if typed_value(c)[1] == "@" else "number",
+                "text"
+                if cell_review_metadata(data, c)["verdict"] == "unreadable"
+                or typed_value(c)[1] == "@"
+                else "number",
+                cell_review_metadata(data, c),
             ]
             for c in data.content.cells
         ),
@@ -175,7 +315,7 @@ def write_workbook(data: ExportInput, target) -> ExportArtifact:
             for index, start in enumerate(range(0, len(encoded), 600))
         ),
     )
-    for sheet in wb:
+    for sheet in (source, changes, manifest_sheet, context_sheet, timeline_sheet, *subtotal_sheets):
         sheet.sheet_view.showGridLines = False
         for row in sheet:
             for cell in row:
@@ -184,10 +324,10 @@ def write_workbook(data: ExportInput, target) -> ExportArtifact:
             sheet.column_dimensions[get_column_letter(col)].width = 24 if col > 1 else 40
         for row in range(1, sheet.max_row + 1):
             sheet.row_dimensions[row].height = 32
-        for header in tuple(r + 1 for r in data.content.header_rows) if sheet is table else (1,):
+        for header in (1,):
             for cell in sheet[header]:
-                cell.font = Font(name="Arial", size=10, bold=True, color="FFFFFF")
-                cell.fill = PatternFill("solid", fgColor="244A41")
+                cell.font = Font(name="Arial", size=10, bold=True, color="233342")
+                cell.fill = PatternFill("solid", fgColor="EAF0F5")
     source.column_dimensions["A"].width = 42
     for column in ("B", "C", "D"):
         source.column_dimensions[column].width = 10
@@ -198,7 +338,7 @@ def write_workbook(data: ExportInput, target) -> ExportArtifact:
         changes.column_dimensions[column].width = 70
     manifest_sheet.column_dimensions["B"].width = 8
     manifest_sheet.column_dimensions["C"].width = 100
-    for sheet in wb:
+    for sheet in (source, changes, manifest_sheet):
         for row in sheet:
             lines = max(
                 (
@@ -221,9 +361,7 @@ def write_workbook(data: ExportInput, target) -> ExportArtifact:
                 default=1,
             )
             sheet.row_dimensions[row[0].row].height = min(409, max(28, lines * 15 + 8))
-    table.column_dimensions[get_column_letter(note_column)].width = 45
-    if data.content.header_rows:
-        table.freeze_panes = f"{get_column_letter(max(data.content.row_label_columns, default=-1) + 2)}{max(data.content.header_rows) + 2}"
+    _style_table(table, data.content, note_column)
     target.parent.mkdir(parents=True, exist_ok=True)
     raw = io.BytesIO()
     wb.save(raw)
@@ -235,6 +373,10 @@ def write_workbook(data: ExportInput, target) -> ExportArtifact:
         for name in sorted(original.namelist()):
             value = original.read(name)
             if name == "docProps/core.xml":
+                # Preserve namespace bindings used in QName-valued attributes,
+                # including xsi:type="dcterms:W3CDTF" on both timestamps.
+                # ElementTree rewrites tag prefixes but leaves attribute values
+                # unchanged, producing core properties Excel must repair.
                 root = ET.fromstring(value)
                 for tag in ("created", "modified"):
                     element = root.find("{http://purl.org/dc/terms/}" + tag)

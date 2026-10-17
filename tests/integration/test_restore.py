@@ -85,6 +85,14 @@ def test_real_restore_reconciles_current_journal_and_reproduces_retained_export(
     actor, doc, table = owned_table
     assert check_all(client, table).status_code == 200
     approval = approve(client, table.current_revision_id).json()
+    recorded_timeline = app.state.reviews.timeline(actor, table.current_revision_id)
+    recoverable = app.state.repository.create_table(
+        actor.id,
+        doc.id,
+        app.state.repository.get_revision(actor.id, table.id, table.current_revision_id).content,
+        extraction_manifest={"origin": "backup-removal-fixture"},
+    )
+    app.state.tables.set_removed(actor, recoverable.id, recoverable.current_revision_id, 0, True)
     export = request(client, table).json()
     completed_export, expected_bytes = finish_requested_export_via_worker(app, client, export["id"])
     app.state.documents.page(actor, doc.id, 2, 1.5)
@@ -107,6 +115,17 @@ def test_real_restore_reconciles_current_journal_and_reproduces_retained_export(
     assert result.ready and result.deleted_documents == 1 and result.revoked_accounts == 1
     restored = create_app(target)
     try:
+        from table_review.storage.repository import NotFound
+
+        assert recoverable.id in {
+            item.id for item in restored.state.tables.list(actor, doc.id, removed=True)
+        }
+        with pytest.raises(NotFound):
+            restored.state.tables.get(actor, recoverable.id)
+        recovered = restored.state.tables.set_removed(
+            actor, recoverable.id, recoverable.current_revision_id, 1, False
+        )
+        assert recovered.removed_at is None and recovered.removal_version == 2
         assert (
             restored.state.repository.get_revision(actor.id, table.id, table.current_revision_id).id
             == table.current_revision_id
@@ -117,6 +136,9 @@ def test_real_restore_reconciles_current_journal_and_reproduces_retained_export(
         history = restored.state.reviews.checked_history(actor, table.current_revision_id, 0)
         assert len(history.items) == 1 and history.items[0].checked
         assert history.items[0].actor_id == actor.id
+        assert (
+            restored.state.reviews.timeline(actor, table.current_revision_id) == recorded_timeline
+        )
         assert restored.state.exports.download(actor, export["id"]).read_bytes() == expected_bytes
         with restored.state.session_factory() as session:
             captured = session.get(TaskRow, export["id"]).input["snapshot"]

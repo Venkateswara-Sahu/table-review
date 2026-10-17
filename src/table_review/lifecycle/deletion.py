@@ -15,6 +15,7 @@ from table_review.reviews.models import (
     IssueDecisionRow,
     ReviewSnapshotRow,
     ReviewStateRow,
+    TimelineEventRow,
 )
 from table_review.storage.models import (
     DocumentRow,
@@ -122,6 +123,7 @@ class DeletionService:
             TaskRow.document_id == doc.id, TaskRow.owner_id == doc.owner_id
         )
         # Current revision FK is deferred. Remove dependent review/events before revisions/tables.
+        session.execute(delete(TimelineEventRow).where(TimelineEventRow.table_id.in_(tables)))
         session.execute(delete(ReviewStateRow).where(ReviewStateRow.revision_id.in_(revisions)))
         session.execute(
             delete(ReviewSnapshotRow).where(ReviewSnapshotRow.revision_id.in_(revisions))

@@ -154,9 +154,7 @@ def _terminate(process):
     psutil.wait_procs(children, timeout=5)
 
 
-def run_child(command, limits, *, work_dir, cancelled=lambda: False, heartbeat=lambda: None):
-    work_dir = Path(work_dir).resolve()
-    work_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+def child_environment(work_dir):
     # Do not copy DB credentials, account cookies or arbitrary model service tokens.
     env = {
         key: value
@@ -183,6 +181,13 @@ def run_child(command, limits, *, work_dir, cancelled=lambda: False, heartbeat=l
     elif "HOME" in os.environ:
         env["HOME"] = os.environ["HOME"]
     env["DOCLING_CACHE_DIR"] = str(work_dir / "docling")
+    return env
+
+
+def run_child(command, limits, *, work_dir, cancelled=lambda: False, heartbeat=lambda: None):
+    work_dir = Path(work_dir).resolve()
+    work_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    env = child_environment(work_dir)
     if sys.platform == "linux":
         command = [sys.executable, "-m", "table_review.jobs.linux_exec", str(os.getpid()), *command]
     oom_before = _oom_count()

@@ -1,0 +1,52 @@
+{
+  "status": "derived_ocr_stress_references_frozen_before_ocr_predictions",
+  "frozen_at": "2026-10-16T14:42:41.045348+00:00",
+  "corpus_sha256": "6f8cc2e5a86c00c4774c28157931d5b0375faf883285248ef940ec75955ff48a",
+  "protocol_sha256": "4e0b54fb32c519e3be7f5d1efdf41d7ba7d9acadfa61250047102dcde39e1cf2",
+  "pages": 3,
+  "tables": 2,
+  "cells": 189,
+  "native_reference_sha256": "33770af9c5cd07e30b267ffab80ef9bf678a8007eb5d51e6111b18515c341fcf",
+  "sources": [
+    {
+      "id": "amazon-2025-p48-raster180",
+      "original_report_id": "amazon-2025",
+      "original_page": 48,
+      "original_pdf_sha256": "63196177ef83756ddfaff5aacda547f0eabac4669c0f6144bcee8401cd8cfbfc",
+      "derived_pdf_sha256": "279179c2c6ce8e3a5496c4fa1084daa09d0d077ab9ded3a04c8d7df10f8289e9",
+      "raster_png_sha256": "c15c65d5914554efbbe5addecdcfd823b0496caa95e632616d81d22f0236db16",
+      "page_width": 594.0,
+      "page_height": 774.0,
+      "dpi": 180,
+      "ocr_required": true,
+      "selectable_text": false
+    },
+    {
+      "id": "coca-cola-2025-p63-raster180",
+      "original_report_id": "coca-cola-2025",
+      "original_page": 63,
+      "original_pdf_sha256": "3cf15f041ac30a094d868f383272d5129762dc4ef457413b95dcdae09e560015",
+      "derived_pdf_sha256": "8538dd57e4c21a485f189042bc76d11913b9cad69f7b97c6b8cf7822261e9a04",
+      "raster_png_sha256": "74c7aaeec9b7ce06595401f6d04ca8a11c85aac7a18d942c2a940ab3c9a83a9f",
+      "page_width": 612.0,
+      "page_height": 792.0,
+      "dpi": 180,
+      "ocr_required": true,
+      "selectable_text": false
+    },
+    {
+      "id": "amazon-2025-p18-raster180",
+      "original_report_id": "amazon-2025",
+      "original_page": 18,
+      "original_pdf_sha256": "63196177ef83756ddfaff5aacda547f0eabac4669c0f6144bcee8401cd8cfbfc",
+      "derived_pdf_sha256": "ed7d2d8847d3b53076b61277eeb6076ac0906cac632efb1ad21dc0eea7732e72",
+      "raster_png_sha256": "c6f47ea4e8093ff9e8c50f5ed1d6335a9f505a71a128bb328980b8644b2a8690",
+      "page_width": 594.0,
+      "page_height": 774.0,
+      "dpi": 180,
+      "ocr_required": true,
+      "selectable_text": false
+    }
+  ],
+  "independent_human_reviewers": 0
+}

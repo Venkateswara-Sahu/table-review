@@ -1,6 +1,6 @@
 # Table Review
 
-A private application for extracting English digital annual-report tables,
+A private application for extracting English annual-report tables from digital PDFs and page images,
 comparing them with the original page, correcting a saved revision and exporting
 that exact revision to a spreadsheet. It runs locally on CPU with PostgreSQL,
 FastAPI, React and a separately bounded Docling worker.
@@ -12,10 +12,47 @@ Exports retain raw text, current text, source references, revision checksum and
 review status. Warnings remain visible; marking cells checked is a user action,
 not an automatic correctness guarantee.
 
+Use the **Context** review tab to inspect a cell's canonical header path and
+source-backed period, currency, scale and measure proposals. Confirmations are
+explicit reviewer actions, carry actor/time and source evidence into XLSX/CSV,
+and reopen after dependent edits. Confirming scale does not multiply values.
+See the [source-context checkpoint](docs/evidence/2026-10-15-source-context.md).
+
+Use **History** for an ordered cell/table timeline explaining saved changes and
+stale review evidence. Workbook `Timeline` and CSV `timeline.json` retain the
+events captured when the export was requested. Earlier history remains available
+with an explicit recording boundary. See the
+[timeline checkpoint](docs/evidence/2026-10-16-review-timeline.md).
+
+**Checks** offers previous/next unresolved navigation and current-issue progress;
+**Keyboard help** describes the working controls. **Remove table** removes a table
+from active work with an inline explanation. Use **Removed tables** on its source
+page to restore it while the report is retained. Cell reviews, issue decisions and
+approval must be renewed; saved content/history and existing exports are retained.
+Report deletion or expiry removes recovery. See the
+[navigation/removal checkpoint](docs/evidence/2026-10-16-navigation-and-table-removal.md).
+
+Use **Subtotals** to declare a signed sum of selected currency amounts and a
+separate total, with an explicit absolute tolerance. Every participant needs
+current confirmed source period, currency and scale. Unsupported/unreadable
+inputs stay unavailable; edits reopen confirmation. Results and input evidence
+are captured in workbook `Subtotals` and CSV `subtotals.json` when declarations
+exist. A match checks this selected relation only. See the
+[declared-subtotal checkpoint](docs/evidence/2026-10-16-declared-subtotal-checks.md).
+
+In **Extraction history**, use **Review replacement** to compare a rerun candidate
+with current saved work and explicitly adopt the complete original extraction as
+a new draft. Earlier corrections remain in History. Reviews, context confirmations
+and subtotal declarations reset; matching source areas require confirmation.
+Ambiguous candidates need explicit selection. See the
+[safe-adoption checkpoint](docs/evidence/2026-10-16-safe-extraction-adoption.md).
+
 Start with the [local runbook](docs/runbooks/local.md). It gives exact dependency,
 model preload, deployment and private-account commands. The product supports PDFs
 up to 50 MiB/500 pages, one to five selected pages per run, and grids up to
-500 rows/60 columns/10,000 slots. Scans and OCR are outside this scope. An
+500 rows/60 columns/10,000 slots. Image-based pages can use preloaded offline OCR;
+selectable native content is preserved where usable. OCR recognition and routing
+are fallible, and every extracted figure needs source-image review. An
 interrupted extraction has a bounded retry; a missed table can be recovered
 manually. The network-isolated worker has a hard 6 GiB container limit. Accounts,
 owner checks, cancellation, deletion, retention and encrypted recovery belong to

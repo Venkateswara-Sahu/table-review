@@ -107,13 +107,12 @@ def test_manual_recovery_reviewed_export_reopens_exact_revision(app, client, cli
     )
     assert edited.status_code == 200
     saved = edited.json()
-    ids = [cell["id"] for cell in saved["content"]["cells"]]
-    assert (
-        client.post(
-            f"/api/v1/revisions/{saved['id']}/checked", json={"cell_ids": ids, "checked": True}
-        ).status_code
-        == 200
-    )
+    # Manual recovery starts with unknown empty cells: confirming the edited
+    # number must not silently confirm the other three positions as blank.
+    route = f"/api/v1/revisions/{saved['id']}/cell-review"
+    for verdict, has_text in (("confirmed_value", True), ("confirmed_blank", False)):
+        ids = [cell["id"] for cell in saved["content"]["cells"] if bool(cell["text"]) == has_text]
+        assert client.post(route, json={"cell_ids": ids, "verdict": verdict}).status_code == 200
     approval = client.post(
         f"/api/v1/revisions/{saved['id']}/approval", json={"allow_warnings": True}
     ).json()

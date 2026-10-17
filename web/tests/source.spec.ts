@@ -6,6 +6,47 @@ import {
   fixturePath,
 } from "./helpers";
 
+test("a temporarily busy PDF reader recovers within bounded read retries", async ({
+  page,
+}) => {
+  let attempts = 0;
+  await page.route(/\/api\/v1\/documents\/[^/]+\/pages\/1$/, async (route) => {
+    attempts++;
+    if (attempts <= 2) {
+      await route.fulfill({
+        status: 429,
+        json: { code: "pdf_busy", message: "PDF operation busy" },
+      });
+    } else await route.continue();
+  });
+  await signIn(page);
+  await page
+    .getByRole("button", { name: "Open report.pdf", exact: true })
+    .click();
+  await expect(page.getByTestId("source-image")).toBeVisible();
+  expect(attempts).toBeGreaterThanOrEqual(3);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("persistent PDF contention stops after three read attempts", async ({
+  page,
+}) => {
+  let attempts = 0;
+  await page.route(/\/api\/v1\/documents\/[^/]+\/pages\/1$/, async (route) => {
+    attempts++;
+    await route.fulfill({
+      status: 429,
+      json: { code: "pdf_busy", message: "PDF operation busy" },
+    });
+  });
+  await signIn(page);
+  await page
+    .getByRole("button", { name: "Open report.pdf", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText("PDF operation busy");
+  expect(attempts).toBe(3);
+});
+
 test("original page highlight survives zoom and full-page context", async ({
   page,
 }) => {
@@ -42,6 +83,7 @@ test("upload, explicit page selection and failed upload have real outcomes", asy
   await page.getByRole("button", { name: "Open new-report.pdf" }).click();
   await page.getByLabel("Original page").fill("2");
   await page.getByRole("button", { name: "View page", exact: true }).click();
+  await page.getByText("Extract tables", { exact: true }).click();
   await page.getByLabel("Pages to extract").fill("2");
   await page
     .getByRole("button", { name: "Extract selected pages", exact: true })
@@ -61,16 +103,15 @@ test("upload, explicit page selection and failed upload have real outcomes", asy
   ).toHaveCount(0);
 });
 
-test("unsupported page and no detected table still show original source", async ({
+test("unsupported page and an empty table list still show original source", async ({
   page,
 }) => {
   await signIn(page);
   await page
     .getByRole("button", { name: "Open report.pdf", exact: true })
     .click();
-  await expect(
-    page.getByText("No tables on this page", { exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".table-empty")).toBeVisible();
+  await expect(page.getByRole("grid")).toHaveCount(0);
   await expect(page.getByTestId("source-image")).toBeVisible();
   await page.getByRole("button", { name: "All reports", exact: true }).click();
   await page
@@ -79,9 +120,23 @@ test("unsupported page and no detected table still show original source", async 
   await expect(
     page.getByRole("status").filter({ hasText: "no usable digital text" }),
   ).toBeVisible();
+  await page.getByText("Extract tables", { exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Extract selected pages", exact: true }),
   ).toBeDisabled();
+  // A small image may become a usable OCR input only after cropping it.
+  await page
+    .getByRole("button", { name: "Select region", exact: true })
+    .click();
+  const source = await page.getByTestId("source-image").boundingBox();
+  if (!source) throw new Error("Source page unavailable");
+  await page.mouse.move(source.x + 30, source.y + 60);
+  await page.mouse.down();
+  await page.mouse.move(source.x + 180, source.y + 150, { steps: 5 });
+  await page.mouse.up();
+  await expect(
+    page.getByRole("button", { name: "Extract selected region", exact: true }),
+  ).toBeEnabled();
 });
 
 test("rotation and coarse source references remain honest", async ({
@@ -169,6 +224,7 @@ test("a selected region creates a manual table with honest source references", a
   await expect(
     page.getByRole("heading", { name: "Selected region", exact: true }),
   ).toBeVisible();
+  await page.getByText("Create a manual table", { exact: true }).click();
   await page.getByLabel("Manual rows").fill("2");
   await page.getByLabel("Manual columns").fill("3");
   await page

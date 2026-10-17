@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { ApiError, apiRequest, errorMessage } from "../../api/client";
 import type {
+  CellContext,
   EditOperation,
   Revision,
   ReviewState,
   Snapshot,
   SourceReference,
   TableView,
+  Table,
 } from "../../api/models";
 import { draftFor, EditControls, type EditDraft } from "./EditControls";
 import {
@@ -21,6 +23,9 @@ import { IssueList } from "./IssueList";
 import { ExportControls } from "../exports/ExportControls";
 import type { components } from "../../api/types";
 import { useStudy } from "./StudyRecorder";
+import { CellContextPanel } from "./CellContextPanel";
+import { cellAddress } from "./cellContext";
+import { SubtotalsPanel } from "./SubtotalsPanel";
 
 function firstCell(view: TableView) {
   return view.revision.content.cells.reduce<
@@ -40,12 +45,27 @@ export function ReviewScreen({
   onSource,
   onDirty,
   onRevision,
+  sourceSelection,
+  onRemoved,
 }: {
   view: TableView;
   onSource: (reference: SourceReference) => void;
   onDirty: (dirty: boolean) => void;
   onRevision: (revision: Revision) => void;
+  sourceSelection: { id: string; sequence: number } | null;
+  onRemoved?: (table: Table) => void;
 }) {
+  const screen = useRef<HTMLDivElement>(null);
+  const inspector = useRef<HTMLDivElement>(null);
+  const [tool, setTool] = useState("cell");
+  function openTool(next: string) {
+    setTool(next);
+    requestAnimationFrame(() => {
+      if (inspector.current) inspector.current.scrollTop = 0;
+    });
+  }
+  const [invalidation, setInvalidation] = useState("");
+  const [focusedIssue, setFocusedIssue] = useState<string | null>(null);
   const [revision, setRevision] = useState(view.revision);
   const study = useStudy();
   useEffect(() => {
@@ -69,11 +89,16 @@ export function ReviewScreen({
   const [error, setError] = useState("");
   const [conflict, setConflict] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [subtotalDirty, setSubtotalDirty] = useState(false);
+  const [confirmRemoval, setConfirmRemoval] = useState(false);
   const pending = useRef<{ signature: string; key: string } | null>(null);
   const acknowledged = useRef<{ revisionId: string; message: string } | null>(
     null,
   );
   const content = revision.content;
+  const showChecks =
+    study?.config.condition !== "review_without_checks" &&
+    study?.config.condition !== "spreadsheet_baseline";
   const cell = content.cells.find(
     (cell) =>
       cell.row <= selection.focus.row &&
@@ -81,22 +106,51 @@ export function ReviewScreen({
       cell.col <= selection.focus.col &&
       cell.col + cell.col_span > selection.focus.col,
   );
+  const [contextResult, setContextResult] = useState<{
+    revisionId: string;
+    value: CellContext;
+  } | null>(null);
+  const [contextError, setContextError] = useState("");
+  const [contextAttempt, setContextAttempt] = useState(0);
+  const cellId = cell?.id;
+  const context =
+    contextResult?.revisionId === revision.id &&
+    contextResult.value.cell_id === cellId
+      ? contextResult.value
+      : null;
+  useEffect(() => {
+    setContextError("");
+    if (!cellId || study) return;
+    const controller = new AbortController();
+    apiRequest<CellContext>(
+      `/api/v1/tables/${view.table.id}/revisions/${revision.id}/context/${encodeURIComponent(cellId)}`,
+      { signal: controller.signal },
+    )
+      .then((value) => {
+        if (!controller.signal.aborted)
+          setContextResult({ revisionId: revision.id, value });
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) setContextError(errorMessage(error));
+      });
+    return () => controller.abort();
+  }, [view.table.id, revision.id, cellId, study, contextAttempt]);
   const baseline = draftFor(content, cell);
   const dirty = JSON.stringify(baseline) !== JSON.stringify(draft);
   useEffect(() => {
-    onDirty(dirty || busy);
-  }, [dirty, busy, onDirty]);
+    onDirty(dirty || busy || subtotalDirty);
+  }, [dirty, busy, subtotalDirty, onDirty]);
   useEffect(() => () => onDirty(false), [onDirty]);
   useEffect(() => {
     const warning = (event: BeforeUnloadEvent) => {
-      if (dirty || busy) {
+      if (dirty || busy || subtotalDirty) {
         event.preventDefault();
         event.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", warning);
     return () => window.removeEventListener("beforeunload", warning);
-  }, [dirty, busy]);
+  }, [dirty, busy, subtotalDirty]);
   useEffect(() => {
     const controller = new AbortController();
     apiRequest<ReviewState>(`/api/v1/revisions/${revision.id}/review`, {
@@ -120,12 +174,12 @@ export function ReviewScreen({
     return () => controller.abort();
   }, [revision.id]);
   function select(position: Position, extend: boolean) {
-    if (busy) return;
+    if (busy) return false;
     if (
       dirty &&
       !window.confirm("Discard unsaved changes before selecting another cell?")
     )
-      return;
+      return false;
     const next = content.cells.find(
       (cell) =>
         cell.row <= position.row &&
@@ -140,8 +194,87 @@ export function ReviewScreen({
     setDraft(draftFor(content, next));
     if (next) onSource(next.reference);
     setStatus("");
+    return true;
+  }
+  useEffect(() => {
+    if (!sourceSelection) return;
+    const target = content.cells.find(
+      (value) => value.id === sourceSelection.id,
+    );
+    if (target && select({ row: target.row, col: target.col }, false))
+      openTool("cell");
+  }, [sourceSelection]);
+  function inspectIssue(issue: components["schemas"]["Issue"]) {
+    if (busy) return false;
+    const affected = content.cells.filter((value) =>
+      issue.affected_cell_ids.includes(value.id),
+    );
+    if (affected.length) {
+      const first = affected[0];
+      if (!select({ row: first.row, col: first.col }, false)) return false;
+    } else if (dirty) {
+      if (
+        !window.confirm(
+          "Discard unsaved changes before inspecting another issue?",
+        )
+      )
+        return false;
+      setDraft(baseline);
+    }
+    if (issue.reference) onSource(issue.reference);
+    setFocusedIssue(issue.id);
+    if (!issue.reference && !affected.length)
+      setStatus(
+        "This check has no source location or affected cells. Compare the original page manually.",
+      );
+    return true;
+  }
+  async function removeTable() {
+    if (busy || dirty || subtotalDirty) return;
+    setBusy(true);
+    setError("");
+    try {
+      const table = await apiRequest<Table>(
+        `/api/v1/tables/${view.table.id}/removal`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            removed: true,
+            base_revision_id: revision.id,
+            expected_version: view.table.removal_version,
+          }),
+        },
+      );
+      if (!table.removed_at)
+        throw new Error(
+          "This table was already restored. Reload before removing it again.",
+        );
+      onRemoved?.(table);
+    } catch (error) {
+      setError(errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+  function nextUnchecked() {
+    const ordered = [...content.cells].sort(
+      (a, b) => a.row - b.row || a.col - b.col,
+    );
+    const current = ordered.findIndex((value) => value.id === cell?.id);
+    const target = [
+      ...ordered.slice(current + 1),
+      ...ordered.slice(0, current + 1),
+    ].find((value) => !review?.checked_cell_ids.includes(value.id));
+    if (target) {
+      select({ row: target.row, col: target.col }, false);
+      openTool("cell");
+    }
   }
   function accept(next: Revision, message: string, preserveDraft = false) {
+    if (review?.checked_cell_ids.length || review?.current_approval)
+      setInvalidation(
+        "This edit changed the review evidence. Affected checked marks and any approval must be renewed.",
+      );
     const position = {
       row: Math.min(selection.focus.row, next.content.rows - 1),
       col: Math.min(selection.focus.col, next.content.columns - 1),
@@ -166,6 +299,15 @@ export function ReviewScreen({
   }
   async function save(operation: EditOperation) {
     if (busy) return;
+    if (
+      subtotalDirty &&
+      operation.kind !== "confirm_subtotal" &&
+      operation.kind !== "remove_subtotal" &&
+      !window.confirm(
+        "Discard unsaved subtotal setup before saving this change?",
+      )
+    )
+      return;
     // Atomic saves never silently discard other edited fields.
     const expected = { ...baseline };
     if (operation.kind === "set_text") expected.text = draft.text;
@@ -292,7 +434,39 @@ export function ReviewScreen({
       setBusy(false);
     }
   }
+  async function decideCells(
+    verdict: components["schemas"]["CellReviewInput"]["verdict"],
+    reason = "",
+  ) {
+    if (busy || dirty) return false;
+    setBusy(true);
+    setError("");
+    try {
+      setReview(
+        await apiRequest<ReviewState>(
+          `/api/v1/revisions/${revision.id}/cell-review`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              cell_ids: selectedCells(content, selection).map(
+                (cell) => cell.id,
+              ),
+              verdict,
+              reason,
+            }),
+          },
+        ),
+      );
+      return true;
+    } catch (error) {
+      setError(errorMessage(error));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
   async function restore(id: string) {
+    if (busy || dirty || subtotalDirty) return;
     setBusy(true);
     setError("");
     try {
@@ -334,7 +508,7 @@ export function ReviewScreen({
     }
   }
   return (
-    <div className="review-screen">
+    <div className="review-screen" ref={screen}>
       <div className="review-status">
         <strong>
           {!study && review?.current_approval
@@ -344,10 +518,51 @@ export function ReviewScreen({
             : "Draft"}
         </strong>
         <span role="status">
-          {status ||
-            (dirty ? "Unsaved changes" : "Compare every cell with its source")}
+          {subtotalDirty
+            ? "Unsaved subtotal setup"
+            : status ||
+              (dirty
+                ? "Unsaved changes"
+                : "Compare every cell with its source")}
         </span>
+        {!study && onRemoved && (
+          <button
+            disabled={busy || dirty || subtotalDirty}
+            onClick={() => setConfirmRemoval(true)}
+          >
+            Remove table
+          </button>
+        )}
       </div>
+      {confirmRemoval && (
+        <section className="table-removal" aria-label="Remove this table">
+          <h3>Remove this table from active work?</h3>
+          <p>
+            Cell reviews, issue decisions and approval will be cleared. Saved
+            content, history and existing exports stay with this report. Restore
+            it from Removed tables while the report is retained. Deleting or
+            expiring the report removes this recovery option.
+          </p>
+          <div className="edit-toolbar">
+            <button
+              disabled={busy || dirty || subtotalDirty}
+              onClick={() => void removeTable()}
+            >
+              Remove from active tables
+            </button>
+            <button disabled={busy} onClick={() => setConfirmRemoval(false)}>
+              Keep table
+            </button>
+          </div>
+        </section>
+      )}
+      {view.table.origin === "manual" &&
+        content.cells.every((item) => !item.text.trim()) && (
+          <p className="context-note">
+            This is a blank manual table. Enter the values from the selected
+            source area; no text was extracted.
+          </p>
+        )}
       {error && (
         <p role="alert" className="error">
           {error}
@@ -358,16 +573,104 @@ export function ReviewScreen({
           Reload latest revision
         </button>
       )}
-      <p className="fine-print">
-        Arrow keys move between cells. Shift + arrows or Shift + click selects a
-        range. Ctrl + Home / End moves to the first / last cell.
-      </p>
+      {invalidation && (
+        <p className="review-invalidation" role="status">
+          {invalidation}
+        </p>
+      )}
+      <div className="grid-context">
+        <span>
+          {cell ? cellAddress(cell) : "Select a cell"}
+          {context
+            ? ` / ${[...context.row_headers, ...context.column_headers]
+                .map((source) => source.text)
+                .filter(Boolean)
+                .join(" / ")}`
+            : ""}
+        </span>
+        <button
+          disabled={
+            !review ||
+            busy ||
+            dirty ||
+            review.checked_cell_ids.length === content.cells.length
+          }
+          onClick={nextUnchecked}
+        >
+          Next unchecked cell
+        </button>
+      </div>
       <TableGrid
         content={content}
         selection={selection}
         checked={new Set(review?.checked_cell_ids ?? [])}
+        cellReviews={review?.cell_reviews ?? {}}
         onSelect={select}
+        issueCells={
+          new Set(
+            showChecks
+              ? (review?.issues
+                  .filter(
+                    (issue) =>
+                      !review.issue_decisions?.[issue.fingerprint] ||
+                      review.issue_decisions[issue.fingerprint].kind ===
+                        "reopen",
+                  )
+                  .flatMap((issue) => issue.affected_cell_ids) ?? [])
+              : [],
+          )
+        }
+        highlightedCells={
+          new Set(
+            review?.issues.find((issue) => issue.id === focusedIssue)
+              ?.affected_cell_ids ?? [],
+          )
+        }
+        onActivate={() => {
+          openTool("cell");
+          requestAnimationFrame(() =>
+            screen.current
+              ?.querySelector<HTMLTextAreaElement>(
+                "textarea[data-cell-text-editor]",
+              )
+              ?.focus(),
+          );
+        }}
       />
+      <div className="keyboard-hint">
+        Arrows move · Shift selects a range · Enter edits · Ctrl + Enter saves
+      </div>
+      <details className="keyboard-help">
+        <summary>Keyboard help</summary>
+        <section aria-label="Keyboard controls">
+          <dl>
+            <dt>Arrow keys</dt>
+            <dd>
+              Move between table cells. Merged cells are crossed as one cell.
+            </dd>
+            <dt>Shift + arrows / Shift + click</dt>
+            <dd>Select a range.</dd>
+            <dt>Ctrl + Home / End</dt>
+            <dd>Move to the first / last table position.</dd>
+            <dt>Enter or F2 in the grid</dt>
+            <dd>Open Edit cell and focus the text editor.</dd>
+            <dt>Ctrl or Command + Enter in the editor</dt>
+            <dd>Save the edited cell text.</dd>
+            <dt>Escape in the editor</dt>
+            <dd>Discard unsaved editor fields.</dd>
+            <dt>Left / right arrows on a review tab</dt>
+            <dd>Switch review tools.</dd>
+            <dt>Enter in Original page</dt>
+            <dd>Go to the entered page. Scroll the source to browse pages.</dd>
+            <dt>Escape while selecting a region</dt>
+            <dd>Cancel the region selection.</dd>
+          </dl>
+          <p>
+            Use Previous / Next unresolved issue in Checks to move through open
+            checks. Each value still needs comparison with its source.
+          </p>
+        </section>
+      </details>
       {dirty && (
         <button
           disabled={busy}
@@ -387,53 +690,245 @@ export function ReviewScreen({
         selected={selectedCells(content, selection)}
         busy={busy || dirty}
         onChecked={(value) => void checked(value)}
+        onVerdict={decideCells}
         onApprove={(value) => void approve(value)}
       />
-      <EditControls
-        cell={cell}
-        content={content}
-        selection={selection}
-        draft={draft}
-        onDraft={(value) => {
-          setDraft(value);
-          setStatus("");
-        }}
-        onSave={(operation) => void save(operation)}
-        busy={busy}
-        dirty={dirty}
-      />
-      {!study && (
-        <History
-          table={view.table}
-          revision={revision}
-          busy={busy || dirty}
-          onRestore={(id) => void restore(id)}
-        />
-      )}
-      {!study && (
-        <ExportControls
-          tableId={view.table.id}
-          revisionId={revision.id}
-          disabled={busy || dirty || !review}
-        />
-      )}
-      {review &&
-        study?.config.condition !== "review_without_checks" &&
-        study?.config.condition !== "spreadsheet_baseline" && (
-          <IssueList
-            key={revision.id}
-            review={review}
-            busy={busy || dirty}
-            onSource={onSource}
-            onDecision={(id, kind, reason) => void decide(id, kind, reason)}
+      <div className="inspector-tabs" role="tablist" aria-label="Review tools">
+        {(
+          [
+            ["cell", "Edit cell"],
+            ...(!study
+              ? [
+                  ["context", "Context"],
+                  ["subtotals", "Subtotals"],
+                ]
+              : []),
+            ["structure", "Structure"],
+            ...(showChecks
+              ? [
+                  [
+                    "checks",
+                    `Checks${review ? ` (${review.unresolved_count})` : ""}`,
+                  ],
+                ]
+              : []),
+            ...(!study
+              ? [
+                  ["history", "History"],
+                  ["export", "Export"],
+                ]
+              : []),
+          ] as string[][]
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            id={`tab-${id}`}
+            role="tab"
+            aria-selected={tool === id}
+            aria-controls={`panel-${id}`}
+            tabIndex={tool === id ? 0 : -1}
+            onClick={() => openTool(id)}
+            onKeyDown={(event) => {
+              if (event.key !== "ArrowRight" && event.key !== "ArrowLeft")
+                return;
+              event.preventDefault();
+              const tabs = Array.from(
+                event.currentTarget.parentElement!.querySelectorAll<HTMLButtonElement>(
+                  '[role="tab"]',
+                ),
+              );
+              const next =
+                tabs[
+                  (tabs.indexOf(event.currentTarget) +
+                    (event.key === "ArrowRight" ? 1 : tabs.length - 1)) %
+                    tabs.length
+                ];
+              next.click();
+              next.focus();
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className="inspector-body" ref={inspector}>
+        <section
+          role="tabpanel"
+          id="panel-cell"
+          aria-labelledby="tab-cell"
+          hidden={tool !== "cell"}
+        >
+          <EditControls
+            cell={cell}
+            content={content}
+            selection={selection}
+            draft={draft}
+            onDraft={(value) => {
+              setDraft(value);
+              setStatus("");
+            }}
+            onSave={(operation) => void save(operation)}
+            busy={busy}
+            dirty={dirty}
+            onDiscard={() => {
+              setDraft(baseline);
+              setStatus("");
+              setError("");
+            }}
           />
+          {cell && (
+            <details className="cell-evidence">
+              <summary>Source references and table notes</summary>
+              <p>
+                {content.unit_notes.length
+                  ? content.unit_notes.join("; ")
+                  : "No table notes. Use Context to confirm source-backed units and scale."}
+              </p>
+              {(cell.source_references.length
+                ? cell.source_references
+                : [cell.reference]
+              ).map((reference, index) => (
+                <button key={index} onClick={() => onSource(reference)}>
+                  Source {index + 1}: page {reference.page} ·{" "}
+                  {reference.precision} reference
+                </button>
+              ))}
+            </details>
+          )}
+        </section>
+        {!study && (
+          <section
+            role="tabpanel"
+            id="panel-context"
+            aria-labelledby="tab-context"
+            hidden={tool !== "context"}
+          >
+            <CellContextPanel
+              key={`${revision.id}/${cell?.id ?? "none"}`}
+              context={context}
+              onRetry={() => setContextAttempt((value) => value + 1)}
+              error={contextError}
+              selectedIds={selectedCells(content, selection).map(
+                (cell) => cell.id,
+              )}
+              disabled={busy || dirty}
+              onSource={onSource}
+              onSave={(operation) => void save(operation)}
+            />
+          </section>
         )}
-      {!study && (
-        <details>
-          <summary>Run details</summary>
-          <pre>{JSON.stringify(revision.extraction_manifest, null, 2)}</pre>
-        </details>
-      )}
+        {!study && (
+          <section
+            role="tabpanel"
+            id="panel-subtotals"
+            aria-labelledby="tab-subtotals"
+            hidden={tool !== "subtotals"}
+          >
+            <SubtotalsPanel
+              key={revision.id}
+              tableId={view.table.id}
+              revisionId={revision.id}
+              content={content}
+              current={cell}
+              selected={selectedCells(content, selection)}
+              active={tool === "subtotals"}
+              refreshKey={String(review?.generation ?? 0)}
+              disabled={busy || dirty}
+              onDirty={setSubtotalDirty}
+              onSave={(operation) => void save(operation)}
+              onSelect={(id) => {
+                const target = content.cells.find((cell) => cell.id === id);
+                if (target) select({ row: target.row, col: target.col }, false);
+              }}
+              onContext={() => openTool("context")}
+            />
+          </section>
+        )}
+        <section
+          role="tabpanel"
+          id="panel-structure"
+          aria-labelledby="tab-structure"
+          hidden={tool !== "structure"}
+        >
+          <EditControls
+            cell={cell}
+            content={content}
+            selection={selection}
+            draft={draft}
+            onDraft={(value) => {
+              setDraft(value);
+              setStatus("");
+            }}
+            onSave={(operation) => void save(operation)}
+            busy={busy}
+            dirty={dirty}
+            onDiscard={() => {
+              setDraft(baseline);
+              setStatus("");
+              setError("");
+            }}
+            mode="structure"
+          />
+        </section>
+        <section
+          role="tabpanel"
+          id="panel-history"
+          aria-labelledby="tab-history"
+          hidden={tool !== "history"}
+        >
+          {!study && (
+            <History
+              active={tool === "history"}
+              table={view.table}
+              revision={revision}
+              busy={busy || dirty || subtotalDirty}
+              onRestore={(id) => void restore(id)}
+              selectedCellId={cell?.id}
+              review={review}
+            />
+          )}
+        </section>
+        <section
+          role="tabpanel"
+          id="panel-export"
+          aria-labelledby="tab-export"
+          hidden={tool !== "export"}
+        >
+          {!study && (
+            <ExportControls
+              tableId={view.table.id}
+              revisionId={revision.id}
+              disabled={busy || dirty || subtotalDirty || !review}
+            />
+          )}
+        </section>
+        <section
+          role="tabpanel"
+          id="panel-checks"
+          aria-labelledby="tab-checks"
+          hidden={tool !== "checks"}
+        >
+          {review &&
+            study?.config.condition !== "review_without_checks" &&
+            study?.config.condition !== "spreadsheet_baseline" && (
+              <IssueList
+                key={revision.id}
+                review={review}
+                busy={busy}
+                dirty={dirty}
+                onDecision={(id, kind, reason) => void decide(id, kind, reason)}
+                onInspect={inspectIssue}
+                selectedIssue={focusedIssue}
+              />
+            )}
+        </section>
+        {!study && (
+          <details>
+            <summary>Run details</summary>
+            <pre>{JSON.stringify(revision.extraction_manifest, null, 2)}</pre>
+          </details>
+        )}
+      </div>
     </div>
   );
 }

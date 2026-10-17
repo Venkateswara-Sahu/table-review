@@ -13,6 +13,7 @@ class CheckContext(ImmutableModel):
     source_regions: tuple[PageBox, ...]
     check_version: str = "1"
     source_available: bool = True
+    unreadable_cell_ids: tuple[str, ...] = ()
 
 
 class Issue(ImmutableModel):
@@ -24,6 +25,10 @@ class Issue(ImmutableModel):
         "structural_inconsistency",
         "limited_reference",
         "coverage_unavailable",
+        "unreviewed_blank",
+        "unreadable_value",
+        "subtotal_difference",
+        "subtotal_unavailable",
     ]
     affected_cell_ids: tuple[str, ...]
     evidence: dict[str, Any]

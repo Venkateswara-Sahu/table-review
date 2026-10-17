@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import re
 import secrets
 import shutil
@@ -14,7 +15,7 @@ from uuid import uuid4
 
 import httpx
 
-from table_review.runtime import models_available, write_model_manifest
+from table_review.runtime import models_available
 
 
 def command(args, *, timeout=600):
@@ -24,19 +25,53 @@ def command(args, *, timeout=600):
     return result.stdout
 
 
+def compose_command(state, env_file):
+    args = [
+        "docker",
+        "compose",
+        "--env-file",
+        str(env_file),
+        "-p",
+        state["project"],
+        "-f",
+        "infra/compose.yaml",
+    ]
+    volume = state.get("model_volume")
+    if volume:
+        if not isinstance(volume, str) or not re.fullmatch(
+            r"[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}", volume
+        ):
+            raise SystemExit("Invalid recorded model volume name")
+        os.environ["TABLE_REVIEW_MODEL_VOLUME"] = volume
+        args += ["-f", "infra/compose.models-volume.yaml"]
+    return args
+
+
+def verify_source_models(root):
+    if not (root / "runtime-manifest.lock").is_file():
+        raise SystemExit("Run the preload commands to record offline model identities first")
+    if not models_available(root):
+        raise SystemExit("Preloaded weights differ from recorded model identities")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--acceptance", action="store_true")
     parser.add_argument("--fresh-acceptance", action="store_true")
     parser.add_argument("--stop", action="store_true")
+    storage = parser.add_mutually_exclusive_group()
+    storage.add_argument("--model-volume", help="Existing checksum-verified offline model volume")
+    storage.add_argument(
+        "--bind-models", action="store_true", help="Return to the original model bind mount"
+    )
     args = parser.parse_args()
+    if args.stop and (args.model_volume or args.bind_models):
+        parser.error("Stopping does not change model storage")
     if args.fresh_acceptance:
         if args.stop:
             parser.error("Fresh initialization and stopping are separate actions")
         args.acceptance = True
     root = Path(__file__).resolve().parents[1]
-    import os
-
     os.chdir(root)
     cache = root / ".cache"
     cache.mkdir(exist_ok=True)
@@ -54,19 +89,7 @@ def main():
             if path.exists():
                 shutil.copyfile(path, saved / path.name)
                 (saved / path.name).chmod(0o600)
-        command(
-            [
-                "docker",
-                "compose",
-                "--env-file",
-                str(saved / env_file.name),
-                "-p",
-                prior["project"],
-                "-f",
-                "infra/compose.yaml",
-                "stop",
-            ]
-        )
+        command(compose_command(prior, saved / env_file.name) + ["stop"])
         # Only pointers to the archived test deployment are replaced. Its
         # named volumes and private configuration remain recoverable.
         for path in records:
@@ -105,16 +128,11 @@ def main():
         raise SystemExit("Invalid isolated acceptance project")
     if not args.acceptance and state["project"] != "table-review-local":
         raise SystemExit("Invalid local project")
-    compose = [
-        "docker",
-        "compose",
-        "--env-file",
-        str(env_file),
-        "-p",
-        state["project"],
-        "-f",
-        "infra/compose.yaml",
-    ]
+    if args.model_volume:
+        state["model_volume"] = args.model_volume
+    elif args.bind_models:
+        state.pop("model_volume", None)
+    compose = compose_command(state, env_file)
     if args.stop:
         command(compose + ["stop"])
         print("Recorded services stopped; all volumes preserved")
@@ -141,10 +159,58 @@ def main():
             with (root / "models" / profile["directory"] / name).open("rb") as stream:
                 if hashlib.file_digest(stream, "sha256").hexdigest() != digest:
                     raise SystemExit("Preloaded model artifacts differ from recorded identities")
-    write_model_manifest(root / "models")
-    if not models_available(root / "models"):
-        raise SystemExit("Preload recorded models first")
+    mark_model = json.loads((root / "infra/ocr-mark-model.json").read_text(encoding="utf-8"))
+    mark_path = root / "models" / "rapidocr" / mark_model["name"]
+    if not mark_path.is_file():
+        raise SystemExit("Preload the pinned OCR recognition models first")
+    with mark_path.open("rb") as stream:
+        if hashlib.file_digest(stream, "sha256").hexdigest() != mark_model["sha256"]:
+            raise SystemExit("Preloaded OCR mark model differs from recorded identity")
+    # Deployment is not a preload action: never bless changed bundled OCR files
+    # by replacing their frozen manifest during a storage change or rollback.
+    verify_source_models(root / "models")
     command(compose + ["build", "api", "worker"], timeout=900)
+    if state.get("model_volume"):
+        command(["docker", "volume", "inspect", state["model_volume"]])
+        # Validate the exact source manifest and all destination bytes before
+        # replacing any serving container. This operator check has no DB access.
+        lock_hash = hashlib.sha256((root / "models/runtime-manifest.lock").read_bytes()).hexdigest()
+        command(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--read-only",
+                "--cap-drop",
+                "ALL",
+                "--security-opt",
+                "no-new-privileges",
+                "--memory",
+                "512m",
+                "--cpus",
+                "2",
+                "--pids-limit",
+                "64",
+                "--user",
+                "10001:10001",
+                "--tmpfs",
+                "/tmp:size=64m,mode=1777",
+                "-v",
+                state["model_volume"] + ":/models:ro",
+                "table-review-worker:local",
+                "python",
+                "-c",
+                (
+                    "import hashlib,sys; from pathlib import Path; from table_review.runtime import models_available; "
+                    "root=Path('/models'); assert models_available(root); "
+                    "assert hashlib.sha256((root/'runtime-manifest.lock').read_bytes()).hexdigest()==sys.argv[1]"
+                ),
+                lock_hash,
+            ],
+            timeout=90,
+        )
     command(compose + ["stop", "api", "worker"])
     command(compose + ["up", "-d", "db"])
     command(compose + ["run", "--rm", "initialize"])
@@ -176,8 +242,30 @@ def main():
             )[0]["Image"]
             for service in ("api", "worker", "db")
         },
+        adapter_contract_version=command(
+            [
+                "docker",
+                "exec",
+                state["project"] + "-worker-1",
+                "python",
+                "-c",
+                "from table_review.extraction.provenance import ADAPTER_CONTRACT_VERSION; print(ADAPTER_CONTRACT_VERSION)",
+            ]
+        ).strip(),
+        model_storage="verified_named_volume"
+        if state.get("model_volume")
+        else "original_bind_mount",
     )
-    state_file.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    recorded_state = {**previous, **state}
+    if not state.get("model_volume"):
+        recorded_state.pop("model_volume", None)
+    state_file.write_text(json.dumps(recorded_state, indent=2), encoding="utf-8")
+    recorded = json.loads(project_file.read_text(encoding="utf-8"))
+    if state.get("model_volume"):
+        recorded["model_volume"] = state["model_volume"]
+    else:
+        recorded.pop("model_volume", None)
+    project_file.write_text(json.dumps(recorded), encoding="utf-8")
     print("Private local application ready at " + state["url"])
 
 

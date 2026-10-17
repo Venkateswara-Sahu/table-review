@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import DateTime, ForeignKey, ForeignKeyConstraint, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -13,6 +13,7 @@ class ReviewStateRow(Base):
     revision_id: Mapped[UUID] = mapped_column(ForeignKey("table_revisions.id"), primary_key=True)
     owner_id: Mapped[UUID] = mapped_column(index=True)
     checked_cell_ids: Mapped[list] = mapped_column(JSONB, default=list)
+    cell_reviews: Mapped[dict] = mapped_column(JSONB, default=dict)
     issue_decisions: Mapped[dict] = mapped_column(JSONB, default=dict)
     check_versions: Mapped[dict] = mapped_column(JSONB, default=lambda: {"checks": "not_run"})
     issues: Mapped[list] = mapped_column(JSONB, default=list)
@@ -29,6 +30,8 @@ class ReviewSnapshotRow(Base):
     content_checksum: Mapped[str] = mapped_column(String(64))
     label: Mapped[str]
     checked_cell_ids: Mapped[list] = mapped_column(JSONB)
+    cell_reviews: Mapped[dict] = mapped_column(JSONB, default=dict)
+    unreadable_count: Mapped[int] = mapped_column(default=0)
     issue_decisions: Mapped[dict] = mapped_column(JSONB)
     check_versions: Mapped[dict] = mapped_column(JSONB)
     issues: Mapped[list] = mapped_column(JSONB)
@@ -58,4 +61,27 @@ class CellReviewEventRow(Base):
     actor_id: Mapped[UUID] = mapped_column(index=True)
     cell_ids: Mapped[list] = mapped_column(JSONB)
     checked: Mapped[bool]
+    cell_reviews: Mapped[dict] = mapped_column(JSONB, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class TimelineEventRow(Base):
+    __tablename__ = "review_timeline_events"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["table_id", "owner_id"], ["review_tables.id", "review_tables.owner_id"]
+        ),
+        UniqueConstraint("table_id", "sequence", name="uq_review_timeline_sequence"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    owner_id: Mapped[UUID] = mapped_column(index=True)
+    table_id: Mapped[UUID] = mapped_column(index=True)
+    revision_id: Mapped[UUID] = mapped_column(ForeignKey("table_revisions.id"), index=True)
+    sequence: Mapped[int]
+    kind: Mapped[str]
+    actor_id: Mapped[UUID | None]
+    recorded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    cell_ids: Mapped[list] = mapped_column(JSONB)
+    details: Mapped[dict] = mapped_column(JSONB)

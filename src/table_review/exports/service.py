@@ -13,8 +13,12 @@ from table_review.jobs.models import TaskRow
 from table_review.jobs.queue import TaskConflict, _owner_lock
 from table_review.jobs.runner import code_identity, run_operation
 from table_review.jobs.types import TaskOutcome
-from table_review.storage.models import EditEventRow, RevisionRow
+from table_review.reviews.history import bounded_events
+from table_review.reviews.timeline import ancestor_ids, read_events
+from table_review.reviews.types import CellReviewEvent
+from table_review.storage.models import EditEventRow
 from table_review.storage.repository import NotFound
+from table_review.tables.subtotals import evaluate_subtotals
 from table_review.tables.types import TableContent
 
 
@@ -49,6 +53,8 @@ class ExportService:
             table = self.repository._table(session, actor.id, table_id)
             doc = self.repository._lock_document(session, actor.id, table.document_id)
             session.expire(table)
+            if table.removed_at is not None:
+                raise NotFound("Table not found")
             prior = session.scalar(
                 select(TaskRow).where(
                     TaskRow.owner_id == actor.id, TaskRow.idempotency_key == idempotency_key
@@ -64,14 +70,7 @@ class ExportService:
             if revision.table_id != table_id:
                 raise NotFound("Revision not found")
             review = self.reviews._view(session, table, state)
-            ancestors, pointer = set(), revision
-            while pointer:
-                ancestors.add(pointer.id)
-                pointer = (
-                    session.get(RevisionRow, pointer.parent_revision_id)
-                    if pointer.parent_revision_id
-                    else None
-                )
+            ancestors = ancestor_ids(session, revision)
             events = tuple(
                 {
                     "id": str(e.id),
@@ -92,7 +91,23 @@ class ExportService:
                     .order_by(EditEventRow.created_at, EditEventRow.id)
                 )
             )
+            timeline, _, through = read_events(
+                session, revision, byte_limit=self.reviews.history_bytes_limit
+            )
             data = ExportInput(
+                subtotal_results=tuple(
+                    result.model_dump(mode="json")
+                    for result in evaluate_subtotals(
+                        TableContent.model_validate(revision.content),
+                        unreadable_ids={
+                            key
+                            for key, value in state.cell_reviews.items()
+                            if value.get("verdict") == "unreadable"
+                        },
+                    )
+                ),
+                timeline_events=tuple(event.model_dump(mode="json") for event in timeline),
+                timeline_through_sequence=through,
                 content=TableContent.model_validate(revision.content),
                 revision_id=revision.id,
                 review_snapshot=review.current_approval,
@@ -105,7 +120,23 @@ class ExportService:
                 },
                 generation_manifest={**code_identity(), "export_version": "1"},
                 edit_events=events,
-                issues=tuple(state.issues),
+                cell_review_events=tuple(
+                    CellReviewEvent.model_validate(
+                        {
+                            "id": event.id,
+                            "revision_id": event.revision_id,
+                            "actor_id": event.actor_id,
+                            "created_at": event.created_at,
+                            "cell_ids": event.cell_ids,
+                            "checked": event.checked,
+                            "cell_reviews": event.cell_reviews,
+                        }
+                    ).model_dump(mode="json")
+                    for event in bounded_events(
+                        session, revision.id, byte_limit=self.reviews.history_bytes_limit
+                    )[0]
+                ),
+                issues=tuple(issue.model_dump(mode="json") for issue in review.issues),
             )
             task = self.queue.enqueue_in_session(
                 session,

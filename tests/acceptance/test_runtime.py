@@ -32,7 +32,9 @@ def test_task_metrics_keep_outcomes_and_timings_without_report_strings(
     assert len(records) == 1
     value = json.loads(records[0].removeprefix("task_metric "))
     assert value["kind"] == "prepare" and value["state"] in {"queued", "failed"}
-    assert value["duration_seconds"] >= 0 and value["queue_age_seconds"] >= 0
+    assert value["duration_seconds"] >= 0 and value["task_age_at_claim_seconds"] >= 0
+    assert value["task_age_semantics"] == "includes_prior_attempts_when_retried"
+    assert value["worker_stages"]["stages"]["publication_operation"]["seconds"] >= 0
     assert "secret-report-text" not in caplog.text and "confidential-report.pdf" not in caplog.text
     assert "password=" not in caplog.text and str(document.id) not in caplog.text
 

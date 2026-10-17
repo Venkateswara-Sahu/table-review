@@ -339,6 +339,7 @@ def restore_backup(backup, current_journal, target_settings) -> RestoreResult:
                 "review_states",
                 "issue_decision_events",
                 "cell_review_events",
+                "review_timeline_events",
                 "account_sessions",
                 "sign_in_throttles",
                 "lifecycle_events",

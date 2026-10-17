@@ -131,6 +131,9 @@ export function ExportControls({
             <span className="fine-print">
               {" "}
               Revision {record.revision_id.slice(0, 8)}
+              {record.revision_id !== revisionId
+                ? " · Earlier revision"
+                : " · Current revision"}
             </span>
             {record.state === "succeeded" && (
               <button disabled={busy} onClick={() => void download(record)}>

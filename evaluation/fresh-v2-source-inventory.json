@@ -1,0 +1,171 @@
+{
+  "version": "fresh-source-inventory-v1",
+  "status": "sources_only_not_accuracy_results",
+  "frozen_original_corpus_unchanged": true,
+  "reports": [
+    {
+      "id": "amazon-2025",
+      "company": "Amazon",
+      "year": 2025,
+      "source_url": "https://s2.q4cdn.com/299287126/files/doc_financials/2026/ar/Amazon-2025-Annual-Report.pdf",
+      "source_path": ".cache/fresh-evaluation-sources/amazon-2025.pdf",
+      "sha256": "63196177ef83756ddfaff5aacda547f0eabac4669c0f6144bcee8401cd8cfbfc",
+      "byte_count": 1634251,
+      "page_count": 92,
+      "accessed": "2026-10-16",
+      "extraction_predictions_viewed": false,
+      "annotation_status": "not_started",
+      "independent_adjudication": "not_started",
+      "pretrained_exposure": "unknown",
+      "selected_pages": [
+        {
+          "page": 17,
+          "purpose": "non_financial_board_table",
+          "image_path": ".cache/fresh-v2-review-packet/amazon-2025-page-017.png",
+          "image_sha256": "2cbf4424480d1d86f135114586afb0af25551ba90c15654b9b750abcc47dac52",
+          "source_image_review": "agent_visual_source_review_not_independent_gold",
+          "ground_truth": "not_started",
+          "independent_check": "not_started",
+          "provisional_table_count": 1
+        },
+        {
+          "page": 18,
+          "purpose": "plain_prose_negative",
+          "image_path": ".cache/fresh-v2-review-packet/amazon-2025-page-018.png",
+          "image_sha256": "b31db8efef479ffd6edd01dd41373a2e62f5139596aac7db86dc64537353d513",
+          "source_image_review": "agent_visual_source_review_not_independent_gold",
+          "ground_truth": "not_started",
+          "independent_check": "not_started",
+          "provisional_table_count": 0
+        },
+        {
+          "page": 46,
+          "purpose": "audit_narrative_layout_challenge",
+          "image_path": ".cache/fresh-v2-review-packet/amazon-2025-page-046.png",
+          "image_sha256": "39b3767ab1cc2c995b879cc195ac7ccde99ab715b55d6da8e35e62ce9e9d970b",
+          "source_image_review": "agent_visual_source_review_not_independent_gold",
+          "ground_truth": "not_started",
+          "independent_check": "not_started",
+          "table_scope_status": "requires_explicit_adjudication_narrative_columns_are_not_automatically_false_positives",
+          "provisional_table_count": null
+        },
+        {
+          "page": 47,
+          "purpose": "cash_flow",
+          "image_path": ".cache/fresh-v2-review-packet/amazon-2025-page-047.png",
+          "image_sha256": "8dbcef0ba579c9f8e9444d8ca3b06f877c38ab9e99ae1c3c14f5654dda8272bb",
+          "source_image_review": "agent_visual_source_review_not_independent_gold",
+          "ground_truth": "not_started",
+          "independent_check": "not_started",
+          "provisional_table_count": 1
+        },
+        {
+          "page": 48,
+          "purpose": "operations",
+          "image_path": ".cache/fresh-v2-review-packet/amazon-2025-page-048.png",
+          "image_sha256": "806f8117389bc0cf22306ecf77500cbb2a7fc90d24a5c6c14f629a74b040b9a4",
+          "source_image_review": "agent_visual_source_review_not_independent_gold",
+          "ground_truth": "not_started",
+          "independent_check": "not_started",
+          "provisional_table_count": 1
+        },
+        {
+          "page": 50,
+          "purpose": "balance_sheet",
+          "image_path": ".cache/fresh-v2-review-packet/amazon-2025-page-050.png",
+          "image_sha256": "e8b1400f0738366bb285ee72cfdf80e9cee36c942366728f726c4f8c1979313c",
+          "source_image_review": "agent_visual_source_review_not_independent_gold",
+          "ground_truth": "not_started",
+          "independent_check": "not_started",
+          "provisional_table_count": 1
+        }
+      ],
+      "page_plan_selected_before_app_predictions": true
+    },
+    {
+      "id": "coca-cola-2025",
+      "company": "The Coca-Cola Company",
+      "year": 2025,
+      "source_url": "https://investors.coca-colacompany.com/filings-reports/all-sec-filings/content/0001628280-26-010047/0001628280-26-010047.pdf",
+      "source_path": ".cache/fresh-evaluation-sources/coca-cola-2025.pdf",
+      "sha256": "3cf15f041ac30a094d868f383272d5129762dc4ef457413b95dcdae09e560015",
+      "byte_count": 8335449,
+      "page_count": 192,
+      "accessed": "2026-10-16",
+      "extraction_predictions_viewed": false,
+      "annotation_status": "not_started",
+      "independent_adjudication": "not_started",
+      "pretrained_exposure": "unknown",
+      "selected_pages": [
+        {
+          "page": 23,
+          "purpose": "plain_prose_negative",
+          "image_path": ".cache/fresh-v2-review-packet/coca-cola-2025-page-023.png",
+          "image_sha256": "b08b690b3e6c2282389ac219938399295e5b69dc6b77d2b2f773c7b567052fbb",
+          "source_image_review": "agent_visual_source_review_not_independent_gold",
+          "ground_truth": "not_started",
+          "independent_check": "not_started",
+          "provisional_table_count": 0
+        },
+        {
+          "page": 63,
+          "purpose": "income",
+          "image_path": ".cache/fresh-v2-review-packet/coca-cola-2025-page-063.png",
+          "image_sha256": "195a88880d1a45e54ab87dca13a1232e2171776cb528a9aab9e36ca9ee1f6680",
+          "source_image_review": "agent_visual_source_review_not_independent_gold",
+          "ground_truth": "not_started",
+          "independent_check": "not_started",
+          "provisional_table_count": 1
+        },
+        {
+          "page": 65,
+          "purpose": "balance_sheet",
+          "image_path": ".cache/fresh-v2-review-packet/coca-cola-2025-page-065.png",
+          "image_sha256": "49e7613a0a4204e6aaa35270fb54e06e3f4bd1ff16b241957774e1dd405c5093",
+          "source_image_review": "agent_visual_source_review_not_independent_gold",
+          "ground_truth": "not_started",
+          "independent_check": "not_started",
+          "provisional_table_count": 1
+        },
+        {
+          "page": 66,
+          "purpose": "cash_flow",
+          "image_path": ".cache/fresh-v2-review-packet/coca-cola-2025-page-066.png",
+          "image_sha256": "2f4512b09d8d3f7b489b8e17f70412ba7675f5e8ba67ee20ea9749f9d2887ed5",
+          "source_image_review": "agent_visual_source_review_not_independent_gold",
+          "ground_truth": "not_started",
+          "independent_check": "not_started",
+          "provisional_table_count": 1
+        },
+        {
+          "page": 124,
+          "purpose": "audit_narrative_layout_challenge",
+          "image_path": ".cache/fresh-v2-review-packet/coca-cola-2025-page-124.png",
+          "image_sha256": "bdf0f6c56fd9cf60d4b35616684fd25ab61051cc9be41e2f83dfc9325bd4f46f",
+          "source_image_review": "agent_visual_source_review_not_independent_gold",
+          "ground_truth": "not_started",
+          "independent_check": "not_started",
+          "table_scope_status": "requires_explicit_adjudication_narrative_columns_are_not_automatically_false_positives",
+          "provisional_table_count": null
+        }
+      ],
+      "page_plan_selected_before_app_predictions": true
+    }
+  ],
+  "unavailable_candidates": [
+    {
+      "id": "adobe-2025",
+      "http_status": 403,
+      "included": false
+    }
+  ],
+  "limits": [
+    "No extraction predictions were generated or used to select these source title candidates.",
+    "Title matches are not exhaustive page-level table annotations.",
+    "Ground truth and independent checking are not complete.",
+    "Original PDFs stay private ignored files; no redistribution claim."
+  ],
+  "source_and_page_plan_sha256": "f155ef024cfb53034bf7d2c2122e53fbda02c8489061e13febc6ad39f67e215f",
+  "selection_basis": "source titles and visual page inspection only; no app predictions",
+  "scope": "Two new company reports; 11 original pages; native-source cohort only. OCR/mixed image cohorts still needed."
+}

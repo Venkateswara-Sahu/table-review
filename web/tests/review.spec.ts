@@ -7,6 +7,138 @@ import type {
   ReviewState,
 } from "../src/api/models";
 
+test("blank and unreadable decisions remain explicit after reload and text edits", async ({
+  page,
+}) => {
+  const table = await manual(page);
+  await cell(page, 0, 0);
+  await expect(
+    page.getByRole("button", { name: "Confirm values", exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Confirm blank", exact: true })
+    .click();
+  await expect(page.locator('[data-row="0"][data-col="0"]')).toHaveAttribute(
+    "title",
+    /confirmed blank/,
+  );
+  await cell(page, 0, 1);
+  await page.getByText("Unreadable source", { exact: true }).click();
+  await page
+    .getByLabel("Why is the source unreadable?")
+    .fill("Source digits are blurred");
+  await page
+    .getByRole("button", { name: "Record unreadable", exact: true })
+    .click();
+  await expect(page.locator('[data-row="0"][data-col="1"]')).toHaveAttribute(
+    "title",
+    /unreadable/,
+  );
+  await page.getByRole("tab", { name: /Checks/ }).click();
+  await expect(
+    page.getByRole("region", { name: "Unreadable value", exact: true }),
+  ).toContainText("Source digits are blurred");
+  await expect(page.getByTestId("source-image")).toBeVisible();
+  await expect(page.getByTestId("source-image")).toHaveJSProperty(
+    "complete",
+    true,
+  );
+  await page.screenshot({ path: "../.cache/explicit-review-desktop.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Review", exact: true }).click();
+  await page.screenshot({ path: "../.cache/explicit-review-mobile.png" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole("tab", { name: "Edit cell", exact: true }).click();
+  await page.getByLabel("Cell text", { exact: true }).fill("55");
+  await expect(
+    page.getByRole("button", { name: "Confirm values", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Save text", exact: true }).click();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  await expect(page.locator('[data-row="0"][data-col="1"]')).toHaveAttribute(
+    "title",
+    /unreviewed/,
+  );
+  await page.reload();
+  await expect(page.locator('[data-row="0"][data-col="0"]')).toHaveAttribute(
+    "title",
+    /confirmed blank/,
+  );
+  const latest = (await (
+    await page.request.get(`/api/v1/tables/${table.id}`)
+  ).json()) as TableView;
+  const review = (await (
+    await page.request.get(`/api/v1/revisions/${latest.revision.id}/review`)
+  ).json()) as ReviewState;
+  expect(review.unreadable_count).toBe(0);
+});
+
+test("short review-history pages advance by the returned event count", async ({
+  page,
+}) => {
+  await manual(page, 1, 1);
+  await page
+    .getByRole("button", { name: "Confirm blank", exact: true })
+    .click();
+  await expect(
+    page.getByText("1 / 1 cells reviewed", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Clear review", exact: true }).click();
+  await expect(
+    page.getByText("0 / 1 cells reviewed", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Confirm blank", exact: true })
+    .click();
+  await expect(
+    page.getByText("1 / 1 cells reviewed", { exact: true }),
+  ).toBeVisible();
+  const offsets: number[] = [];
+  await page.route("**/checked-history?offset=*", async (route) => {
+    const offset = Number(
+      new URL(route.request().url()).searchParams.get("offset"),
+    );
+    offsets.push(offset);
+    const response = await route.fetch();
+    const history = await response.json();
+    // Emulate the backend's byte-limited short page; writes and history remain real.
+    await route.fulfill({
+      response,
+      json: {
+        ...history,
+        items: history.items.slice(0, 1),
+        has_more: history.items.length > 1,
+      },
+    });
+  });
+  await page.getByRole("tab", { name: "History", exact: true }).click();
+  await page
+    .getByText("Earlier history and revision restore", { exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Revision history", exact: true })
+    .click();
+  await expect(
+    page.locator(".history p").filter({ hasText: "by reviewer" }),
+  ).toHaveCount(1);
+  await page
+    .getByRole("button", { name: "Load more review events", exact: true })
+    .click();
+  await expect(
+    page.locator(".history p").filter({ hasText: "by reviewer" }),
+  ).toHaveCount(2);
+  await page
+    .getByRole("button", { name: "Load more review events", exact: true })
+    .click();
+  await expect(
+    page.locator(".history p").filter({ hasText: "by reviewer" }),
+  ).toHaveCount(3);
+  expect(offsets).toEqual([0, 1, 2]);
+  await expect(
+    page.getByRole("button", { name: "Load more review events", exact: true }),
+  ).not.toBeVisible();
+});
+
 // Each test edits its own real manual table. Successful writes use PostgreSQL,
 // revision CAS and the real API; the failure test aborts transport only.
 async function manual(page: Page, rows = 2, columns = 3) {
@@ -73,6 +205,10 @@ test("explicit saved correction survives reopening and original stays immutable"
   await expect(
     page.getByRole("button", { name: "Source: (1,234.50)", exact: true }),
   ).toBeVisible();
+  await page.getByRole("tab", { name: "History", exact: true }).click();
+  await page
+    .getByText("Earlier history and revision restore", { exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Revision history", exact: true })
     .click();
@@ -149,7 +285,7 @@ test("two tabs preserve a conflicting draft until explicit reload and save", asy
   await second.close();
 });
 
-test("blank cells support keyboard range checking and topology invalidates review", async ({
+test("blank cells support explicit keyboard range confirmation and topology invalidates review", async ({
   page,
 }) => {
   const table = await manual(page);
@@ -159,12 +295,12 @@ test("blank cells support keyboard range checking and topology invalidates revie
     page.getByText("2 cells selected", { exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Mark selection checked", exact: true })
+    .getByRole("button", { name: "Confirm blank", exact: true })
     .click();
   await expect(
-    page.getByText("2 / 6 cells checked", { exact: true }),
+    page.getByText("2 / 6 cells reviewed", { exact: true }),
   ).toBeVisible();
-  await page.getByText("Table structure", { exact: true }).click();
+  await page.getByRole("tab", { name: "Structure", exact: true }).click();
   await page
     .getByRole("button", { name: "Merge selection", exact: true })
     .click();
@@ -173,7 +309,7 @@ test("blank cells support keyboard range checking and topology invalidates revie
     "2",
   );
   await expect(
-    page.getByText("0 / 5 cells checked", { exact: true }),
+    page.getByText("0 / 5 cells reviewed", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Split cell", exact: true }).click();
   await expect(page.getByRole("gridcell")).toHaveCount(6);
@@ -209,6 +345,7 @@ test("header roles, raw notes and interpretation persist with review invalidatio
   await page
     .getByRole("button", { name: "Save interpretation", exact: true })
     .click();
+  await page.getByRole("tab", { name: "Structure", exact: true }).click();
   await page.getByText("Headers and units", { exact: true }).click();
   await page.getByLabel("Header rows").fill("1");
   await page.getByLabel("Row label columns").fill("1");
@@ -240,8 +377,9 @@ test("approval explicitly warns about checks not run and an edit reopens the dra
   const table = await manual(page, 1, 1);
   await cell(page, 0, 0);
   await page
-    .getByRole("button", { name: "Mark selection checked", exact: true })
+    .getByRole("button", { name: "Confirm blank", exact: true })
     .click();
+  await page.getByText("Approve table", { exact: true }).click();
   await page
     .getByRole("button", { name: "Approve with warnings", exact: true })
     .click();
@@ -309,7 +447,7 @@ test("a lost successful insertion response retries the exact saved structural re
 }) => {
   const table = await manual(page);
   await cell(page, 0, 0);
-  await page.getByText("Table structure", { exact: true }).click();
+  await page.getByRole("tab", { name: "Structure", exact: true }).click();
   const keys: string[] = [];
   let first = true;
   await page.route(`**/api/v1/tables/${table.id}/edits`, async (route) => {

@@ -74,10 +74,10 @@ def page_info(
     info = request.app.state.documents.info(actor, document_id, page_no)
     return {
         **info.model_dump(),
-        "extraction_supported": info.digital_text_present,
+        "extraction_supported": info.digital_text_present or info.requires_ocr,
         "unsupported_reason": None
-        if info.digital_text_present
-        else "This page has no usable digital text; automatic extraction is unsupported",
+        if info.digital_text_present or info.requires_ocr
+        else "This page has no usable digital text or page image to extract",
     }
 
 

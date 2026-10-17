@@ -5,6 +5,8 @@ from typing import Literal
 from pydantic import Field, field_validator
 
 from table_review.documents.types import ImmutableModel, SourceReference
+from table_review.tables.context_types import ContextBinding, ContextSource
+from table_review.tables.subtotal_types import SubtotalGroup
 
 type CellRole = Literal[
     "data", "column_header", "row_header", "section", "value", "label", "header"
@@ -39,11 +41,19 @@ class TableContent(ImmutableModel):
     row_label_columns: tuple[int, ...] = ()
     unit_notes: tuple[str, ...] = ()
     source_reference: SourceReference | None = None
+    context_sources: tuple[ContextSource, ...] = Field(default=(), max_length=32)
+    context_bindings: tuple[ContextBinding, ...] = Field(default=(), max_length=40000)
+    subtotal_groups: tuple[SubtotalGroup, ...] = Field(default=(), max_length=50)
 
 
 def content_checksum(content: TableContent) -> str:
+    canonical = content.model_dump(mode="json")
+    # Empty extensions must not alter checksums of pre-context immutable revisions.
+    for name in ("context_sources", "context_bindings", "subtotal_groups"):
+        if not canonical[name]:
+            canonical.pop(name)
     payload = json.dumps(
-        content.model_dump(mode="json"),
+        canonical,
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),

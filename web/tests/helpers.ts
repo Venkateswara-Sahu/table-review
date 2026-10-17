@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import path from "node:path";
+import type { TableView } from "../src/api/models";
 
 export const fixturePath = (name = "report.pdf") =>
   path.resolve("../.cache/browser-fixtures", name);
@@ -23,7 +24,41 @@ export async function openPageTwoTable(page: Page) {
     .click();
   await page.getByLabel("Original page").fill("2");
   await page.getByRole("button", { name: "View page", exact: true }).click();
-  await page.getByRole("button", { name: "Open table 1", exact: true }).click();
+  await page
+    .locator(".table-choices button")
+    .filter({ hasText: "Extracted" })
+    .first()
+    .click();
+  // These tests share a seeded server. Restore its immutable fixture before
+  // assertions if another test left a saved correction or interpretation.
+  await expect
+    .poll(() => new URL(page.url()).searchParams.get("table"))
+    .not.toBeNull();
+  const tableId = new URL(page.url()).searchParams.get("table")!;
+  const view = (await (
+    await page.request.get(`/api/v1/tables/${tableId}`)
+  ).json()) as TableView;
+  if (view.revision.id !== view.table.original_revision_id) {
+    const csrf = (await page.context().cookies()).find(
+      (item) => item.name === "tr_csrf",
+    )!.value;
+    const restored = await page.request.post(
+      `/api/v1/tables/${tableId}/restore`,
+      {
+        headers: {
+          Origin: "http://127.0.0.1:5173",
+          "X-CSRF-Token": csrf,
+          "Idempotency-Key": crypto.randomUUID(),
+        },
+        data: {
+          base_revision_id: view.revision.id,
+          historical_revision_id: view.table.original_revision_id,
+        },
+      },
+    );
+    expect(restored.status()).toBe(200);
+    await page.reload();
+  }
   await page
     .getByRole("button", { name: "Source: 1,234.50", exact: true })
     .click();

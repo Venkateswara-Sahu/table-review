@@ -41,10 +41,34 @@ def test_delete_revokes_all_owned_resources_and_is_idempotent(app, client, clien
         f"/tables/{table.id}",
         f"/tables/{table.id}/history",
         f"/revisions/{table.current_revision_id}/review",
+        f"/revisions/{table.current_revision_id}/timeline",
         f"/exports/{export['id']}/download",
     ):
         assert client.get("/api/v1" + route).status_code == 404, route
     assert str(doc.id) not in {d["id"] for d in client.get("/api/v1/documents").json()["items"]}
+
+
+def test_document_cleanup_purges_recorded_timeline(app, client, owned_table):  # noqa: F811
+    from sqlalchemy import func, select
+
+    from table_review.reviews.models import TimelineEventRow
+    from tests.integration.test_review_api import check_all
+
+    actor, doc, table = owned_table
+    check_all(client, table)
+    query = (
+        select(func.count())
+        .select_from(TimelineEventRow)
+        .where(TimelineEventRow.table_id == table.id)
+    )
+    with app.state.session_factory() as session:
+        assert session.scalar(query) > 0
+    clock = Clock()
+    app.state.deletion.request(actor, doc.id, clock.now())
+    assert client.get(f"/api/v1/revisions/{table.current_revision_id}/timeline").status_code == 404
+    app.state.deletion.sweep(clock.now())
+    with app.state.session_factory() as session:
+        assert session.scalar(query) == 0
 
 
 @pytest.mark.parametrize("kind", ["prepare", "extract", "export"])

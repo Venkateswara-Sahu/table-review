@@ -7,6 +7,7 @@ from table_review.documents.pdf import page_info, source_tokens
 from table_review.documents.types import PageBox, SourceReference
 from table_review.extraction.types import ExtractedTable, ExtractionResult
 from table_review.jobs.types import TaskOutcome
+from table_review.tables.context_types import ContextSource
 from table_review.tables.types import CellContent, TableContent
 
 
@@ -55,6 +56,19 @@ def contract_extractor(queue):
             header_rows=(0,),
             row_label_columns=(0,),
             source_reference=SourceReference(page=page, precision="table", box=area),
+            context_sources=(
+                ContextSource(
+                    id="caption:units",
+                    text="USD millions; values are fixture data.",
+                    raw_text="USD millions; values are fixture data.",
+                    references=tuple(
+                        token.provenance
+                        for token in tokens
+                        if token.text in ("USD", "millions;", "values", "are", "fixture", "data.")
+                    ),
+                    origin="extracted",
+                ),
+            ),
         )
         result = ExtractionResult(
             tables=(

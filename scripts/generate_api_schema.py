@@ -22,7 +22,9 @@ def main():
             target = root / "docs/api/openapi.json"
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(
-                json.dumps(app.openapi(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+                json.dumps(app.openapi(), indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+                newline="\n",
             )
         finally:
             app.state.session_factory.kw["bind"].dispose()

@@ -28,6 +28,15 @@ def test_probe_preserves_original_page(tmp_path: Path):
     assert result.tables and all(t.page_no == 2 for t in result.tables)
     assert result.manifest["device"] == "cpu"
     assert result.manifest["model_artifact_hashes"]
+    assert result.manifest["conversion_outcome"] == "success"
+    assert result.manifest["page_outcomes"][0]["status"] == "success"
+    assert result.manifest["page_outcomes"][0]["original_page"] == 2
+    assert result.manifest["page_outcomes"][0]["confidence"]["pages"]
+    assert result.manifest["pipeline_options"]["do_ocr"] is False
+    assert result.manifest["pipeline_options"]["enable_remote_services"] is False
+    assert result.manifest["versions"]["docling-parse"]
+    assert result.manifest["versions"]["torchvision"]
+    json.dumps(result.model_dump(mode="json"), allow_nan=False)
     assert any("1,234.50" in c.raw_text for t in result.tables for c in t.content.cells)
     assert all(c.reference.page == 2 for t in result.tables for c in t.content.cells)
     expected_headers = tuple(
@@ -41,6 +50,19 @@ def test_probe_preserves_original_page(tmp_path: Path):
         )
     )
     assert result.tables[0].content.header_rows == expected_headers
+
+
+@pytest.mark.extraction
+def test_real_non_table_page_is_a_successful_empty_conversion(tmp_path: Path):
+    from table_review.extraction.docling_adapter import DoclingExtractor
+    from table_review.extraction.types import ExtractionRequest
+
+    source = two_page_report(tmp_path / "cover.pdf")
+    result = DoclingExtractor().extract(ExtractionRequest(source_path=source, pages=(1,)))
+    assert result.tables == ()
+    assert result.manifest["conversion_outcome"] == "success"
+    assert result.manifest["page_outcomes"][0]["status"] == "success"
+    assert any("no tables detected" in warning for warning in result.warnings)
 
 
 def test_rotated_crop_tokens_match_display(tmp_path: Path):
@@ -72,6 +94,9 @@ def test_selected_region_is_clipped_and_reversible(tmp_path: Path):
     )
     assert result.tables
     assert result.manifest["region_transform"]["offset_top"] == 115
+    outcome = result.manifest["page_outcomes"][0]
+    assert outcome["original_page"] == 2 and outcome["backend_page"] == 1
+    assert outcome["input_sha256"] != result.manifest["source_sha256"]
     for table in result.tables:
         assert table.page_no == 2
         assert table.region and region.left <= table.region.left < region.right

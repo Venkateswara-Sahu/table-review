@@ -17,6 +17,7 @@ test("upload correction review export and reopen uses the requested snapshot", a
     .click();
   await page.getByLabel("Original page").fill("2");
   await page.getByRole("button", { name: "View page", exact: true }).click();
+  await page.getByText("Extract tables", { exact: true }).click();
   await page.getByLabel("Pages to extract").fill("2");
   await page
     .getByRole("button", { name: "Extract selected pages", exact: true })
@@ -34,14 +35,16 @@ test("upload correction review export and reopen uses the requested snapshot", a
   await page.keyboard.press("Control+Home");
   await page.keyboard.press("Control+Shift+End");
   await page
-    .getByRole("button", { name: "Mark selection checked", exact: true })
+    .getByRole("button", { name: "Confirm values", exact: true })
     .click();
+  await page.getByText("Approve table", { exact: true }).click();
   await page
     .getByRole("button", { name: "Approve with warnings", exact: true })
     .click();
   await expect(
     page.getByText("Reviewed with warnings", { exact: true }),
   ).toBeVisible();
+  await page.getByRole("tab", { name: "Export", exact: true }).click();
   await page
     .getByRole("button", { name: "Create workbook", exact: true })
     .click();
@@ -64,13 +67,17 @@ test("upload correction review export and reopen uses the requested snapshot", a
     testInfo.outputPath("reviewed.xlsx"),
     "../artifacts/export-viewer/reviewed.xlsx",
   );
+  await page.getByRole("tab", { name: "Edit cell", exact: true }).click();
   await page.getByLabel("Cell text", { exact: true }).fill("later text");
+  await page.getByRole("tab", { name: "Export", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Create workbook", exact: true }),
   ).toBeDisabled();
+  await page.getByRole("tab", { name: "Edit cell", exact: true }).click();
   await page.getByRole("button", { name: "Save text", exact: true }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
   await page.reload();
+  await page.getByRole("tab", { name: "Export", exact: true }).click();
   await expect(downloadButton).toBeVisible();
   await expect(page.getByRole("region", { name: "Exports" })).toContainText(
     "Reviewed with warnings",

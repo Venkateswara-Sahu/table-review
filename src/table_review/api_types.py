@@ -75,6 +75,7 @@ class PageView(APIModel):
     width: float
     height: float
     digital_text_present: bool
+    requires_ocr: bool = False
     extraction_supported: bool
     unsupported_reason: str | None
 

@@ -82,7 +82,7 @@ def test_export_keeps_requested_approval(app, client, owned_table):  # noqa: F81
             s.attrib["name"]
             for s in ET.fromstring(archive.read("xl/workbook.xml")).findall("x:sheets/x:sheet", ns)
         ]
-        assert names == ["Table", "Source", "Changes", "Manifest"]
+        assert names == ["Table", "Source", "Changes", "Manifest", "Context", "Timeline"]
         assert b"later edit" not in archive.read("xl/worksheets/sheet1.xml")
         assert b"1:1" in archive.read("xl/worksheets/sheet1.xml")
 
@@ -148,6 +148,8 @@ def test_csv_retains_exact_literals_with_escape_metadata(app, client, owned_tabl
             "manifest.json",
             "cells.json",
             "changes.json",
+            "context.json",
+            "timeline.json",
         }
         import csv
 

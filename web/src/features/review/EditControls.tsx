@@ -27,6 +27,8 @@ export function EditControls({
   onSave,
   busy,
   dirty,
+  onDiscard,
+  mode = "cell",
 }: {
   cell?: Cell;
   content: TableContent;
@@ -36,6 +38,8 @@ export function EditControls({
   onSave: (operation: EditOperation) => void;
   busy: boolean;
   dirty: boolean;
+  onDiscard: () => void;
+  mode?: "cell" | "structure";
 }) {
   const id = useId();
   const box = selectionBounds(selection);
@@ -43,7 +47,7 @@ export function EditControls({
     value.trim() ? value.split(",").map((item) => Number(item.trim()) - 1) : [];
   return (
     <div className="edit-controls">
-      {cell && (
+      {mode === "cell" && cell && (
         <>
           <p className="fine-print">
             Row {cell.row + 1}, column {cell.col + 1} · {cell.row_span} ×{" "}
@@ -51,12 +55,32 @@ export function EditControls({
           </p>
           <label htmlFor={`${id}-text`}>Cell text</label>
           <textarea
+            data-cell-text-editor
             disabled={busy}
             id={`${id}-text`}
             value={draft.text}
             onChange={(event) =>
               onDraft({ ...draft, text: event.target.value })
             }
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                onDiscard();
+              }
+              if (
+                (event.ctrlKey || event.metaKey) &&
+                event.key === "Enter" &&
+                !busy &&
+                draft.text !== cell.text
+              ) {
+                event.preventDefault();
+                onSave({
+                  kind: "set_text",
+                  cell_id: cell.id,
+                  text: draft.text,
+                });
+              }
+            }}
           />
           <button
             className="primary"
@@ -102,123 +126,137 @@ export function EditControls({
           </button>
         </>
       )}
-      <details>
-        <summary>Table structure</summary>
-        <p className="fine-print">
-          Save or discard edited fields first. Structure changes clear checked
-          cells and approval.
-        </p>
-        <div className="edit-toolbar">
-          <button
-            disabled={busy || dirty}
-            onClick={() =>
-              onSave({ kind: "insert_row", index: selection.focus.row + 1 })
-            }
-          >
-            Insert row after
-          </button>
-          <button
-            disabled={busy || dirty || content.rows === 1}
-            onClick={() =>
-              onSave({ kind: "delete_row", index: selection.focus.row })
-            }
-          >
-            Delete row
-          </button>
-          <button
-            disabled={busy || dirty}
-            onClick={() =>
-              onSave({ kind: "insert_column", index: selection.focus.col + 1 })
-            }
-          >
-            Insert column after
-          </button>
-          <button
-            disabled={busy || dirty || content.columns === 1}
-            onClick={() =>
-              onSave({ kind: "delete_column", index: selection.focus.col })
-            }
-          >
-            Delete column
-          </button>
-          <button
-            disabled={busy || dirty || box.rows * box.columns === 1}
-            onClick={() => onSave({ kind: "merge", ...box })}
-          >
-            Merge selection
-          </button>
-          <button
-            disabled={
-              busy || dirty || !cell || cell.row_span * cell.col_span === 1
-            }
-            onClick={() => cell && onSave({ kind: "split", cell_id: cell.id })}
-          >
-            Split cell
-          </button>
-        </div>
-      </details>
-      <details>
-        <summary>Headers and units</summary>
-        <label>
-          Header rows
-          <input
-            disabled={busy}
-            placeholder="e.g. 1, 2"
-            value={draft.headers}
-            onChange={(event) =>
-              onDraft({ ...draft, headers: event.target.value })
-            }
-          />
-        </label>
-        <label>
-          Row label columns
-          <input
-            disabled={busy}
-            placeholder="e.g. 1"
-            value={draft.labels}
-            onChange={(event) =>
-              onDraft({ ...draft, labels: event.target.value })
-            }
-          />
-        </label>
-        <p className="fine-print">
-          Original grid indices start at 1. Use commas; leave empty for none.
-        </p>
-        <button
-          disabled={
-            busy ||
-            (draft.headers === draftFor(content).headers &&
-              draft.labels === draftFor(content).labels)
-          }
-          onClick={() =>
-            onSave({
-              kind: "set_headers",
-              header_rows: indices(draft.headers),
-              row_label_columns: indices(draft.labels),
-            })
-          }
-        >
-          Save header roles
-        </button>
-        <label htmlFor={`${id}-notes`}>Raw unit notes</label>
-        <textarea
-          disabled={busy}
-          id={`${id}-notes`}
-          value={draft.notes}
-          onChange={(event) => onDraft({ ...draft, notes: event.target.value })}
-        />
-        <button
-          disabled={busy || draft.notes === content.unit_notes.join("\n")}
-          onClick={() =>
-            onSave({
-              kind: "set_notes",
-              unit_notes: draft.notes === "" ? [] : draft.notes.split("\n"),
-            })
-          }
-        >
-          Save unit notes
-        </button>
-      </details>
+      {mode === "structure" && (
+        <>
+          <details open>
+            <summary>Table structure</summary>
+            <p className="fine-print">
+              Save or discard edited fields first. Structure changes clear
+              checked cells and approval.
+            </p>
+            <div className="edit-toolbar">
+              <button
+                disabled={busy || dirty}
+                onClick={() =>
+                  onSave({ kind: "insert_row", index: selection.focus.row + 1 })
+                }
+              >
+                Insert row after
+              </button>
+              <button
+                className="danger"
+                disabled={busy || dirty || content.rows === 1}
+                onClick={() =>
+                  onSave({ kind: "delete_row", index: selection.focus.row })
+                }
+              >
+                Delete row
+              </button>
+              <button
+                disabled={busy || dirty}
+                onClick={() =>
+                  onSave({
+                    kind: "insert_column",
+                    index: selection.focus.col + 1,
+                  })
+                }
+              >
+                Insert column after
+              </button>
+              <button
+                className="danger"
+                disabled={busy || dirty || content.columns === 1}
+                onClick={() =>
+                  onSave({ kind: "delete_column", index: selection.focus.col })
+                }
+              >
+                Delete column
+              </button>
+              <button
+                disabled={busy || dirty || box.rows * box.columns === 1}
+                onClick={() => onSave({ kind: "merge", ...box })}
+              >
+                Merge selection
+              </button>
+              <button
+                disabled={
+                  busy || dirty || !cell || cell.row_span * cell.col_span === 1
+                }
+                onClick={() =>
+                  cell && onSave({ kind: "split", cell_id: cell.id })
+                }
+              >
+                Split cell
+              </button>
+            </div>
+          </details>
+          <details>
+            <summary>Headers and units</summary>
+            <label>
+              Header rows
+              <input
+                disabled={busy}
+                placeholder="e.g. 1, 2"
+                value={draft.headers}
+                onChange={(event) =>
+                  onDraft({ ...draft, headers: event.target.value })
+                }
+              />
+            </label>
+            <label>
+              Row label columns
+              <input
+                disabled={busy}
+                placeholder="e.g. 1"
+                value={draft.labels}
+                onChange={(event) =>
+                  onDraft({ ...draft, labels: event.target.value })
+                }
+              />
+            </label>
+            <p className="fine-print">
+              Original grid indices start at 1. Use commas; leave empty for
+              none.
+            </p>
+            <button
+              disabled={
+                busy ||
+                (draft.headers === draftFor(content).headers &&
+                  draft.labels === draftFor(content).labels)
+              }
+              onClick={() =>
+                onSave({
+                  kind: "set_headers",
+                  header_rows: indices(draft.headers),
+                  row_label_columns: indices(draft.labels),
+                })
+              }
+            >
+              Save header roles
+            </button>
+            <label htmlFor={`${id}-notes`}>Raw unit notes</label>
+            <textarea
+              disabled={busy}
+              id={`${id}-notes`}
+              value={draft.notes}
+              onChange={(event) =>
+                onDraft({ ...draft, notes: event.target.value })
+              }
+            />
+            <button
+              disabled={busy || draft.notes === content.unit_notes.join("\n")}
+              onClick={() =>
+                onSave({
+                  kind: "set_notes",
+                  unit_notes: draft.notes === "" ? [] : draft.notes.split("\n"),
+                })
+              }
+            >
+              Save unit notes
+            </button>
+          </details>
+        </>
+      )}
     </div>
   );
 }

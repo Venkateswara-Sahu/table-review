@@ -129,6 +129,8 @@ class TableRow(Base):
         )
     )
     original_revision_id: Mapped[UUID]
+    removed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    removal_version: Mapped[int] = mapped_column(default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -194,6 +196,8 @@ class TableRecord(ImmutableModel):
     current_revision_id: UUID
     original_revision_id: UUID
     origin: str
+    removed_at: datetime | None = None
+    removal_version: int = 0
 
 
 class RevisionRecord(ImmutableModel):

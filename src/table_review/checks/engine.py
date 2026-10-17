@@ -6,6 +6,7 @@ from itertools import pairwise
 from uuid import NAMESPACE_URL, uuid5
 
 from table_review.checks.types import CheckContext, Issue
+from table_review.tables.subtotals import evaluate_subtotals
 from table_review.tables.types import TableContent
 
 CHECK_VERSION = "1"
@@ -258,5 +259,18 @@ def evaluate_checks(content: TableContent, context: CheckContext) -> tuple[Issue
             },
             "Header roles disagree with the declared row or column associations. Check the structure; an absent physical slot alone is not an inferred missing value or zero.",
             content.source_reference,
+        )
+    for result in evaluate_subtotals(content, unreadable_ids=context.unreadable_cell_ids):
+        if result.state == "match":
+            continue
+        ids = {term.cell_id for term in result.group.terms} | {result.group.total_cell_id}
+        add(
+            "subtotal_difference" if result.state == "difference" else "subtotal_unavailable",
+            ids & cells.keys(),
+            result.model_dump(mode="json"),
+            result.reason,
+            cells[result.group.total_cell_id].reference
+            if result.group.total_cell_id in cells
+            else content.source_reference,
         )
     return tuple(issues)

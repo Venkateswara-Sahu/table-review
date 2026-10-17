@@ -21,6 +21,163 @@
         "title": "Actor",
         "type": "object"
       },
+      "AdoptInput": {
+        "additionalProperties": false,
+        "properties": {
+          "base_revision_id": {
+            "format": "uuid",
+            "title": "Base Revision Id",
+            "type": "string"
+          },
+          "candidate_revision_id": {
+            "format": "uuid",
+            "title": "Candidate Revision Id",
+            "type": "string"
+          },
+          "candidate_table_id": {
+            "format": "uuid",
+            "title": "Candidate Table Id",
+            "type": "string"
+          },
+          "candidate_visibility_version": {
+            "minimum": 0.0,
+            "title": "Candidate Visibility Version",
+            "type": "integer"
+          },
+          "confirmed_replacement": {
+            "const": true,
+            "title": "Confirmed Replacement",
+            "type": "boolean"
+          },
+          "confirmed_same_table": {
+            "const": true,
+            "title": "Confirmed Same Table",
+            "type": "boolean"
+          },
+          "target_visibility_version": {
+            "minimum": 0.0,
+            "title": "Target Visibility Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "base_revision_id",
+          "candidate_table_id",
+          "candidate_revision_id",
+          "target_visibility_version",
+          "candidate_visibility_version",
+          "confirmed_same_table",
+          "confirmed_replacement"
+        ],
+        "title": "AdoptInput",
+        "type": "object"
+      },
+      "AdoptionPreview": {
+        "additionalProperties": false,
+        "properties": {
+          "base_revision_id": {
+            "format": "uuid",
+            "title": "Base Revision Id",
+            "type": "string"
+          },
+          "candidate_reference": {
+            "$ref": "#/components/schemas/SourceReference"
+          },
+          "candidate_revision_id": {
+            "format": "uuid",
+            "title": "Candidate Revision Id",
+            "type": "string"
+          },
+          "candidate_shape": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Candidate Shape",
+            "type": "array"
+          },
+          "candidate_table_id": {
+            "format": "uuid",
+            "title": "Candidate Table Id",
+            "type": "string"
+          },
+          "candidate_visibility_version": {
+            "title": "Candidate Visibility Version",
+            "type": "integer"
+          },
+          "changed_cell_count": {
+            "title": "Changed Cell Count",
+            "type": "integer"
+          },
+          "current_context_confirmations": {
+            "title": "Current Context Confirmations",
+            "type": "integer"
+          },
+          "current_reference": {
+            "$ref": "#/components/schemas/SourceReference"
+          },
+          "current_shape": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Current Shape",
+            "type": "array"
+          },
+          "current_subtotal_declarations": {
+            "title": "Current Subtotal Declarations",
+            "type": "integer"
+          },
+          "difference": {
+            "additionalProperties": true,
+            "title": "Difference",
+            "type": "object"
+          },
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "next_offset": {
+            "title": "Next Offset",
+            "type": "integer"
+          },
+          "target_visibility_version": {
+            "title": "Target Visibility Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "base_revision_id",
+          "candidate_table_id",
+          "candidate_revision_id",
+          "target_visibility_version",
+          "candidate_visibility_version",
+          "current_shape",
+          "candidate_shape",
+          "current_reference",
+          "candidate_reference",
+          "current_context_confirmations",
+          "current_subtotal_declarations",
+          "changed_cell_count",
+          "difference",
+          "next_offset",
+          "has_more"
+        ],
+        "title": "AdoptionPreview",
+        "type": "object"
+      },
       "ApprovalInput": {
         "additionalProperties": false,
         "properties": {
@@ -141,6 +298,68 @@
         "title": "CellContent",
         "type": "object"
       },
+      "CellContext": {
+        "additionalProperties": false,
+        "properties": {
+          "cell_id": {
+            "title": "Cell Id",
+            "type": "string"
+          },
+          "column_headers": {
+            "items": {
+              "$ref": "#/components/schemas/ContextSource"
+            },
+            "title": "Column Headers",
+            "type": "array"
+          },
+          "confirmed": {
+            "items": {
+              "$ref": "#/components/schemas/ContextBinding"
+            },
+            "title": "Confirmed",
+            "type": "array"
+          },
+          "proposals": {
+            "items": {
+              "$ref": "#/components/schemas/ContextProposal"
+            },
+            "title": "Proposals",
+            "type": "array"
+          },
+          "row_headers": {
+            "items": {
+              "$ref": "#/components/schemas/ContextSource"
+            },
+            "title": "Row Headers",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ContextSource"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "cell_id",
+          "column_headers",
+          "row_headers",
+          "sources",
+          "proposals",
+          "confirmed"
+        ],
+        "title": "CellContext",
+        "type": "object"
+      },
       "CellReviewEvent": {
         "additionalProperties": false,
         "properties": {
@@ -155,6 +374,13 @@
             },
             "title": "Cell Ids",
             "type": "array"
+          },
+          "cell_reviews": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CellReviewRecord"
+            },
+            "title": "Cell Reviews",
+            "type": "object"
           },
           "checked": {
             "title": "Checked",
@@ -214,6 +440,100 @@
         "title": "CellReviewHistory",
         "type": "object"
       },
+      "CellReviewInput": {
+        "additionalProperties": false,
+        "properties": {
+          "cell_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10000,
+            "minItems": 1,
+            "title": "Cell Ids",
+            "type": "array"
+          },
+          "reason": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Reason",
+            "type": "string"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/CellVerdict"
+          }
+        },
+        "required": [
+          "cell_ids",
+          "verdict"
+        ],
+        "title": "CellReviewInput",
+        "type": "object"
+      },
+      "CellReviewRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "actor_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "origin": {
+            "default": "explicit",
+            "enum": [
+              "explicit",
+              "legacy"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "revision_id": {
+            "format": "uuid",
+            "title": "Revision Id",
+            "type": "string"
+          },
+          "source_references": {
+            "items": {
+              "$ref": "#/components/schemas/SourceReference"
+            },
+            "title": "Source References",
+            "type": "array"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/CellVerdict"
+          }
+        },
+        "required": [
+          "verdict",
+          "revision_id",
+          "source_references"
+        ],
+        "title": "CellReviewRecord",
+        "type": "object"
+      },
       "CellRole": {
         "enum": [
           "data",
@@ -223,6 +543,15 @@
           "value",
           "label",
           "header"
+        ],
+        "type": "string"
+      },
+      "CellVerdict": {
+        "enum": [
+          "confirmed_value",
+          "confirmed_blank",
+          "unreadable",
+          "unreviewed"
         ],
         "type": "string"
       },
@@ -248,6 +577,251 @@
           "checked"
         ],
         "title": "CheckedInput",
+        "type": "object"
+      },
+      "ConfirmContext": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate_id": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "cell_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10000,
+            "minItems": 1,
+            "title": "Cell Ids",
+            "type": "array"
+          },
+          "kind": {
+            "const": "confirm_context",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "cell_ids",
+          "candidate_id"
+        ],
+        "title": "ConfirmContext",
+        "type": "object"
+      },
+      "ConfirmSubtotal": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmed_scope": {
+            "const": true,
+            "title": "Confirmed Scope",
+            "type": "boolean"
+          },
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "confirm_subtotal",
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "terms": {
+            "items": {
+              "$ref": "#/components/schemas/SubtotalTerm"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Terms",
+            "type": "array"
+          },
+          "tolerance": {
+            "default": "0",
+            "pattern": "^(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,6})?$",
+            "title": "Tolerance",
+            "type": "string"
+          },
+          "total_cell_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Total Cell Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "group_id",
+          "name",
+          "total_cell_id",
+          "terms",
+          "confirmed_scope"
+        ],
+        "title": "ConfirmSubtotal",
+        "type": "object"
+      },
+      "ContextBinding": {
+        "additionalProperties": false,
+        "properties": {
+          "cell_id": {
+            "title": "Cell Id",
+            "type": "string"
+          },
+          "confirmed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed At"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed By"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ContextKind"
+          },
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Source Ids",
+            "type": "array"
+          },
+          "value": {
+            "maxLength": 800,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "value",
+          "source_ids",
+          "cell_id"
+        ],
+        "title": "ContextBinding",
+        "type": "object"
+      },
+      "ContextKind": {
+        "enum": [
+          "period",
+          "currency",
+          "scale",
+          "measure"
+        ],
+        "type": "string"
+      },
+      "ContextProposal": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ContextKind"
+          },
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Source Ids",
+            "type": "array"
+          },
+          "value": {
+            "maxLength": 800,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "value",
+          "source_ids"
+        ],
+        "title": "ContextProposal",
+        "type": "object"
+      },
+      "ContextSource": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "maxLength": 200,
+            "title": "Id",
+            "type": "string"
+          },
+          "origin": {
+            "enum": [
+              "extracted",
+              "current_draft"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "raw_text": {
+            "maxLength": 800,
+            "title": "Raw Text",
+            "type": "string"
+          },
+          "references": {
+            "items": {
+              "$ref": "#/components/schemas/SourceReference"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "References",
+            "type": "array"
+          },
+          "text": {
+            "maxLength": 800,
+            "title": "Text",
+            "type": "string"
+          },
+          "truncated": {
+            "default": false,
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "raw_text",
+          "references",
+          "origin"
+        ],
+        "title": "ContextSource",
         "type": "object"
       },
       "DeletionReceipt": {
@@ -450,11 +1024,15 @@
           "operation": {
             "discriminator": {
               "mapping": {
+                "confirm_context": "#/components/schemas/ConfirmContext",
+                "confirm_subtotal": "#/components/schemas/ConfirmSubtotal",
                 "delete_column": "#/components/schemas/AxisEdit",
                 "delete_row": "#/components/schemas/AxisEdit",
                 "insert_column": "#/components/schemas/AxisEdit",
                 "insert_row": "#/components/schemas/AxisEdit",
                 "merge": "#/components/schemas/Merge",
+                "remove_subtotal": "#/components/schemas/RemoveSubtotal",
+                "reopen_context": "#/components/schemas/ReopenContext",
                 "set_headers": "#/components/schemas/SetHeaders",
                 "set_interpretation": "#/components/schemas/SetInterpretation",
                 "set_notes": "#/components/schemas/SetNotes",
@@ -484,6 +1062,18 @@
               },
               {
                 "$ref": "#/components/schemas/SetInterpretation"
+              },
+              {
+                "$ref": "#/components/schemas/ConfirmContext"
+              },
+              {
+                "$ref": "#/components/schemas/ReopenContext"
+              },
+              {
+                "$ref": "#/components/schemas/ConfirmSubtotal"
+              },
+              {
+                "$ref": "#/components/schemas/RemoveSubtotal"
               }
             ],
             "title": "Operation"
@@ -659,7 +1249,11 @@
               "placement_ambiguity",
               "structural_inconsistency",
               "limited_reference",
-              "coverage_unavailable"
+              "coverage_unavailable",
+              "unreviewed_blank",
+              "unreadable_value",
+              "subtotal_difference",
+              "subtotal_unavailable"
             ],
             "title": "Kind",
             "type": "string"
@@ -879,6 +1473,11 @@
             "title": "Page No",
             "type": "integer"
           },
+          "requires_ocr": {
+            "default": false,
+            "title": "Requires Ocr",
+            "type": "boolean"
+          },
           "unsupported_reason": {
             "anyOf": [
               {
@@ -975,6 +1574,53 @@
         "title": "ReadinessView",
         "type": "object"
       },
+      "RemovalInput": {
+        "additionalProperties": false,
+        "properties": {
+          "base_revision_id": {
+            "format": "uuid",
+            "title": "Base Revision Id",
+            "type": "string"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "removed": {
+            "title": "Removed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "base_revision_id",
+          "expected_version",
+          "removed"
+        ],
+        "title": "RemovalInput",
+        "type": "object"
+      },
+      "RemoveSubtotal": {
+        "additionalProperties": false,
+        "properties": {
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "remove_subtotal",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "group_id"
+        ],
+        "title": "RemoveSubtotal",
+        "type": "object"
+      },
       "Reopen": {
         "additionalProperties": false,
         "properties": {
@@ -995,6 +1641,35 @@
           "kind"
         ],
         "title": "Reopen",
+        "type": "object"
+      },
+      "ReopenContext": {
+        "additionalProperties": false,
+        "properties": {
+          "cell_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10000,
+            "minItems": 1,
+            "title": "Cell Ids",
+            "type": "array"
+          },
+          "context_kind": {
+            "$ref": "#/components/schemas/ContextKind"
+          },
+          "kind": {
+            "const": "reopen_context",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "cell_ids",
+          "context_kind"
+        ],
+        "title": "ReopenContext",
         "type": "object"
       },
       "Resolved": {
@@ -1053,6 +1728,13 @@
             "title": "Approved At",
             "type": "string"
           },
+          "cell_reviews": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CellReviewRecord"
+            },
+            "title": "Cell Reviews",
+            "type": "object"
+          },
           "check_versions": {
             "additionalProperties": {
               "type": "string"
@@ -1108,6 +1790,11 @@
             "title": "Revision Id",
             "type": "string"
           },
+          "unreadable_count": {
+            "default": 0,
+            "title": "Unreadable Count",
+            "type": "integer"
+          },
           "unresolved_count": {
             "title": "Unresolved Count",
             "type": "integer"
@@ -1132,6 +1819,13 @@
       "ReviewState": {
         "additionalProperties": false,
         "properties": {
+          "cell_reviews": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CellReviewRecord"
+            },
+            "title": "Cell Reviews",
+            "type": "object"
+          },
           "check_versions": {
             "additionalProperties": {
               "type": "string"
@@ -1187,6 +1881,11 @@
             "title": "Revision Id",
             "type": "string"
           },
+          "unreadable_count": {
+            "default": 0,
+            "title": "Unreadable Count",
+            "type": "integer"
+          },
           "unresolved_count": {
             "default": 1,
             "title": "Unresolved Count",
@@ -1197,6 +1896,47 @@
           "revision_id"
         ],
         "title": "ReviewState",
+        "type": "object"
+      },
+      "ReviewTimeline": {
+        "additionalProperties": false,
+        "properties": {
+          "coverage": {
+            "enum": [
+              "recorded_since_boundary",
+              "legacy_only"
+            ],
+            "title": "Coverage",
+            "type": "string"
+          },
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineEvent"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_after_sequence": {
+            "title": "Next After Sequence",
+            "type": "integer"
+          },
+          "through_sequence": {
+            "title": "Through Sequence",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "through_sequence",
+          "next_after_sequence",
+          "has_more",
+          "coverage"
+        ],
+        "title": "ReviewTimeline",
         "type": "object"
       },
       "RevisionView": {
@@ -1570,6 +2310,210 @@
         "title": "Split",
         "type": "object"
       },
+      "SubtotalGroup": {
+        "additionalProperties": false,
+        "properties": {
+          "confirmed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed At"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed By"
+          },
+          "evidence_fingerprint": {
+            "default": "",
+            "title": "Evidence Fingerprint",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "terms": {
+            "items": {
+              "$ref": "#/components/schemas/SubtotalTerm"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Terms",
+            "type": "array"
+          },
+          "tolerance": {
+            "default": "0",
+            "pattern": "^(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,6})?$",
+            "title": "Tolerance",
+            "type": "string"
+          },
+          "total_cell_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Total Cell Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "total_cell_id",
+          "terms"
+        ],
+        "title": "SubtotalGroup",
+        "type": "object"
+      },
+      "SubtotalResult": {
+        "additionalProperties": false,
+        "properties": {
+          "difference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difference"
+          },
+          "group": {
+            "$ref": "#/components/schemas/SubtotalGroup"
+          },
+          "input_sum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Sum"
+          },
+          "inputs": {
+            "default": [],
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Inputs",
+            "type": "array"
+          },
+          "policy": {
+            "default": "declared_sum_v1",
+            "title": "Policy",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "reported_total": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reported Total"
+          },
+          "scope": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Scope",
+            "type": "object"
+          },
+          "state": {
+            "enum": [
+              "match",
+              "difference",
+              "needs_confirmation",
+              "unavailable"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "total": {
+            "additionalProperties": true,
+            "title": "Total",
+            "type": "object"
+          }
+        },
+        "required": [
+          "group",
+          "state",
+          "reason"
+        ],
+        "title": "SubtotalResult",
+        "type": "object"
+      },
+      "SubtotalResults": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SubtotalResult"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SubtotalResults",
+        "type": "object"
+      },
+      "SubtotalTerm": {
+        "additionalProperties": false,
+        "properties": {
+          "cell_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Cell Id",
+            "type": "string"
+          },
+          "sign": {
+            "enum": [
+              -1,
+              1
+            ],
+            "title": "Sign",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cell_id",
+          "sign"
+        ],
+        "title": "SubtotalTerm",
+        "type": "object"
+      },
       "TableContent": {
         "additionalProperties": false,
         "properties": {
@@ -1584,6 +2528,24 @@
             "minimum": 1.0,
             "title": "Columns",
             "type": "integer"
+          },
+          "context_bindings": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ContextBinding"
+            },
+            "maxItems": 40000,
+            "title": "Context Bindings",
+            "type": "array"
+          },
+          "context_sources": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ContextSource"
+            },
+            "maxItems": 32,
+            "title": "Context Sources",
+            "type": "array"
           },
           "header_rows": {
             "default": [],
@@ -1615,6 +2577,15 @@
                 "type": "null"
               }
             ]
+          },
+          "subtotal_groups": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/SubtotalGroup"
+            },
+            "maxItems": 50,
+            "title": "Subtotal Groups",
+            "type": "array"
           },
           "unit_notes": {
             "default": [],
@@ -1680,6 +2651,23 @@
             "format": "uuid",
             "title": "Owner Id",
             "type": "string"
+          },
+          "removal_version": {
+            "default": 0,
+            "title": "Removal Version",
+            "type": "integer"
+          },
+          "removed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed At"
           }
         },
         "required": [
@@ -1793,6 +2781,85 @@
           "created_at"
         ],
         "title": "TaskView",
+        "type": "object"
+      },
+      "TimelineEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "actor_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "cell_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Cell Ids",
+            "type": "array"
+          },
+          "details": {
+            "additionalProperties": true,
+            "title": "Details",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "coverage_start",
+              "checks_changed",
+              "cell_review",
+              "issue_decision",
+              "approval",
+              "edit",
+              "table_visibility"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "revision_id": {
+            "format": "uuid",
+            "title": "Revision Id",
+            "type": "string"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "table_id": {
+            "format": "uuid",
+            "title": "Table Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "table_id",
+          "revision_id",
+          "sequence",
+          "kind",
+          "actor_id",
+          "recorded_at",
+          "cell_ids",
+          "details"
+        ],
+        "title": "TimelineEvent",
         "type": "object"
       },
       "ValueInterpretation": {
@@ -3014,6 +4081,28 @@
               "title": "Document Id",
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "include_details",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Include Details",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -3280,6 +4369,146 @@
         "summary": "Submit"
       }
     },
+    "/api/v1/documents/{document_id}/runs/{run_id}": {
+      "get": {
+        "operationId": "run_api_v1_documents__document_id__runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Run"
+      }
+    },
     "/api/v1/documents/{document_id}/source": {
       "get": {
         "operationId": "source_api_v1_documents__document_id__source_get",
@@ -3436,6 +4665,16 @@
                 }
               ],
               "title": "Page No"
+            }
+          },
+          {
+            "in": "query",
+            "name": "removed",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Removed",
+              "type": "boolean"
             }
           }
         ],
@@ -4338,6 +5577,146 @@
         "summary": "Approve"
       }
     },
+    "/api/v1/revisions/{revision_id}/cell-review": {
+      "post": {
+        "operationId": "cell_review_api_v1_revisions__revision_id__cell_review_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CellReviewInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Cell Review"
+      }
+    },
     "/api/v1/revisions/{revision_id}/checked": {
       "post": {
         "operationId": "checked_api_v1_revisions__revision_id__checked_post",
@@ -4918,6 +6297,180 @@
         "summary": "Review"
       }
     },
+    "/api/v1/revisions/{revision_id}/timeline": {
+      "get": {
+        "operationId": "timeline_api_v1_revisions__revision_id__timeline_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "After",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "through",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Through"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cell_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cell Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewTimeline"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Timeline"
+      }
+    },
     "/api/v1/session": {
       "delete": {
         "operationId": "sign_out_api_v1_session_delete",
@@ -5399,6 +6952,307 @@
           }
         },
         "summary": "Table"
+      }
+    },
+    "/api/v1/tables/{table_id}/adopt": {
+      "post": {
+        "operationId": "adopt_api_v1_tables__table_id__adopt_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "table_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Table Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdoptInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevisionView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Adopt"
+      }
+    },
+    "/api/v1/tables/{table_id}/adoption-preview": {
+      "get": {
+        "operationId": "adoption_preview_api_v1_tables__table_id__adoption_preview_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "table_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Table Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "candidate_table_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Candidate Table Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdoptionPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Adoption Preview"
       }
     },
     "/api/v1/tables/{table_id}/edits": {
@@ -5960,6 +7814,146 @@
         "summary": "History"
       }
     },
+    "/api/v1/tables/{table_id}/removal": {
+      "post": {
+        "operationId": "removal_api_v1_tables__table_id__removal_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "table_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Table Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemovalInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TableRecord"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Removal"
+      }
+    },
     "/api/v1/tables/{table_id}/restore": {
       "post": {
         "operationId": "restore_api_v1_tables__table_id__restore_post",
@@ -6248,6 +8242,295 @@
           }
         },
         "summary": "Revision"
+      }
+    },
+    "/api/v1/tables/{table_id}/revisions/{revision_id}/context/{cell_id}": {
+      "get": {
+        "operationId": "cell_context_api_v1_tables__table_id__revisions__revision_id__context__cell_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "table_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Table Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cell_id",
+            "required": true,
+            "schema": {
+              "title": "Cell Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CellContext"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Cell Context"
+      }
+    },
+    "/api/v1/tables/{table_id}/revisions/{revision_id}/subtotals": {
+      "get": {
+        "operationId": "subtotals_api_v1_tables__table_id__revisions__revision_id__subtotals_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "table_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Table Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Revision Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubtotalResults"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Subtotals"
       }
     },
     "/api/v1/tasks/{task_id}": {

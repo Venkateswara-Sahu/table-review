@@ -39,7 +39,13 @@ def main():
                 stream.write("500")
         except OSError:
             pass
-        process = subprocess.Popen(sys.argv[2:], stdin=subprocess.DEVNULL)
+        command = sys.argv[2:]
+        forward_stdin = command[0] == "--forward-stdin"
+        if forward_stdin:
+            command = command[1:]
+        process = subprocess.Popen(
+            command, stdin=sys.stdin if forward_stdin else subprocess.DEVNULL
+        )
         return process.wait()
     finally:
         stop_descendants()

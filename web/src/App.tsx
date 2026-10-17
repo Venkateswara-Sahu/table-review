@@ -112,9 +112,12 @@ export default function App() {
             back();
           }}
         >
-          ▦ &nbsp; Table Review
+          <svg className="brand-mark" viewBox="0 0 28 28" aria-hidden="true">
+            <path d="M3 3h10v15H3zM16 10h9v15h-9zM6 7h4M6 11h4M19 14h3M19 18h3M10 21h3v-8h3" />
+          </svg>
+          Table Review
         </a>
-        <span className="trial-label">PRIVATE TRIAL</span>
+        <span className="trial-label">Private workspace</span>
         {actor && (
           <div className="account">
             <span>{actor.username}</span>
@@ -139,7 +142,10 @@ export default function App() {
           }}
         />
       ) : (
-        <div key={actor.id}>
+        <div
+          key={actor.id}
+          className={`app-content ${document ? "document-open" : ""}`}
+        >
           {document ? (
             <ReportPages document={document} onBack={back} onDirty={setDirty} />
           ) : (

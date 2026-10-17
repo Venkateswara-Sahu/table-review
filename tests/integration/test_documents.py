@@ -80,6 +80,37 @@ def test_render_cache_and_rotated_pages(client, tmp_path, app, monkeypatch):
     )  # opaque private keys, no public asset filenames
 
 
+def test_warm_page_reads_reuse_metadata_without_native_pdf_work(
+    client, client_b, owned_document, app, monkeypatch
+):
+    path = f"/api/v1/documents/{owned_document['id']}/pages/2"
+    assert client.get(path).status_code == 200
+    assert client.get(path + "/image?scale=1").status_code == 200
+
+    def unexpected_native_work(*args, **kwargs):
+        raise AssertionError("Warm preview must not reopen the native PDF parser")
+
+    monkeypatch.setattr(app.state.documents.pdf, "info", unexpected_native_work)
+    monkeypatch.setattr(app.state.documents.pdf, "render", unexpected_native_work)
+    assert client.get(path).status_code == 200
+    assert client.get(path + "/image?scale=1").status_code == 200
+    assert client_b.get(path).status_code == 404
+    assert client_b.get(path + "/image?scale=1").status_code == 404
+
+
+def test_warm_metadata_still_checks_source_integrity(client, owned_document, owner, app):
+    path = f"/api/v1/documents/{owned_document['id']}/pages/2"
+    assert client.get(path).status_code == 200
+    document = app.state.repository.get_document(owner.id, UUID(owned_document["id"]))
+    with app.state.blobs.open(owner.id, document.blob_key) as source:
+        from pathlib import Path
+
+        source_path = Path(source.name)
+    source_path.write_bytes(b"tampered source")
+    response = client.get(path)
+    assert response.status_code == 503 and response.json()["code"] == "source_changed"
+
+
 @pytest.mark.parametrize(
     "name,data,code",
     [

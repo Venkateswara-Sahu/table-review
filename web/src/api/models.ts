@@ -16,3 +16,5 @@ export type Snapshot = components["schemas"]["ReviewSnapshot"];
 export type Actor = components["schemas"]["Actor"];
 export type Session = components["schemas"]["SessionView"];
 export type EditOperation = components["schemas"]["EditInput"]["operation"];
+
+export type CellContext = components["schemas"]["CellContext"];

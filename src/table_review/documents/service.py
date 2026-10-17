@@ -1,6 +1,8 @@
 import hashlib
 import math
+from collections import OrderedDict
 from pathlib import Path
+from threading import Lock
 from typing import BinaryIO
 from uuid import UUID, uuid4
 
@@ -25,6 +27,8 @@ class DocumentService:
         self.staging = blobs.root / ".staging"
         self.staging.mkdir(exist_ok=True, mode=0o700)
         self.pdf = PdfOperations(settings, self.staging)
+        self._page_info = OrderedDict()
+        self._page_info_lock = Lock()
 
     def upload(
         self, actor: Actor, stream: BinaryIO, filename: str, idempotency_key: str
@@ -95,7 +99,21 @@ class DocumentService:
         document = self.repository.get_document(actor.id, document_id)
         if not 1 <= page_no <= document.page_count:
             raise DocumentError("invalid_page", "Select an original page number in this report")
-        return self.pdf.info(self.source_path(actor, document_id), page_no)
+        # Permission, deletion and source integrity remain checked on every read.
+        # Only immutable PDF metadata is cached, never authorization decisions.
+        source = self.source_path(actor, document_id)
+        key = (actor.id, document_id, document.source_sha256, page_no)
+        with self._page_info_lock:
+            if key in self._page_info:
+                self._page_info.move_to_end(key)
+                return self._page_info[key]
+        info = self.pdf.info(source, page_no)
+        with self._page_info_lock:
+            self._page_info[key] = info
+            self._page_info.move_to_end(key)
+            while len(self._page_info) > 256:
+                self._page_info.popitem(last=False)
+        return info
 
     def page(self, actor: Actor, document_id: UUID, page_no: int, scale: float) -> RenderedPage:
         if not math.isfinite(scale) or not 0 < scale <= 4:

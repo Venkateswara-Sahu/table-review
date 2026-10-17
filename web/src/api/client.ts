@@ -51,41 +51,55 @@ async function request(
     headers.set("X-CSRF-Token", csrfToken);
   }
   try {
-    const response = await fetch(path, {
-      ...options,
-      headers,
-      credentials: "include",
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    if (generation !== sessionGeneration)
-      throw new DOMException("Session changed", "AbortError");
-    if (!response.ok) {
-      let code = "request_failed",
-        message = "The request could not be completed",
-        details: unknown = {};
-      try {
-        const value: unknown = await response.json();
-        if (value && typeof value === "object") {
-          if ("code" in value && typeof value.code === "string")
-            code = value.code;
-          if ("message" in value && typeof value.message === "string")
-            message = value.message;
-          if ("details" in value) details = value.details;
+    for (let attempt = 0; ; attempt++) {
+      const response = await fetch(path, {
+        ...options,
+        headers,
+        credentials: "include",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (generation !== sessionGeneration)
+        throw new DOMException("Session changed", "AbortError");
+      if (!response.ok) {
+        let code = "request_failed",
+          message = "The request could not be completed",
+          details: unknown = {};
+        try {
+          const value: unknown = await response.json();
+          if (value && typeof value === "object") {
+            if ("code" in value && typeof value.code === "string")
+              code = value.code;
+            if ("message" in value && typeof value.message === "string")
+              message = value.message;
+            if ("details" in value) details = value.details;
+          }
+        } catch {
+          /* A proxy failure can have a non-JSON body. */
         }
-      } catch {
-        /* A proxy failure can have a non-JSON body. */
+        // The server's PDF slot already waits for admission. Retry only these
+        // idempotent reads, at most twice, using the same abort/session boundary.
+        if (
+          response.status === 429 &&
+          code === "pdf_busy" &&
+          (options.method ?? "GET").toUpperCase() === "GET" &&
+          /^\/api\/v1\/documents\/[^/]+\/pages\/\d+(?:\/image)?(?:\?|$)/.test(
+            path,
+          ) &&
+          attempt < 2
+        )
+          continue;
+        if (
+          response.status === 401 &&
+          !(path === "/api/v1/session" && options.method === "POST")
+        ) {
+          clearPrivateState();
+          window.dispatchEvent(new Event("session-lost"));
+        }
+        throw new ApiError(response.status, code, message, details);
       }
-      if (
-        response.status === 401 &&
-        !(path === "/api/v1/session" && options.method === "POST")
-      ) {
-        clearPrivateState();
-        window.dispatchEvent(new Event("session-lost"));
-      }
-      throw new ApiError(response.status, code, message, details);
+      return response;
     }
-    return response;
   } finally {
     requests.delete(controller);
     originalSignal?.removeEventListener("abort", abort);

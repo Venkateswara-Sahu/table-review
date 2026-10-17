@@ -1,4 +1,4 @@
-from datetime import UTC
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select, update
@@ -57,7 +57,7 @@ class Repository:
             raise NotFound("Document not found")
         return row
 
-    def _table(self, session, owner_id, table_id):
+    def _table(self, session, owner_id, table_id, *, include_removed=False):
         row = session.scalar(
             select(TableRow)
             .join(DocumentRow, TableRow.document_id == DocumentRow.id)
@@ -66,7 +66,9 @@ class Repository:
                 TableRow.owner_id == owner_id,
                 DocumentRow.owner_id == owner_id,
                 DocumentRow.deleted_at.is_(None),
+                *(() if include_removed else (TableRow.removed_at.is_(None),)),
             )
+            .execution_options(populate_existing=True)
         )
         if row is None:
             raise NotFound("Table not found")
@@ -273,7 +275,18 @@ class Repository:
                 raise RevisionConflict()
             return _record(RevisionRecord, session.get(RevisionRow, prior.result_revision_id))
 
-    def _duplicate(self, session, owner_id, table_id, expected_revision_id, checksum, event):
+    def _duplicate(
+        self,
+        session,
+        owner_id,
+        table_id,
+        expected_revision_id,
+        checksum,
+        event,
+        *,
+        content=None,
+        prepare_content=None,
+    ):
         prior = session.scalar(
             select(EditEventRow).where(
                 EditEventRow.owner_id == owner_id,
@@ -283,6 +296,8 @@ class Repository:
         if prior is None:
             return None
         revision = session.get(RevisionRow, prior.result_revision_id)
+        if prepare_content is not None:
+            checksum = content_checksum(prepare_content(content, revision.created_at))
         if (
             prior.table_id != table_id
             or prior.base_revision_id != expected_revision_id
@@ -303,7 +318,11 @@ class Repository:
         event: EditEventInput,
         *,
         on_saved=None,
+        prepare_content=None,
+        prepare_manifest=None,
     ) -> RevisionRecord:
+        # prepare_content must be deterministic for (content, timestamp). Publication
+        # assigns that timestamp under the lock; retries reuse the persisted one.
         validate_grid(content)
         checksum = content_checksum(content)
         try:
@@ -311,8 +330,17 @@ class Repository:
                 table = self._table(session, owner_id, table_id)
                 self._lock_document(session, owner_id, table.document_id)
                 session.expire(table)
+                if table.removed_at is not None:
+                    raise NotFound("Table not found")
                 prior = self._duplicate(
-                    session, owner_id, table_id, expected_revision_id, checksum, event
+                    session,
+                    owner_id,
+                    table_id,
+                    expected_revision_id,
+                    checksum,
+                    event,
+                    content=content,
+                    prepare_content=prepare_content,
                 )
                 if prior:
                     return prior
@@ -331,21 +359,34 @@ class Repository:
                 )
                 if changed.rowcount != 1:
                     prior = self._duplicate(
-                        session, owner_id, table_id, expected_revision_id, checksum, event
+                        session,
+                        owner_id,
+                        table_id,
+                        expected_revision_id,
+                        checksum,
+                        event,
+                        content=content,
+                        prepare_content=prepare_content,
                     )
                     if prior:
                         return prior
                     session.expire(table)
                     raise RevisionConflict(table.current_revision_id)
                 old_revision = session.get(RevisionRow, expected_revision_id)
+                created_at = datetime.now(UTC)
+                saved_content = prepare_content(content, created_at) if prepare_content else content
+                validate_grid(saved_content)
                 row = RevisionRow(
                     id=new_id,
                     owner_id=owner_id,
                     table_id=table_id,
                     parent_revision_id=expected_revision_id,
-                    content=content.model_dump(mode="json"),
-                    checksum=checksum,
-                    extraction_manifest=old_revision.extraction_manifest,
+                    content=saved_content.model_dump(mode="json"),
+                    checksum=content_checksum(saved_content),
+                    created_at=created_at,
+                    extraction_manifest=prepare_manifest(session, old_revision)
+                    if prepare_manifest
+                    else old_revision.extraction_manifest,
                 )
                 session.add(row)
                 session.flush()
@@ -370,7 +411,14 @@ class Repository:
             with self.session_factory() as session:
                 self._table(session, owner_id, table_id)
                 prior = self._duplicate(
-                    session, owner_id, table_id, expected_revision_id, checksum, event
+                    session,
+                    owner_id,
+                    table_id,
+                    expected_revision_id,
+                    checksum,
+                    event,
+                    content=content,
+                    prepare_content=prepare_content,
                 )
                 if prior:
                     return prior

@@ -1,0 +1,25 @@
+{
+  "status": "real_packaged_chromium_probe",
+  "browser": "153.0.8010.12",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "semantics": "page navigation request to decoded source image plus two animation frames; local headless browser, not actual compositor presentation or a latency SLA",
+  "js_errors": [],
+  "raw_sha256": "559aaa55f6d60f182a5b57ee83b38403c1fb82cd48b6c55102ce113d24ccdb80",
+  "first_visit": {
+    "samples": 5,
+    "minimum_ms": 176.20000000298023,
+    "median_ms": 225.80000000074506,
+    "maximum_ms": 273.80000000074506,
+    "image_requests": 5
+  },
+  "return_visit": {
+    "samples": 5,
+    "minimum_ms": 42.900000002235174,
+    "median_ms": 43.19999999925494,
+    "maximum_ms": 44.599999997764826,
+    "image_requests": 0
+  }
+}

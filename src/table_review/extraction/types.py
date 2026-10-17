@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field, model_validator
 
@@ -12,6 +12,9 @@ class ExtractorConfig(ImmutableModel):
     num_threads: int = Field(default=4, ge=1, le=8)
     mode: str = "accurate"
     cell_matching: bool = True
+    ocr_mode: Literal["auto", "never"] = "auto"
+    table_recovery: bool = True
+    mark_recovery: bool = True
     artifacts_path: Path = Path("models")
 
     @model_validator(mode="after")

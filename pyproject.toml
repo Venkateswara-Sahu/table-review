@@ -22,7 +22,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-extraction = ["docling>=2.132,<3", "torch==2.14.1", "torchvision==0.29.1"]
+extraction = [
+    "docling>=2.132,<3",
+    "onnxruntime>=1.23,<2",
+    "torch==2.14.1",
+    "torchvision==0.29.1",
+]
 
 [dependency-groups]
 dev = ["pytest>=8,<10", "ruff>=0.13,<1", "reportlab>=4,<5", "httpx>=0.28,<1"]

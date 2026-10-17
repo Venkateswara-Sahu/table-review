@@ -8,6 +8,7 @@ test("a real missing source token has an evidence reason and a saved dismissal",
   await page.getByLabel("Cell text", { exact: true }).fill("123450");
   await page.getByRole("button", { name: "Save text", exact: true }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: /^Checks/ }).click();
   const issue = page
     .getByRole("region", { name: "Coverage discrepancy" })
     .filter({ hasText: "1,234.50" })
@@ -26,11 +27,13 @@ test("a real missing source token has an evidence reason and a saved dismissal",
     .click();
   await expect(issue.getByText("Dismissed", { exact: true })).toBeVisible();
   await page.reload();
+  await page.getByRole("tab", { name: /^Checks/ }).click();
   await expect(
     page.getByText("Manually compared this value with the original source", {
       exact: true,
     }),
   ).toBeVisible();
+  await page.getByRole("tab", { name: "Edit cell", exact: true }).click();
   // Restore the fixture through a real correction so existing source tests remain isolated.
   await page
     .getByRole("button", { name: "Source: 123450", exact: true })
@@ -38,6 +41,7 @@ test("a real missing source token has an evidence reason and a saved dismissal",
   await page.getByLabel("Cell text", { exact: true }).fill("1,234.50");
   await page.getByRole("button", { name: "Save text", exact: true }).click();
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: /^Checks/ }).click();
   await expect(
     page
       .getByRole("region", { name: "Coverage discrepancy" })

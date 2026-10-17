@@ -1,34 +1,16 @@
 import hashlib
-import math
-import tempfile
 from contextlib import closing
-from functools import wraps
 from pathlib import Path
-from threading import RLock
 
 import pypdfium2 as pdfium
-import pypdfium2.raw as pdfium_raw
 from pypdf import PdfReader
 
+from table_review.documents import pdf_native
+from table_review.documents.pdf_native import page as _page
+from table_review.documents.pdf_native import serialized_pdfium as _serialized_pdfium
+from table_review.documents.pdf_native import visible_char as _visible_char
 from table_review.documents.types import PageBox, PageInfo, PdfInfo, RenderedPage, SourceReference
 from table_review.settings import Settings
-
-_PDFIUM_LOCK = RLock()
-
-
-def _visible_char(text, index):
-    obj = pdfium_raw.FPDFText_GetTextObject(text, index)
-    # Generated whitespace may have no text object; it is never positive evidence.
-    return bool(obj) and pdfium_raw.FPDFTextObj_GetTextRenderMode(obj) not in (3, 7)
-
-
-def _serialized_pdfium(function):
-    @wraps(function)
-    def call(*args, **kwargs):
-        with _PDFIUM_LOCK:
-            return function(*args, **kwargs)
-
-    return call
 
 
 def inspect_pdf(path: Path) -> PdfInfo:
@@ -44,54 +26,13 @@ def inspect_pdf(path: Path) -> PdfInfo:
     return PdfInfo(page_count=count, byte_count=size, encrypted=False)
 
 
-def _page(document, page_no: int):
-    if not 1 <= page_no <= len(document):
-        raise ValueError("Page number outside this PDF")
-    return document[page_no - 1]
-
-
-@_serialized_pdfium
 def page_info(path: Path, page_no: int) -> PageInfo:
-    with pdfium.PdfDocument(path) as document, closing(_page(document, page_no)) as page:
-        width, height = page.get_size()
-        with closing(page.get_textpage()) as text:
-            digital = any(
-                _visible_char(text, i) and text.get_text_range(i, 1).strip()
-                for i in range(text.count_chars())
-            )
-        return PageInfo(page_no=page_no, width=width, height=height, digital_text_present=digital)
+    return PageInfo.model_validate(pdf_native.page_info(path, page_no))
 
 
-@_serialized_pdfium
 def render_page(path: Path, page_no: int, scale: float) -> RenderedPage:
-    if not 0 < scale <= 4:
-        raise ValueError("Render scale must be greater than zero and at most four")
-    with pdfium.PdfDocument(path) as document, closing(_page(document, page_no)) as page:
-        width, height = page.get_size()
-        if math.ceil(width * scale) * math.ceil(height * scale) > Settings().max_render_pixels:
-            raise ValueError("Page render exceeds the pixel budget")
-        bitmap = page.render(scale=scale)
-        try:
-            image = bitmap.to_pil()
-            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as output:
-                image_path = Path(output.name)
-            image.save(image_path)
-            pixel_width, pixel_height = image.size
-        finally:
-            bitmap.close()
-    return RenderedPage(
-        image_path=image_path,
-        pixel_width=pixel_width,
-        pixel_height=pixel_height,
-        page_box=PageBox(
-            page=page_no,
-            left=0,
-            top=0,
-            right=width,
-            bottom=height,
-            page_width=width,
-            page_height=height,
-        ),
+    return RenderedPage.model_validate(
+        pdf_native.render_page(path, page_no, scale, Settings().max_render_pixels)
     )
 
 

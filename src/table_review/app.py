@@ -26,11 +26,13 @@ from table_review.jobs.queue import QueueFull, TaskConflict, TaskQueue
 from table_review.lifecycle.deletion import DeletionService
 from table_review.lifecycle.journal import JournalUnavailable, LifecycleJournal
 from table_review.reviews.api import router as reviews_router
+from table_review.reviews.history import ReviewHistoryTooLarge
 from table_review.reviews.service import ReviewIncomplete, ReviewInputError, ReviewService
 from table_review.settings import Settings
 from table_review.storage.blobs import PrivateBlobStore
 from table_review.storage.db import create_session_factory
 from table_review.storage.repository import NotFound, Repository, RevisionConflict, UploadConflict
+from table_review.tables.adoption import AdoptionService
 from table_review.tables.api import router as tables_router
 from table_review.tables.service import TableInputError, TableService
 
@@ -61,8 +63,12 @@ def create_app(settings: Settings) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app):
-        yield
-        factory.kw["bind"].dispose()
+        await run_in_threadpool(app.state.documents.pdf.warmup)
+        try:
+            yield
+        finally:
+            await run_in_threadpool(app.state.documents.pdf.close)
+            factory.kw["bind"].dispose()
 
     app = FastAPI(
         title="Table Review",
@@ -87,6 +93,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.reviews = ReviewService(app.state.repository)
     app.state.reviews.checker = RevisionChecker()
     app.state.tables = TableService(app.state.repository, app.state.documents, app.state.reviews)
+    app.state.adoption = AdoptionService(app.state.repository, app.state.tables)
     app.state.exports = ExportService(
         app.state.repository, app.state.reviews, app.state.queue, app.state.blobs
     )
@@ -232,6 +239,7 @@ def create_app(settings: Settings) -> FastAPI:
         return error_response(request, 409, "review_incomplete", str(error))
 
     @app.exception_handler(ReviewInputError)
+    @app.exception_handler(ReviewHistoryTooLarge)
     @app.exception_handler(TableInputError)
     async def table_input_error(request, error):
         return error_response(request, 422, "invalid_table_operation", str(error))

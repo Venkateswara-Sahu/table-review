@@ -4,15 +4,17 @@ import json
 import sys
 from pathlib import Path
 
-from pypdf.errors import PdfReadError
 from pypdfium2 import PdfiumError
 
 from table_review.documents.errors import DocumentError
-from table_review.documents.pdf import inspect_pdf, page_info, render_page
-from table_review.settings import Settings
+from table_review.documents.pdf_native import page_info, render_page
 
 
 def inspect_supported(path, settings):
+    from pypdf.errors import PdfReadError
+
+    from table_review.documents.pdf import inspect_pdf
+
     try:
         info = inspect_pdf(path)
     except PdfReadError as error:
@@ -44,16 +46,20 @@ def inspect_supported(path, settings):
 def process(payload):
     path = Path(payload["source_path"])
     if payload["kind"] == "inspect":
+        from table_review.settings import Settings
+
         return inspect_supported(path, Settings(max_pdf_pages=payload["max_pdf_pages"])).model_dump(
             mode="json"
         )
     if payload["kind"] == "info":
-        return page_info(path, payload["page_no"]).model_dump(mode="json")
+        return page_info(path, payload["page_no"])
     if payload["kind"] == "render":
-        rendered = render_page(path, payload["page_no"], payload["scale"])
+        rendered = render_page(
+            path, payload["page_no"], payload["scale"], payload.get("max_render_pixels", 16_000_000)
+        )
         destination = Path(payload["target"])
-        rendered.image_path.replace(destination)
-        return rendered.model_copy(update={"image_path": destination}).model_dump(mode="json")
+        Path(rendered["image_path"]).replace(destination)
+        return {**rendered, "image_path": str(destination)}
     raise ValueError("Unsupported PDF operation")
 
 
@@ -65,15 +71,14 @@ def apply_memory_limit(memory_bytes):
         resource.setrlimit(resource.RLIMIT_AS, (memory_bytes, memory_bytes))
 
 
-def main():
-    request, destination = map(Path, sys.argv[1:3])
+def run_request(request, destination):
     try:
         payload = json.loads(request.read_text(encoding="utf-8"))
         apply_memory_limit(payload["memory_bytes"])
         result = {"result": process(payload)}
     except DocumentError as error:
         result = {"failure_code": error.code, "status": error.status}
-    except (PdfReadError, PdfiumError, ValueError):
+    except (PdfiumError, ValueError):
         result = {"failure_code": "page_unavailable", "status": 422}
     except MemoryError:
         result = {"failure_code": "resource_exhaustion", "status": 422}
@@ -82,6 +87,10 @@ def main():
     temporary = destination.with_suffix(".tmp")
     temporary.write_text(json.dumps(result), encoding="utf-8")
     temporary.replace(destination)
+
+
+def main():
+    run_request(*map(Path, sys.argv[1:3]))
 
 
 if __name__ == "__main__":

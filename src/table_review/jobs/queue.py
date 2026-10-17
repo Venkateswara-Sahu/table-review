@@ -1,16 +1,17 @@
 import hashlib
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy import and_, func, or_, select, text
 
+from table_review.extraction.comparison import compare_tables, match_tables, request_scope
 from table_review.extraction.types import ExtractionResult
 from table_review.jobs.models import AttemptRow, ExtractionRunRow, TaskRow
 from table_review.jobs.types import TaskLease, TaskRecord
 from table_review.storage.models import DocumentRow, RevisionRow, TableRow
 from table_review.storage.repository import NotFound, _record
 from table_review.tables.grid import validate_grid
-from table_review.tables.types import content_checksum
+from table_review.tables.types import TableContent, content_checksum
 
 
 class QueueFull(RuntimeError):
@@ -248,6 +249,10 @@ class TaskQueue:
             result = outcome.result
             if outcome.status == "succeeded" and outcome.extraction is not None:
                 result = self._publish_extraction(session, row, doc, outcome.extraction)
+                if result["conversion_outcome"] == "failure":
+                    outcome = outcome.model_copy(
+                        update={"status": "failed", "failure_code": "parse_failure"}
+                    )
             if outcome.status == "succeeded" and row.kind in self.publishers:
                 result = self.publishers[row.kind](session, row, result)
             if row.kind == "prepare":
@@ -264,10 +269,14 @@ class TaskQueue:
             return True
 
     def _publish_extraction(self, session, row, doc, payload):
+        import time
+
+        started = time.monotonic()
         extracted = ExtractionResult.model_validate(payload)
         if extracted.manifest.get("source_sha256") != doc.source_sha256:
             raise ValueError("Extraction source hash differs from document")
         table_ids, tokens = [], {}
+        contents = {}
         run_id = uuid4()
         for table in extracted.tables:
             validate_grid(table.content)
@@ -294,27 +303,135 @@ class TaskQueue:
                 )
             )
             table_ids.append(str(table_id))
+            contents[str(table_id)] = table.content
             tokens[str(table_id)] = [token.model_dump(mode="json") for token in table.source_tokens]
-        session.add(
-            ExtractionRunRow(
-                id=run_id,
-                task_id=row.id,
-                owner_id=row.owner_id,
-                document_id=row.document_id,
-                source_sha256=doc.source_sha256,
-                manifest={**extracted.manifest, "request": row.input},
-                page_info=[p.model_dump(mode="json") for p in extracted.page_info],
-                warnings=list(extracted.warnings),
-                table_ids=table_ids,
-                source_tokens=tokens,
-            )
+        comparison = self._compare_extraction(session, row, contents)
+        run = ExtractionRunRow(
+            id=run_id,
+            task_id=row.id,
+            owner_id=row.owner_id,
+            document_id=row.document_id,
+            source_sha256=doc.source_sha256,
+            manifest={
+                **extracted.manifest,
+                "request": row.input,
+                "request_scope_sha256": request_scope(row.input),
+                "comparison": comparison,
+                "publication_timing": {
+                    "seconds": time.monotonic() - started,
+                    "table_count": len(table_ids),
+                    "semantics": "publication_work_before_final_flush_and_commit",
+                },
+            },
+            page_info=[p.model_dump(mode="json") for p in extracted.page_info],
+            warnings=list(extracted.warnings),
+            table_ids=table_ids,
+            source_tokens=tokens,
         )
+        session.add(run)
         session.flush()
-        return {"run_id": str(run_id), "table_ids": table_ids, "warnings": list(extracted.warnings)}
+        return {
+            "run_id": str(run_id),
+            "table_ids": table_ids,
+            "warnings": list(extracted.warnings),
+            "conversion_outcome": extracted.manifest.get("conversion_outcome", "legacy_unknown"),
+        }
 
-    def runs(self, owner_id, document_id):
+    def _compare_extraction(self, session, row, contents):
+        scope = request_scope(row.input)
+        # Project identities only: never hydrate old source-token or diff payloads while
+        # the document is locked. Legacy lookup is explicitly limited to 20 recent runs.
+        base = (
+            select(
+                ExtractionRunRow.id,
+                ExtractionRunRow.table_ids,
+                ExtractionRunRow.created_at,
+                ExtractionRunRow.manifest["request"].label("request"),
+            )
+            .where(
+                ExtractionRunRow.owner_id == row.owner_id,
+                ExtractionRunRow.document_id == row.document_id,
+                func.coalesce(
+                    ExtractionRunRow.manifest["conversion_outcome"].astext, "legacy_unknown"
+                )
+                != "failure",
+            )
+            .order_by(ExtractionRunRow.created_at.desc(), ExtractionRunRow.id.desc())
+        )
+        previous = session.execute(
+            base.where(ExtractionRunRow.manifest["request_scope_sha256"].astext == scope).limit(1)
+        ).first()
+        legacy_query = base.where(
+            ExtractionRunRow.manifest["request_scope_sha256"].astext.is_(None)
+        )
+        if previous:
+            legacy_query = legacy_query.where(ExtractionRunRow.created_at >= previous.created_at)
+        legacy = next(
+            (
+                run
+                for run in session.execute(legacy_query.limit(20))
+                if run.request and request_scope(run.request) == scope
+            ),
+            None,
+        )
+        if legacy and (
+            previous is None or (legacy.created_at, legacy.id) > (previous.created_at, previous.id)
+        ):
+            previous = legacy
+        if previous is None:
+            return {
+                "status": "no_comparable_baseline",
+                "review_transferred": False,
+                "legacy_search_limit": 20,
+            }
+        originals, revisions = {}, {}
+        for identity in previous.table_ids:
+            table = session.get(TableRow, UUID(identity))
+            original = session.get(RevisionRow, table.original_revision_id)
+            reviewed = session.get(RevisionRow, table.current_revision_id)
+            originals[identity] = TableContent.model_validate(original.content)
+            revisions[identity] = (original, reviewed)
+        comparison = match_tables(originals, contents)
+        for match in comparison["matches"]:
+            key, candidate = match["before_id"], contents[match["after_id"]]
+            original, reviewed = revisions[key]
+            match.update(
+                {
+                    "original_revision_id": str(original.id),
+                    "reviewed_revision_id": str(reviewed.id),
+                    "has_review_revisions": original.id != reviewed.id,
+                    "original_diff": compare_tables(originals[key], candidate),
+                    "reviewed_diff": compare_tables(
+                        TableContent.model_validate(reviewed.content), candidate
+                    ),
+                }
+            )
+        return {
+            **comparison,
+            "status": "compared",
+            "baseline_run_id": str(previous.id),
+            "review_transferred": False,
+            "snapshot_at": "rerun_publication",
+            "replacement_performed": False,
+        }
+
+    def runs(self, owner_id, document_id, *, include_details=True, limit=100):
         with self.session_factory() as session:
             self.repository._document(session, owner_id, document_id)
+            manifest = (
+                ExtractionRunRow.manifest
+                if include_details
+                else func.jsonb_build_object(
+                    "conversion_outcome",
+                    ExtractionRunRow.manifest["conversion_outcome"],
+                    "request",
+                    ExtractionRunRow.manifest["request"],
+                    "parser_executed",
+                    ExtractionRunRow.manifest["parser_executed"],
+                    "evidence_kind",
+                    ExtractionRunRow.manifest["evidence_kind"],
+                )
+            )
             return tuple(
                 {
                     "id": str(row.id),
@@ -323,13 +440,45 @@ class TaskQueue:
                     "table_ids": row.table_ids,
                     "warnings": row.warnings,
                 }
-                for row in session.scalars(
-                    select(ExtractionRunRow)
+                for row in session.execute(
+                    select(
+                        ExtractionRunRow.id,
+                        ExtractionRunRow.task_id,
+                        manifest.label("manifest"),
+                        ExtractionRunRow.table_ids,
+                        ExtractionRunRow.warnings,
+                    )
                     .where(
                         ExtractionRunRow.owner_id == owner_id,
                         ExtractionRunRow.document_id == document_id,
                     )
                     .order_by(ExtractionRunRow.created_at.desc())
-                    .limit(100)
+                    .limit(min(100, max(1, limit)))
                 )
             )
+
+    def get_run(self, owner_id, document_id, run_id):
+        with self.session_factory() as session:
+            self.repository._document(session, owner_id, document_id)
+            row = session.execute(
+                select(
+                    ExtractionRunRow.id,
+                    ExtractionRunRow.task_id,
+                    ExtractionRunRow.manifest,
+                    ExtractionRunRow.table_ids,
+                    ExtractionRunRow.warnings,
+                ).where(
+                    ExtractionRunRow.id == run_id,
+                    ExtractionRunRow.owner_id == owner_id,
+                    ExtractionRunRow.document_id == document_id,
+                )
+            ).first()
+            if row is None:
+                raise NotFound("Extraction run not found")
+            return {
+                "id": str(row.id),
+                "task_id": str(row.task_id),
+                "manifest": row.manifest,
+                "table_ids": row.table_ids,
+                "warnings": row.warnings,
+            }

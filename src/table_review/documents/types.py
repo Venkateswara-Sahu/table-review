@@ -54,6 +54,7 @@ class PageInfo(ImmutableModel):
     width: float
     height: float
     digital_text_present: bool
+    requires_ocr: bool = False
 
 
 class RenderedPage(ImmutableModel):

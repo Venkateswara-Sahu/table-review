@@ -73,7 +73,6 @@ export function ReportList({
     <main className="reports">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">SAVED WORK</p>
           <h1>Your reports</h1>
           <p className="muted">
             Choose a report to select pages, review tables and keep your
@@ -145,7 +144,7 @@ export function ReportList({
               disabled={busy}
               onClick={() => void deleteReport(report)}
             >
-              Delete
+              Delete report
             </button>
           </article>
         ))}

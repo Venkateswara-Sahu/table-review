@@ -1,0 +1,21 @@
+{
+  "version": "fresh-v2-reference-freeze-1",
+  "status": "complete_agent_authored_provisional_references_frozen_before_predictions",
+  "frozen_at": "2026-10-16T14:17:43.523105+00:00",
+  "corpus_sha256": "33770af9c5cd07e30b267ffab80ef9bf678a8007eb5d51e6111b18515c341fcf",
+  "corpus_payload_sha256": "1f8b3f34c9e83d8f72e16da1999f01fcfafd2e8ba65fbb242dc989a3d74e0e0e",
+  "page_protocol_sha256": "0802f4efc45e17956bcb1b3f578aff6f66bdb14610333721323ecc5448c5278d",
+  "source_plan_sha256": "f155ef024cfb53034bf7d2c2122e53fbda02c8489061e13febc6ad39f67e215f",
+  "tables": 7,
+  "financial_tables": 6,
+  "pages": 11,
+  "scorable_pages": 9,
+  "unresolved_scope_pages": 2,
+  "cells": 746,
+  "blank_cells": 61,
+  "precise_source_boxes": 685,
+  "independent_human_reviewers": 0,
+  "predictions_generated_before_freeze": 0,
+  "runtime_image": "sha256:665aee433927f4943395c1750d4962ee188fdcf776aa357a90f40a64d21d6853",
+  "model_manifest_sha256": "3e3ae47d13730fa2ad9aff7f0a01483d56103741c40ab6a1bceae41dae7a545f"
+}

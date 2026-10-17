@@ -74,6 +74,7 @@ def main():
         ("report.pdf", two_page_report, [2]),
         ("rotated.pdf", rotated_cropped_report, [1]),
         ("blank.pdf", blank_report, None),
+        ("long-report.pdf", lambda path: blank_report(path, pages=12), None),
         ("fallback.pdf", two_page_report, None),
         ("review.pdf", two_page_report, None),
     ):

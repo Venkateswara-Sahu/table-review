@@ -48,6 +48,11 @@ for (const condition of [
       .click();
     await expect(page.getByRole("grid")).toBeVisible();
     await expect(
+      page.getByRole("button", { name: "Extraction history", exact: true }),
+    ).toHaveCount(0);
+    if (condition === "review_with_checks")
+      await page.getByRole("tab", { name: /^Checks/ }).click();
+    await expect(
       page.getByRole("region", { name: "Source checks" }),
     ).toHaveCount(condition === "review_with_checks" ? 1 : 0);
     await expect(

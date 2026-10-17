@@ -1,12 +1,12 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header, Query, Request
 from pydantic import Field, model_validator
 
 from table_review.accounts.api import require_actor
 from table_review.accounts.types import Actor
-from table_review.api_types import RunList, TaskList, TaskView
+from table_review.api_types import RunList, RunView, TaskList, TaskView
 from table_review.documents.service import DocumentError
 from table_review.documents.types import ImmutableModel, PageBox
 
@@ -55,8 +55,28 @@ def tasks(document_id: UUID, request: Request, actor: Annotated[Actor, Depends(r
 
 
 @router.get("/documents/{document_id}/runs", response_model=RunList)
-def runs(document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
-    return {"items": request.app.state.queue.runs(actor.id, document_id)}
+def runs(
+    document_id: UUID,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+    include_details: bool = True,
+    limit: Annotated[int, Query(ge=1, le=100)] = 100,
+):
+    return {
+        "items": request.app.state.queue.runs(
+            actor.id, document_id, include_details=include_details, limit=limit
+        )
+    }
+
+
+@router.get("/documents/{document_id}/runs/{run_id}", response_model=RunView)
+def run(
+    document_id: UUID,
+    run_id: UUID,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+):
+    return request.app.state.queue.get_run(actor.id, document_id, run_id)
 
 
 @router.get("/tasks/{task_id}", response_model=TaskView)

@@ -1,0 +1,7 @@
+{
+  "name": "en_PP-OCRv5_rec_mobile.onnx",
+  "source": "RapidAI/RapidOCR model registry bundled with rapidocr 3.9.2",
+  "url": "https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.9.2/onnx/PP-OCRv5/rec/en_PP-OCRv5_rec_mobile.onnx",
+  "sha256": "c3461add59bb4323ecba96a492ab75e06dda42467c9e3d0c18db5d1d21924be8",
+  "pretrained_exposure": "unknown"
+}

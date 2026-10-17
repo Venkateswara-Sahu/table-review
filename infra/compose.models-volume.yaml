@@ -1,0 +1,13 @@
+# Opt-in, preverified local model storage. Saved report/database/key volumes stay
+# in the base configuration; Compose merges mount entries by container target.
+services:
+  api:
+    volumes: ["model-cache:/models:ro"]
+  worker:
+    volumes: ["model-cache:/models:ro"]
+  initialize:
+    volumes: ["model-cache:/models:ro"]
+volumes:
+  model-cache:
+    external: true
+    name: ${TABLE_REVIEW_MODEL_VOLUME:?Set an existing verified model volume}
