@@ -1292,6 +1292,11 @@ export interface components {
       extraction_supported: boolean;
       /** Height */
       height: number;
+      /**
+       * Mixed Image Content
+       * @default false
+       */
+      mixed_image_content: boolean;
       /** Page No */
       page_no: number;
       /**

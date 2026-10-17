@@ -239,6 +239,11 @@ class DoclingExtractor:
                     warnings.append(
                         f"Page {page.page_no}: offline OCR used; verify every cell against the image"
                     )
+                elif page.mixed_image_content and request.region is None:
+                    warnings.append(
+                        f"Page {page.page_no}: PDF text and images share this page; "
+                        "if an image table is missing, select its region for offline OCR"
+                    )
                 outcome["elapsed_seconds"] = time.monotonic() - page_started
                 if outcome["status"] != "success" or outcome["errors"]:
                     warnings.append(
@@ -273,7 +278,7 @@ class DoclingExtractor:
                         offset_top,
                         source_hash,
                         tokens,
-                        fill_missing=use_ocr,
+                        ocr=use_ocr,
                     )
                     if not use_ocr:
                         try:
@@ -689,7 +694,7 @@ class DoclingExtractor:
                     top,
                     source_hash,
                     retry_tokens,
-                    fill_missing=True,
+                    ocr=True,
                     identity_scope=hashlib.sha256(region.model_dump_json().encode()).hexdigest(),
                 )
                 accepted = [
@@ -740,7 +745,7 @@ class DoclingExtractor:
         source_hash,
         tokens,
         *,
-        fill_missing=False,
+        ocr=False,
         identity_scope="",
     ):
         tables, warnings = [], []
@@ -852,36 +857,36 @@ class DoclingExtractor:
             validate_grid(table.content)
             if not any(cell.text.strip() for cell in table.content.cells):
                 raise ValueError("Extracted table contains no recognized content")
-            if fill_missing:
-                occupied = {
-                    (row, col)
-                    for cell in table.content.cells
-                    for row in range(cell.row, cell.row + cell.row_span)
-                    for col in range(cell.col, cell.col + cell.col_span)
-                }
-                missing = [
-                    CellContent(
-                        id=str(uuid5(NAMESPACE_URL, f"{table.id}:unrecognized:{row}:{col}")),
-                        row=row,
-                        col=col,
-                        raw_text="",
-                        text="",
-                        reference=table.content.source_reference,
-                    )
-                    for row in range(table.content.rows)
-                    for col in range(table.content.columns)
-                    if (row, col) not in occupied
-                ]
-                if missing:
-                    tables[index] = table.model_copy(
-                        update={
-                            "content": table.content.model_copy(
-                                update={"cells": (*table.content.cells, *missing)}
-                            )
-                        }
-                    )
-                    warnings.append(
-                        f"Page {page.page_no}: OCR omitted {len(missing)} table positions; "
-                        "blank cells added for manual image review"
-                    )
+            occupied = {
+                (row, col)
+                for cell in table.content.cells
+                for row in range(cell.row, cell.row + cell.row_span)
+                for col in range(cell.col, cell.col + cell.col_span)
+            }
+            missing = [
+                CellContent(
+                    id=str(uuid5(NAMESPACE_URL, f"{table.id}:unrecognized:{row}:{col}")),
+                    row=row,
+                    col=col,
+                    raw_text="",
+                    text="",
+                    interpretation="uncertain",
+                    reference=table.content.source_reference,
+                )
+                for row in range(table.content.rows)
+                for col in range(table.content.columns)
+                if (row, col) not in occupied
+            ]
+            if missing:
+                tables[index] = table.model_copy(
+                    update={
+                        "content": table.content.model_copy(
+                            update={"cells": (*table.content.cells, *missing)}
+                        )
+                    }
+                )
+                warnings.append(
+                    f"Page {page.page_no}: {'OCR' if ocr else 'Parser'} omitted "
+                    f"{len(missing)} table positions; blank cells added for manual image review"
+                )
         return tables, warnings

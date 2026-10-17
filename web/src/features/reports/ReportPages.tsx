@@ -138,6 +138,7 @@ export function ReportPages({
           typeof warning === "string" &&
           warning.startsWith(`Page ${pageNo}:`) &&
           (warning.includes("OCR omitted") ||
+            warning.includes("Parser omitted") ||
             warning.includes("region retry") ||
             warning.includes("table recovered automatically") ||
             warning.includes("isolated dash marks") ||
@@ -559,6 +560,13 @@ export function ReportPages({
         <p role="status" className="warning">
           This page uses offline OCR. Check extracted figures against the page
           image.
+        </p>
+      )}
+      {page?.mixed_image_content && (
+        <p role="status" className="warning">
+          This page combines PDF text and images. If an image table is missing,
+          choose Select region, draw around the table, then Extract selected
+          region to read it with offline OCR.
         </p>
       )}
       {recoveryWarnings.map((warning) => (

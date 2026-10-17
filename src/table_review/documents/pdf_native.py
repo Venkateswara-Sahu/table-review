@@ -56,12 +56,14 @@ def page_info(path, page_no):
                 0, min(top, crop_t) - max(bottom, crop_b)
             )
         requires_ocr = image_area >= width * height * 0.15 and readable_chars < 20
+        mixed_image_content = image_area >= width * height * 0.15 and readable_chars >= 20
     return {
         "page_no": page_no,
         "width": width,
         "height": height,
         "digital_text_present": digital,
         "requires_ocr": requires_ocr,
+        "mixed_image_content": mixed_image_content,
     }
 
 

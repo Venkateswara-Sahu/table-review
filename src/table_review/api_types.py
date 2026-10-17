@@ -76,6 +76,7 @@ class PageView(APIModel):
     height: float
     digital_text_present: bool
     requires_ocr: bool = False
+    mixed_image_content: bool = False
     extraction_supported: bool
     unsupported_reason: str | None
 

@@ -151,6 +151,8 @@ test("viewed PDF pages are reused when returning to them", async ({ page }) => {
       `Original report page ${number}`,
     );
   }
+  // Navigation must survive a resize while the first reader layout settles.
+  await page.setViewportSize({ width: 1420, height: 980 });
   await go(5);
   const originalUrl = await page
     .getByTestId("source-image")

@@ -146,6 +146,9 @@ export function SourceReader({
     resizeAnchor.current = null;
   }, [size.width, size.height]);
   useLayoutEffect(() => {
+    // A pending resize anchor describes the old reading position. An explicit
+    // jump supersedes it, including when the initial resize commits later.
+    resizeAnchor.current = null;
     const element = reader.current,
       target = element?.querySelector<HTMLElement>(
         `[data-source-page="${jump.page}"]`,
