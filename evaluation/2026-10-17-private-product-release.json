@@ -1,0 +1,260 @@
+{
+  "version": "private-product-v8-release-1",
+  "recorded_at": "2026-10-17T11:24:36.540196+00:00",
+  "status": "verified_private_local_product_independent_validation_pending",
+  "code_commit": "b62411b",
+  "evaluation_commit": "cb10331",
+  "verification": {
+    "ordinary": {
+      "summary": "492 passed, 3 skipped, 24 deselected",
+      "private_log": ".cache/product-v8-ordinary.log",
+      "sha256": "a667e343241775e9589e0d8dcd88d5c10fc7b6d7f1a985b68f2aa0fd5286ea67"
+    },
+    "models": {
+      "summary": "14 passed",
+      "private_log": ".cache/product-v8-extraction-verification/stdout.log",
+      "sha256": "7def37672331a11673afe5fa6a73cc35425a3d14d7805cf5880678bbf8dcdb74"
+    },
+    "linux_preview": {
+      "summary": "3 passed",
+      "private_log": ".cache/product-v8-linux-preview-access.log",
+      "sha256": "99e32deb071378713a9cec7223bc62b0df964dfd8e173093bef2185314c5c7fb"
+    },
+    "browser": {
+      "summary": "69 passed",
+      "private_log": ".cache/product-v8-browser-contract-final.log",
+      "sha256": "82199159cb679020e8b003c542e1fe207fbe4df8ec745618a6621bce08f3d64c"
+    },
+    "packaged": {
+      "summary": "10 passed",
+      "private_log": ".cache/product-v8-packaged-final.log",
+      "sha256": "c2b44f0e97bb90ba68496f5dc2eade20604149b9c871acedc209a6ac5e9a851e"
+    }
+  },
+  "packaged_acceptance": {
+    "fresh_boundary": {
+      "ready": {
+        "ready": true,
+        "components": {
+          "database": true,
+          "journal": true,
+          "worker": true,
+          "models": true
+        }
+      },
+      "worker_uid": 10001,
+      "worker_network": "none",
+      "hard_memory_bytes": 6442450944,
+      "db_exposed": false
+    },
+    "absent_models": {
+      "ready": false,
+      "components": {
+        "database": true,
+        "journal": true,
+        "worker": true,
+        "models": false
+      }
+    },
+    "worker_network_probe": {
+      "interfaces": [
+        "lo"
+      ],
+      "outbound_denied": true
+    },
+    "real_parser": {
+      "elapsed_to_terminal_after_ready_probe": 18.76599999999962,
+      "ready_responses": 8,
+      "original_page": 2,
+      "table_count": 1,
+      "bounded_runner": {
+        "cgroup_version": 1,
+        "elapsed_seconds": 18.757362314000602,
+        "hard_memory_scope": "whole_container_including_controller",
+        "sampled_peak_rss_bytes": 1346592768,
+        "hard_memory_enforcement": true,
+        "rss_sample_interval_seconds": 0.1,
+        "container_memory_limit_bytes": 6442450944
+      },
+      "source_sha256": "a4111e6f1dfe3cc3e8835e6f9f0458ab961046b6ed8ec645066f85c03134ad1a",
+      "code_revision": "97fa071d50041c04136f6492e88e93388ad25959d807c36b83f167e22e15f9bc"
+    },
+    "queue_limit": {
+      "accepted": 3,
+      "fourth_status": 429,
+      "all_cancelled": true
+    },
+    "kill_restart": {
+      "attempt_count": 2,
+      "published_tables": 1,
+      "recovered": true
+    },
+    "process_isolation": {
+      "timeout_code": "timeout",
+      "timeout_descendant_alive": false,
+      "parent_death_descendants_alive": 0,
+      "parent_death_descendant_count": 3
+    },
+    "kernel_memory_probe": {
+      "failure_code": "resource_exhaustion",
+      "oom_kill_delta": 1,
+      "memory_contract": {
+        "hard_memory_enforcement": true,
+        "container_memory_limit_bytes": 6442450944,
+        "hard_memory_scope": "whole_container_including_controller",
+        "cgroup_version": 1
+      },
+      "ready_after": true
+    },
+    "api_pdf_boundary": {
+      "codes": [
+        "pdf_timeout",
+        "resource_exhaustion"
+      ],
+      "memory_bytes": 536870912,
+      "probe_process_survived": true,
+      "ready_responses": 8,
+      "linux_limit": "RLIMIT_AS",
+      "fixture": "injected sleeping and oversized allocation child commands",
+      "fixture_timeout_seconds": 4,
+      "api_kernel_oom_claimed": false
+    },
+    "packaged_restore": {
+      "result": {
+        "ready": true,
+        "deleted_documents": 1,
+        "revoked_accounts": 1,
+        "reset_accounts": 0,
+        "recovered_blobs": 6,
+        "recovery_seconds": 0.38
+      },
+      "original_sha256": "f08b24506d101acb8624f578f18ec898032d8a7a48bb6bfed8ce6da6c0bf6849",
+      "restored_sha256": "f08b24506d101acb8624f578f18ec898032d8a7a48bb6bfed8ce6da6c0bf6849",
+      "regenerated_sha256": "f08b24506d101acb8624f578f18ec898032d8a7a48bb6bfed8ce6da6c0bf6849",
+      "approval_preserved": true,
+      "deleted_files_removed": true,
+      "later_session_denied": true,
+      "differing_members": {}
+    },
+    "real_annual_workflow": {
+      "source_sha256": "54918aa92371de4691da903c1d7e4c60626134cf3679b5a0a6a4acb615793117",
+      "original_page": 48,
+      "cell_count": 175,
+      "revision_preserved": true,
+      "raw_text_preserved": true,
+      "export_sha256": "fb99afec01d84c6c6f5eba517f354dacecb9fbd0aefa2a235c3d85909413fedd",
+      "automated_checking_only": true,
+      "financial_correctness_audited": false
+    }
+  },
+  "private_deployment": {
+    "url": "http://127.0.0.1:8000",
+    "images": {
+      "api": "sha256:f7399f815a43f22a8404d341f1e53eaeeac97d309bda5fb50821837a013e9a01",
+      "worker": "sha256:1b6137dadf52a7878eed143cfb7e8af966906d2310205f2c90485094433f5d91",
+      "db": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537"
+    },
+    "adapter_contract_version": "docling-auto-ocr-editable-gaps-cpu-v8",
+    "schema_revision": "0013",
+    "worker_network": "none",
+    "worker_memory_bytes": 6442450944,
+    "worker_uid": 10001,
+    "model_storage": "verified_named_volume",
+    "verified_at": "2026-10-17T11:17:04.595583+00:00"
+  },
+  "saved_database_counts_preserved_across_update": {
+    "schema_revision": "0013",
+    "counts": {
+      "documents": 25,
+      "review_tables": 0,
+      "table_revisions": 0,
+      "extraction_runs": 0
+    }
+  },
+  "served_frontend": {
+    "ready": {
+      "ready": true,
+      "components": {
+        "database": true,
+        "journal": true,
+        "worker": true,
+        "models": true
+      }
+    },
+    "url": "http://127.0.0.1:8000",
+    "served_assets_match_current_build": true,
+    "assets": {
+      "/assets/index-HtIihLJl.js": "23de58aa1473bddbfdab789b1afd4bc3483a667723a90378d579ad1b2a48d6be",
+      "/assets/index-BOXZl_7I.css": "be394cbf66199132371c20edfcc27657091b2b2bf563038eaeca6d3f8439f8e9"
+    }
+  },
+  "real_deployed_ocr_and_exports": {
+    "status": "verified_real_queued_ocr_and_exports",
+    "adapter_contract_version": "docling-auto-ocr-editable-gaps-cpu-v8",
+    "code_revision": "97fa071d50041c04136f6492e88e93388ad25959d807c36b83f167e22e15f9bc",
+    "source_sha256": "8538dd57e4c21a485f189042bc76d11913b9cad69f7b97c6b8cf7822261e9a04",
+    "real_queued_ocr_extractions": 1,
+    "repaired_cells": 9,
+    "raw_and_coarse_source_evidence_exported": true,
+    "uncertain_letter_s_retained": true,
+    "exports": {
+      "workbook": {
+        "sha256": "4dc212c303466e5669d82f68f47120189c75570118e2af72a38ecd693ccff12d",
+        "bytes": 40008,
+        "captured_revision": true
+      },
+      "csv_package": {
+        "sha256": "e4035153aca297f618877109669e908d289757a87b37818ccf8e08df8bd8b2c5",
+        "bytes": 22830,
+        "captured_revision": true
+      }
+    },
+    "disposable_report_cleanup_requested": true
+  },
+  "native_excel": {
+    "status": "opened_without_observed_repair_prompt",
+    "app": "Installed Microsoft Excel; Office16 process path observed",
+    "sheets_observed": [
+      "Table",
+      "Source",
+      "Changes",
+      "Manifest",
+      "Context",
+      "Timeline"
+    ],
+    "sheets_inspected": [
+      "Table",
+      "Context",
+      "Timeline"
+    ],
+    "context_json_chunks_visible": true,
+    "timeline_coverage_start_visible": true,
+    "closed_without_save": true,
+    "workbook_bytes_unchanged": true,
+    "workbook_sha256": "4dc212c303466e5669d82f68f47120189c75570118e2af72a38ecd693ccff12d",
+    "scope": "One current OCR draft export; no subtotal declarations, no broad version compatibility or independent financial audit"
+  },
+  "raw_preservation": {
+    "native": {
+      "prior_cells": 689,
+      "raw_and_text_unchanged": 689,
+      "added_uncertain_blank_cells": 58
+    },
+    "derived_ocr": {
+      "prior_cells": 190,
+      "raw_and_text_unchanged": 190,
+      "added_uncertain_blank_cells": 0
+    }
+  },
+  "extraction_results_sha256": "bf4ad77e12bccb02d6aa2b65ac10029f4c6c93fe47ccdc771a8744108c704dc8",
+  "independent_human_adjudicators": 0,
+  "external_usability_participants": 0,
+  "remaining": [
+    "Independent source adjudication and unfamiliar-user sessions",
+    "New naturally scanned source evaluation",
+    "Broader native Excel/subtotal compatibility and cold/large-document performance",
+    "Earlier unexplained Windows native-library crash root cause",
+    "Hosted deployment and remote CI outside this private release"
+  ],
+  "isolated_acceptance_stopped_volumes_preserved": true
+}

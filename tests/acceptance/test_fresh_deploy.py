@@ -544,13 +544,15 @@ def test_real_annual_report_moves_through_source_review_and_exact_export(runtime
     )
     assert edited.status_code == 200
     saved = edited.json()
-    assert (
-        runtime.owner.post(
-            "/api/v1/revisions/" + saved["id"] + "/checked",
-            json={"cell_ids": [cell["id"] for cell in saved["content"]["cells"]], "checked": True},
-        ).status_code
-        == 200
-    )
+    # Explicit fixture decisions exercise review policy; they are not a source audit.
+    for blank, verdict in ((False, "confirmed_value"), (True, "confirmed_blank")):
+        ids = [c["id"] for c in saved["content"]["cells"] if (not c["text"].strip()) == blank]
+        if ids:
+            decision = runtime.owner.post(
+                "/api/v1/revisions/" + saved["id"] + "/cell-review",
+                json={"cell_ids": ids, "verdict": verdict, "reason": "Automated workflow fixture"},
+            )
+            assert decision.status_code == 200
     approved = runtime.owner.post(
         "/api/v1/revisions/" + saved["id"] + "/approval", json={"allow_warnings": True}
     )
@@ -576,12 +578,39 @@ def test_real_annual_report_moves_through_source_review_and_exact_export(runtime
     assert blob.status_code == 200
     workbook = load_workbook(io.BytesIO(blob.content), read_only=True, data_only=False)
     try:
-        assert workbook.sheetnames == ["Table", "Source", "Changes", "Manifest"]
+        assert workbook.sheetnames == [
+            "Table",
+            "Source",
+            "Changes",
+            "Manifest",
+            "Context",
+            "Timeline",
+        ]
         sources = list(workbook["Source"].iter_rows(min_row=2, values_only=True))
         assert len(sources) == len(saved["content"]["cells"])
         assert [(row[0], row[4] or "", row[5] or "") for row in sources] == [
             (cell["id"], cell["raw_text"], cell["text"]) for cell in saved["content"]["cells"]
         ]
+
+        def records(sheet):
+            chunks = {}
+            for identity, part, value in workbook[sheet].iter_rows(min_row=2, values_only=True):
+                chunks.setdefault(identity, []).append((int(part), value))
+            restored = {}
+            for identity, parts in chunks.items():
+                parts.sort()
+                assert [part for part, _ in parts] == list(range(1, len(parts) + 1))
+                restored[identity] = json.loads("".join(value for _, value in parts))
+            return restored
+
+        context = records("Context")
+        assert {
+            value["cell_id"] for identity, value in context.items() if identity.startswith("cell:")
+        } == {cell["id"] for cell in saved["content"]["cells"]}
+        timeline = sorted(records("Timeline").values(), key=lambda event: event["sequence"])
+        assert timeline and timeline[0]["kind"] == "coverage_start"
+        assert timeline[-1]["sequence"] == final["manifest"]["timeline_policy"]["through_sequence"]
+        assert any(event["kind"] == "approval" for event in timeline)
     finally:
         workbook.close()
     reopened = runtime.owner.get("/api/v1/tables/" + table_id).json()

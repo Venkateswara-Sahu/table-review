@@ -5,6 +5,10 @@ comparing them with the original page, correcting a saved revision and exporting
 that exact revision to a spreadsheet. It runs locally on CPU with PostgreSQL,
 FastAPI, React and a separately bounded Docling worker.
 
+The [17 October private release record](docs/evidence/2026-10-17-private-product-release.md)
+documents the current build, recovery tests and extraction limits. Open the local
+deployment at <http://127.0.0.1:8000> after following the local runbook.
+
 The workflow includes original-page highlights and zoom, region selection,
 explicit manual grids, keyboard editing, immutable edit history, checked-cell
 audit events, source discrepancy decisions, approval and workbook/CSV downloads.
@@ -54,7 +58,10 @@ up to 50 MiB/500 pages, one to five selected pages per run, and grids up to
 selectable native content is preserved where usable. OCR recognition and routing
 are fallible, and every extracted figure needs source-image review. An
 interrupted extraction has a bounded retry; a missed table can be recovered
-manually. The network-isolated worker has a hard 6 GiB container limit. Accounts,
+by selecting its region for OCR or creating a manual grid. Mixed text/image pages
+include this recovery guidance. Omitted grid positions become uncertain editable
+blanks; compare the image and explicitly confirm blank or enter the missing value.
+The network-isolated worker has a hard 6 GiB container limit. Accounts,
 owner checks, cancellation, deletion, retention and encrypted recovery belong to
 the same workflow.
 
@@ -78,8 +85,9 @@ Evidence and claim boundaries:
 - [Backup and recovery](docs/runbooks/backup-restore.md)
 
 Human review-time savings, the proposed 20% improvement, demand and adoption are
-unmeasured. There have been no external study participants. Local tests do not
-establish hosted service reliability or native Microsoft Excel compatibility.
+unmeasured. There have been no external study participants. One current six-sheet
+export has been opened and inspected in native Excel; broader workbook/version
+compatibility and hosted service reliability remain unestablished.
 
 Original reports, complete transcriptions, models, environments, passwords and
 private execution artifacts are excluded from Git. `uv.lock`, the npm lockfile,
