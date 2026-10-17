@@ -55,7 +55,8 @@ jobs:
         with: {version: '0.10.11'}
       - run: uv sync --frozen --extra extraction --group dev
       - run: uv run --frozen --extra extraction python scripts/preload_models.py
-      - run: uv run --frozen --extra extraction python scripts/deploy_local.py --acceptance
+      - run: uv run --frozen --extra extraction python scripts/preload_ocr_models.py
+      - run: uv run --frozen --extra extraction python scripts/deploy_local.py --fresh-acceptance
       - run: uv run --frozen --group dev pytest tests/acceptance/test_fresh_deploy.py -q
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()

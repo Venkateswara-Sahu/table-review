@@ -226,8 +226,33 @@ def main():
         time.sleep(1)
     else:
         raise SystemExit("Deployment did not become ready within its startup bound")
+    schema_revision = command(
+        [
+            "docker",
+            "exec",
+            state["project"] + "-api-1",
+            "python",
+            "-c",
+            (
+                "from sqlalchemy import text\n"
+                "from table_review.settings import Settings\n"
+                "from table_review.storage.db import create_session_factory\n"
+                "settings = Settings.from_env()\n"
+                "factory = create_session_factory(settings.database_url, schema=settings.database_schema)\n"
+                "with factory.begin() as session:\n"
+                "    revisions = list(session.scalars(text('SELECT version_num FROM alembic_version')))\n"
+                "if len(revisions) != 1:\n"
+                "    raise SystemExit('Expected one deployed schema revision')\n"
+                "print(revisions[0])\n"
+                "factory.kw['bind'].dispose()\n"
+            ),
+        ]
+    ).strip()
+    if not re.fullmatch(r"[A-Za-z0-9_]{1,64}", schema_revision):
+        raise SystemExit("Unable to verify the deployed schema revision")
     worker = json.loads(command(["docker", "inspect", state["project"] + "-worker-1"]))[0]
     state.update(
+        schema_revision=schema_revision,
         worker_network=worker["HostConfig"]["NetworkMode"],
         worker_memory_bytes=worker["HostConfig"]["Memory"],
         worker_uid=int(worker["Config"]["User"].split(":")[0]),
