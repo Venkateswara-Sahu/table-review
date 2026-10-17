@@ -1,0 +1,25 @@
+{
+  "frozen_at": "2026-10-17T11:13:21.224913+00:00",
+  "source_sha256": "550eaf563e00aa4862eb26f2a738b9c95968f3aa39e12f31e7076824e9ba9a8d",
+  "corpus_sha256": "20c9350d18ad3c3be4d261fb70b726b07cd51fce41135eebf95b1f36656d6a27",
+  "pages_sha256": "ae1cfa14d712eb066ed673477d93f7d2235b33af03a984939b9c66d625af9afe",
+  "image_sha256": {
+    "page-8.png": "2f927a61ae61dd5c7c108113219b6e3ee869d67366c42f3a63ef84163342d41f",
+    "page-54.png": "07b655cee3fccf13e41edad2cf10a7949464648afff92f99b560e792db0752fe"
+  },
+  "source_layout_sha256": "d07fd4599d1d35da37d554ab30248a9959f26253a09cdb03569e41fac4f1350d",
+  "table_cells": 109,
+  "rows": 28,
+  "columns": 4,
+  "predictions_before_freeze": 0,
+  "independent_human_reviewers": 0,
+  "execution_identity_sha256": "c3f359a3f1f5e6e0dc6c30ad9681749209472b6a65cd04133fc01dd7c79ee8ec",
+  "status": "source_frozen_agent_authored_not_independently_adjudicated",
+  "source_url": "https://stock.walmart.com/sec-filings/all-sec-filings/content/0000104169-26-000091/0000104169-26-000091.pdf",
+  "source_pages": [
+    54,
+    8
+  ],
+  "source_review": "Agent inspected full source images; table glyph-assisted reference, prose negative",
+  "role": "new_company_layout_at_first_prediction_only_not_independent_human_validation"
+}

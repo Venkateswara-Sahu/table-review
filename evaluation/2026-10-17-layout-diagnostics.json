@@ -1,0 +1,304 @@
+{
+  "status": "additive_development_diagnostics_not_replacement_accuracy",
+  "recorded_at": "2026-10-17T10:49:18.698368+00:00",
+  "diagnostic_code_sha256": "69378c5d183883969213bebc778bba3b6971048872f0465a56e76dd4ea5ef489",
+  "original_metrics_unchanged": true,
+  "limitations": [
+    "Span expansion preserves anchor text and treats covered nonanchor slots as empty; it does not establish semantic equivalence or header correctness",
+    "Caption matching is literal source support, not confirmation of scope or correctness of currency/scale interpretation",
+    "Retained existing development outputs and provisional agent references; no new model runs or independent adjudicators"
+  ],
+  "cohorts": {
+    "native": {
+      "reference_sha256": "33770af9c5cd07e30b267ffab80ef9bf678a8007eb5d51e6111b18515c341fcf",
+      "cases": [
+        {
+          "case_id": "amazon-2025-p17",
+          "diagnostic": {
+            "method": "anchor_text_blank_span_projection_v1",
+            "expanded_slot_literal_correct": 39,
+            "expanded_slot_literal_total": 39,
+            "expanded_slot_literals_exact": true,
+            "nonblank_anchor_literal_correct": 39,
+            "nonblank_anchor_literal_total": 39,
+            "source_caption_literal_supported": 0,
+            "source_caption_literal_total": 0
+          },
+          "strict": {
+            "literal_occurrence_correct": 39,
+            "literal_occurrence_total": 39,
+            "predicted_literal_occurrences": 39,
+            "literal_correct": 39,
+            "literal_total": 39,
+            "association_correct": 0,
+            "association_total": 24,
+            "geometry_correct": 39,
+            "geometry_total": 39,
+            "role_correct": 27,
+            "role_total": 39,
+            "unit_correct": true,
+            "structure_correct": true,
+            "exact_table": false
+          }
+        },
+        {
+          "case_id": "amazon-2025-p47",
+          "diagnostic": {
+            "method": "anchor_text_blank_span_projection_v1",
+            "expanded_slot_literal_correct": 127,
+            "expanded_slot_literal_total": 144,
+            "expanded_slot_literals_exact": false,
+            "nonblank_anchor_literal_correct": 125,
+            "nonblank_anchor_literal_total": 125,
+            "source_caption_literal_supported": 1,
+            "source_caption_literal_total": 1
+          },
+          "strict": {
+            "literal_occurrence_correct": 125,
+            "literal_occurrence_total": 125,
+            "predicted_literal_occurrences": 125,
+            "literal_correct": 125,
+            "literal_total": 141,
+            "association_correct": 87,
+            "association_total": 87,
+            "geometry_correct": 125,
+            "geometry_total": 125,
+            "role_correct": 125,
+            "role_total": 141,
+            "unit_correct": false,
+            "structure_correct": false,
+            "exact_table": false
+          }
+        },
+        {
+          "case_id": "amazon-2025-p48",
+          "diagnostic": {
+            "method": "anchor_text_blank_span_projection_v1",
+            "expanded_slot_literal_correct": 100,
+            "expanded_slot_literal_total": 108,
+            "expanded_slot_literals_exact": false,
+            "nonblank_anchor_literal_correct": 98,
+            "nonblank_anchor_literal_total": 98,
+            "source_caption_literal_supported": 1,
+            "source_caption_literal_total": 1
+          },
+          "strict": {
+            "literal_occurrence_correct": 98,
+            "literal_occurrence_total": 98,
+            "predicted_literal_occurrences": 98,
+            "literal_correct": 98,
+            "literal_total": 105,
+            "association_correct": 69,
+            "association_total": 69,
+            "geometry_correct": 98,
+            "geometry_total": 98,
+            "role_correct": 98,
+            "role_total": 105,
+            "unit_correct": false,
+            "structure_correct": false,
+            "exact_table": false
+          }
+        },
+        {
+          "case_id": "amazon-2025-p50",
+          "diagnostic": {
+            "method": "anchor_text_blank_span_projection_v1",
+            "expanded_slot_literal_correct": 85,
+            "expanded_slot_literal_total": 99,
+            "expanded_slot_literals_exact": false,
+            "nonblank_anchor_literal_correct": 84,
+            "nonblank_anchor_literal_total": 84,
+            "source_caption_literal_supported": 1,
+            "source_caption_literal_total": 1
+          },
+          "strict": {
+            "literal_occurrence_correct": 84,
+            "literal_occurrence_total": 84,
+            "predicted_literal_occurrences": 84,
+            "literal_correct": 84,
+            "literal_total": 97,
+            "association_correct": 50,
+            "association_total": 50,
+            "geometry_correct": 84,
+            "geometry_total": 84,
+            "role_correct": 84,
+            "role_total": 97,
+            "unit_correct": false,
+            "structure_correct": false,
+            "exact_table": false
+          }
+        },
+        {
+          "case_id": "coca-cola-2025-p63",
+          "diagnostic": {
+            "method": "anchor_text_blank_span_projection_v1",
+            "expanded_slot_literal_correct": 84,
+            "expanded_slot_literal_total": 84,
+            "expanded_slot_literals_exact": true,
+            "nonblank_anchor_literal_correct": 84,
+            "nonblank_anchor_literal_total": 84,
+            "source_caption_literal_supported": 1,
+            "source_caption_literal_total": 1
+          },
+          "strict": {
+            "literal_occurrence_correct": 84,
+            "literal_occurrence_total": 84,
+            "predicted_literal_occurrences": 84,
+            "literal_correct": 84,
+            "literal_total": 84,
+            "association_correct": 60,
+            "association_total": 60,
+            "geometry_correct": 84,
+            "geometry_total": 84,
+            "role_correct": 83,
+            "role_total": 84,
+            "unit_correct": false,
+            "structure_correct": true,
+            "exact_table": false
+          }
+        },
+        {
+          "case_id": "coca-cola-2025-p65",
+          "diagnostic": {
+            "method": "anchor_text_blank_span_projection_v1",
+            "expanded_slot_literal_correct": 116,
+            "expanded_slot_literal_total": 120,
+            "expanded_slot_literals_exact": false,
+            "nonblank_anchor_literal_correct": 110,
+            "nonblank_anchor_literal_total": 110,
+            "source_caption_literal_supported": 1,
+            "source_caption_literal_total": 1
+          },
+          "strict": {
+            "literal_occurrence_correct": 110,
+            "literal_occurrence_total": 110,
+            "predicted_literal_occurrences": 110,
+            "literal_correct": 107,
+            "literal_total": 120,
+            "association_correct": 68,
+            "association_total": 68,
+            "geometry_correct": 107,
+            "geometry_total": 110,
+            "role_correct": 106,
+            "role_total": 120,
+            "unit_correct": false,
+            "structure_correct": false,
+            "exact_table": false
+          }
+        },
+        {
+          "case_id": "coca-cola-2025-p66",
+          "diagnostic": {
+            "method": "anchor_text_blank_span_projection_v1",
+            "expanded_slot_literal_correct": 145,
+            "expanded_slot_literal_total": 160,
+            "expanded_slot_literals_exact": false,
+            "nonblank_anchor_literal_correct": 145,
+            "nonblank_anchor_literal_total": 145,
+            "source_caption_literal_supported": 1,
+            "source_caption_literal_total": 1
+          },
+          "strict": {
+            "literal_occurrence_correct": 145,
+            "literal_occurrence_total": 145,
+            "predicted_literal_occurrences": 145,
+            "literal_correct": 145,
+            "literal_total": 160,
+            "association_correct": 102,
+            "association_total": 102,
+            "geometry_correct": 123,
+            "geometry_total": 145,
+            "role_correct": 144,
+            "role_total": 160,
+            "unit_correct": false,
+            "structure_correct": false,
+            "exact_table": false
+          }
+        }
+      ],
+      "counts": {
+        "expanded_slot_literal_correct": 696,
+        "expanded_slot_literal_total": 754,
+        "nonblank_anchor_literal_correct": 685,
+        "nonblank_anchor_literal_total": 685,
+        "source_caption_literal_supported": 6,
+        "source_caption_literal_total": 6
+      },
+      "projected_literal_exact_tables": 2,
+      "strict_exact_tables": 0
+    },
+    "derived_ocr": {
+      "reference_sha256": "6f8cc2e5a86c00c4774c28157931d5b0375faf883285248ef940ec75955ff48a",
+      "cases": [
+        {
+          "case_id": "amazon-2025-p48-raster180",
+          "diagnostic": {
+            "method": "anchor_text_blank_span_projection_v1",
+            "expanded_slot_literal_correct": 108,
+            "expanded_slot_literal_total": 108,
+            "expanded_slot_literals_exact": true,
+            "nonblank_anchor_literal_correct": 98,
+            "nonblank_anchor_literal_total": 98,
+            "source_caption_literal_supported": 1,
+            "source_caption_literal_total": 1
+          },
+          "strict": {
+            "literal_occurrence_correct": 98,
+            "literal_occurrence_total": 98,
+            "predicted_literal_occurrences": 98,
+            "literal_correct": 104,
+            "literal_total": 105,
+            "association_correct": 69,
+            "association_total": 69,
+            "geometry_correct": 81,
+            "geometry_total": 98,
+            "role_correct": 104,
+            "role_total": 105,
+            "unit_correct": false,
+            "structure_correct": false,
+            "exact_table": false
+          }
+        },
+        {
+          "case_id": "coca-cola-2025-p63-raster180",
+          "diagnostic": {
+            "method": "anchor_text_blank_span_projection_v1",
+            "expanded_slot_literal_correct": 79,
+            "expanded_slot_literal_total": 84,
+            "expanded_slot_literals_exact": false,
+            "nonblank_anchor_literal_correct": 79,
+            "nonblank_anchor_literal_total": 84,
+            "source_caption_literal_supported": 1,
+            "source_caption_literal_total": 1
+          },
+          "strict": {
+            "literal_occurrence_correct": 79,
+            "literal_occurrence_total": 84,
+            "predicted_literal_occurrences": 84,
+            "literal_correct": 79,
+            "literal_total": 84,
+            "association_correct": 54,
+            "association_total": 60,
+            "geometry_correct": 17,
+            "geometry_total": 84,
+            "role_correct": 83,
+            "role_total": 84,
+            "unit_correct": false,
+            "structure_correct": true,
+            "exact_table": false
+          }
+        }
+      ],
+      "counts": {
+        "expanded_slot_literal_correct": 187,
+        "expanded_slot_literal_total": 192,
+        "nonblank_anchor_literal_correct": 177,
+        "nonblank_anchor_literal_total": 182,
+        "source_caption_literal_supported": 2,
+        "source_caption_literal_total": 2
+      },
+      "projected_literal_exact_tables": 1,
+      "strict_exact_tables": 0
+    }
+  }
+}
