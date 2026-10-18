@@ -1,0 +1,31 @@
+{
+	admin off
+	persist_config off
+	auto_https disable_redirects
+	http_port 8080
+	https_port 8443
+	skip_install_trust
+	servers {
+		protocols h1 h2
+	}
+}
+
+(public_tls) {
+	tls {
+		issuer acme
+	}
+}
+
+(rehearsal_tls) {
+	tls internal
+}
+
+https://{$TABLE_REVIEW_HOSTNAME}:8443 {
+	import {$TABLE_REVIEW_TLS_MODE:public_tls}
+	header Strict-Transport-Security "max-age=31536000"
+	reverse_proxy api:8000
+}
+
+http://:8080 {
+	redir https://{$TABLE_REVIEW_SITE}{uri} 308
+}

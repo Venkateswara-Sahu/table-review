@@ -7,21 +7,27 @@ from table_review.extraction.types import SourceToken
 
 def ocr_options(config):
     from docling.datamodel.pipeline_options import OcrMode, RapidOcrOptions
+    from rapidocr import LangRec, ModelType, OCRVersion
 
     root = config.artifacts_path.resolve() / "rapidocr"
     names = {
         "det_model_path": "PP-OCRv6_det_small.onnx",
-        "rec_model_path": "PP-OCRv6_rec_small.onnx",
+        "rec_model_path": "en_PP-OCRv5_rec_mobile.onnx",
         "cls_model_path": "ch_ppocr_mobile_v2.0_cls_mobile.onnx",
     }
     if not all((root / name).is_file() for name in names.values()):
         raise DocumentError("ocr_unavailable", "Offline OCR models are not available")
     return RapidOcrOptions(
         backend="onnxruntime",
-        lang=["ch"],
+        lang=["en"],
         mode=OcrMode.FULL_PAGE,
         **{key: str(root / name) for key, name in names.items()},
         rapidocr_params={
+            # Explicit model paths bypass Docling's recognizer metadata setup.
+            # Keep the language/backbone paired with the preloaded English file.
+            "Rec.lang_type": LangRec.EN,
+            "Rec.model_type": ModelType.MOBILE,
+            "Rec.ocr_version": OCRVersion.PPOCRV5,
             "EngineConfig.onnxruntime.intra_op_num_threads": config.num_threads,
             "EngineConfig.onnxruntime.inter_op_num_threads": 1,
         },

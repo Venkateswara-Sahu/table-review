@@ -5,7 +5,7 @@ comparing them with the original page, correcting a saved revision and exporting
 that exact revision to a spreadsheet. It runs locally on CPU with PostgreSQL,
 FastAPI, React and a separately bounded Docling worker.
 
-The [17 October private release record](docs/evidence/2026-10-17-private-product-release.md)
+The [18 October release fixes](docs/evidence/2026-10-18-release-fixes.md)
 documents the current build, recovery tests and extraction limits. Open the local
 deployment at <http://127.0.0.1:8000> after following the local runbook.
 
@@ -59,7 +59,10 @@ selectable native content is preserved where usable. OCR recognition and routing
 are fallible, and every extracted figure needs source-image review. An
 interrupted extraction has a bounded retry; a missed table can be recovered
 by selecting its region for OCR or creating a manual grid. Mixed text/image pages
-include this recovery guidance. Omitted grid positions become uncertain editable
+get one additional bounded OCR pass; only new, non-overlapping tables with at
+least three rows and three columns are admitted. Smaller, overlapping or uncertain
+regions still need explicit selection. Main OCR uses the preloaded English
+recognizer. Omitted grid positions become uncertain editable
 blanks; compare the image and explicitly confirm blank or enter the missing value.
 The network-isolated worker has a hard 6 GiB container limit. Accounts,
 owner checks, cancellation, deletion, retention and encrypted recovery belong to

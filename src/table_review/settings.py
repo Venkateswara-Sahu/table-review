@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
+from typing import Literal
+from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Settings(BaseModel):
@@ -29,6 +31,7 @@ class Settings(BaseModel):
     blob_root: Path = Path("data/blobs")
     public_origin: str = "http://localhost:8000"
     secure_cookies: bool = True
+    deployment_mode: Literal["local", "hosted"] = "local"
     max_render_pixels: int = 16_000_000
     journal_path: Path | None = None
     initialize_journal: bool = False
@@ -36,6 +39,30 @@ class Settings(BaseModel):
     backup_root: Path = Path("data/backups")
     max_backup_bytes: int = 256 * 1024**2
     worker_pulse_path: Path | None = None
+
+    @model_validator(mode="after")
+    def hosted_boundary(self):
+        if self.deployment_mode == "hosted":
+            try:
+                origin = urlsplit(self.public_origin)
+                valid = (
+                    origin.scheme == "https"
+                    and bool(origin.hostname)
+                    and origin.username is None
+                    and origin.password is None
+                    and not origin.path
+                    and not origin.query
+                    and not origin.fragment
+                    and (origin.port is None or 1 <= origin.port <= 65535)
+                    and not any(c.isspace() for c in self.public_origin)
+                )
+            except ValueError:
+                valid = False
+            if not valid:
+                raise ValueError("Hosted mode requires an exact HTTPS origin without a path")
+            if not self.secure_cookies:
+                raise ValueError("Hosted mode requires secure cookies")
+        return self
 
     @classmethod
     def from_env(cls):
@@ -56,6 +83,7 @@ class Settings(BaseModel):
             else None,
             public_origin=os.environ.get("TABLE_REVIEW_PUBLIC_ORIGIN", "http://localhost:8000"),
             secure_cookies=os.environ.get("TABLE_REVIEW_SECURE_COOKIES", "true").lower() != "false",
+            deployment_mode=os.environ.get("TABLE_REVIEW_DEPLOYMENT_MODE", "local"),
         )
 
     @property

@@ -18,8 +18,10 @@ import httpx
 from table_review.runtime import models_available
 
 
-def command(args, *, timeout=600):
-    result = subprocess.run(args, capture_output=True, text=True, timeout=timeout, check=False)
+def command(args, *, timeout=600, env=None):
+    result = subprocess.run(
+        args, capture_output=True, text=True, timeout=timeout, check=False, env=env
+    )
     if result.returncode:
         raise SystemExit("Local Docker operation failed; inspect sanitized service readiness/logs")
     return result.stdout

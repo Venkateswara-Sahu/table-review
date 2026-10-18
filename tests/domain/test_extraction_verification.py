@@ -65,11 +65,22 @@ def test_existing_evidence_directory_is_not_overwritten(tmp_path):
 @pytest.mark.skipif(os.name != "nt", reason="Windows native error UI policy")
 def test_windows_verification_child_disables_native_crash_dialogs(tmp_path):
     code = (
-        "import ctypes; from scripts.verify_extraction import prepare_test_process; "
+        "import ctypes; from scripts.native_test_process import prepare_test_process; "
         "prepare_test_process(); assert ctypes.windll.kernel32.GetErrorMode() & 3 == 3"
     )
     result = run_verification([sys.executable, "-c", code], tmp_path, timeout=5)
     assert result["status"] == "passed"
+
+
+def test_native_dialog_bootstrap_runs_before_application_and_inference_imports(tmp_path):
+    code = (
+        "import sys; from scripts.native_test_process import prepare_test_process; "
+        "assert not any(n=='psutil' or n.startswith(('table_review','torch','pydantic')) for n in sys.modules); "
+        "prepare_test_process(); print('bootstrap-ready')"
+    )
+    result = run_verification([sys.executable, "-c", code], tmp_path, timeout=5)
+    assert result["status"] == "passed"
+    assert (tmp_path / "stdout.log").read_text().strip() == "bootstrap-ready"
 
 
 @pytest.mark.parametrize("timeout", [0, -1, float("inf"), float("nan")])

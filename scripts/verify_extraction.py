@@ -16,21 +16,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.native_test_process import prepare_test_process
 from table_review.jobs.runner import _terminate, _WindowsJob
 
-
-def prepare_test_process():
-    """Keep a Windows native fault from waiting on an unattended error dialog."""
-    if os.name == "nt":
-        import ctypes
-        from ctypes import wintypes
-
-        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
-        kernel.GetErrorMode.argtypes = []
-        kernel.GetErrorMode.restype = wintypes.UINT
-        kernel.SetErrorMode.argtypes = [wintypes.UINT]
-        kernel.SetErrorMode.restype = wintypes.UINT
-        kernel.SetErrorMode(kernel.GetErrorMode() | 0x0003)
+__all__ = ["prepare_test_process", "run_verification"]
 
 
 def run_verification(command, output, *, timeout):
@@ -120,7 +110,7 @@ def main():
         )
     ).resolve()
     bootstrap = (
-        "import faulthandler,runpy,sys; from scripts.verify_extraction import prepare_test_process; "
+        "import faulthandler,runpy,sys; from scripts.native_test_process import prepare_test_process; "
         "prepare_test_process(); faulthandler.enable(); "
         "sys.argv=['pytest',*sys.argv[1:]]; runpy.run_module('pytest',run_name='__main__')"
     )

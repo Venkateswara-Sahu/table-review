@@ -1,0 +1,368 @@
+{
+  "recorded_at": "2026-10-18T08:39:30.609046+00:00",
+  "status": "verified_private_local_release_not_public_hosting",
+  "normal_deployment": {
+    "project": "table-review-local",
+    "port": 8000,
+    "url": "http://127.0.0.1:8000",
+    "initialized_at": "2026-10-07T10:56:58.603665+00:00",
+    "worker_network": "none",
+    "worker_memory_bytes": 6442450944,
+    "worker_uid": 10001,
+    "fresh_deployment": false,
+    "initial_deployment_fresh": true,
+    "verified_at": "2026-10-18T08:33:57.600531+00:00",
+    "images": {
+      "api": "sha256:b5df0186e461bb9837e76b207812f6d94e02f3428b4d1eca38061d4ecb928248",
+      "worker": "sha256:6105ec5ca514b631e7efbf7a1311dd19b696e800b1d4f1402998d880884e557d",
+      "db": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537"
+    },
+    "adapter_contract_version": "docling-en-ocr-mixed-recovery-cpu-v9",
+    "schema_revision": "0013",
+    "cell_review_policy": "explicit_blank_unreadable_v1",
+    "model_volume": "table-review-models-20261018",
+    "model_storage": "verified_named_volume"
+  },
+  "served_frontend": {
+    "assets": {
+      "index.html": "1ee6b9df8791c34aeee71ee8a7fbedeed8d576193eb74355aedcc4583ab5ae3a",
+      "assets/index-BOXZl_7I.css": "be394cbf66199132371c20edfcc27657091b2b2bf563038eaeca6d3f8439f8e9",
+      "assets/index-HtIihLJl.js": "23de58aa1473bddbfdab789b1afd4bc3483a667723a90378d579ad1b2a48d6be"
+    },
+    "readiness": {
+      "ready": true,
+      "components": {
+        "database": true,
+        "journal": true,
+        "worker": true,
+        "models": true
+      }
+    }
+  },
+  "saved_aggregate_counts_unchanged": true,
+  "saved_count_evidence_sha256": "491a536ba347c0b66661839773a99b23dce63d4241926a948952e86678d107d6",
+  "verification": {
+    "ordinary": {
+      "result": "512 passed, 3 skipped, 28 deselected",
+      "private_log": ".cache/remaining-v9-ordinary-final.log",
+      "sha256": "0e386645a5bca254747b97e7ecc9d7f66b828168ea0f94ae65f83c9c3fb05631"
+    },
+    "models": {
+      "result": "16 passed, 527 deselected",
+      "private_log": ".cache/remaining-v9-models-release/stdout.log",
+      "sha256": "2696827a18066da2d6d6d41d11f95b831dcd54a4038610f6ef7648d6e136e314"
+    },
+    "browser": {
+      "result": "69 passed",
+      "private_log": ".cache/remaining-v9-browser.log",
+      "sha256": "e02f9876414ed05f16b904a8ec7bdcfe2d526818cdedb669ef8c4c063ef16894"
+    },
+    "packaged": {
+      "result": "10 passed",
+      "private_log": ".cache/remaining-v9-package.log",
+      "sha256": "bdf1fb4fd9afb8c190f50718b633214eda3ee2399c568bfe8bdd96ba35fe74a8"
+    },
+    "https": {
+      "result": "2 passed",
+      "private_log": ".cache/remaining-v9-https-release-final.log",
+      "sha256": "4c64ae567e831cafb760c26f80a55f7e2a5a55d77854859076a6dca2c1d4886e"
+    },
+    "frontend_build": {
+      "result": "built in",
+      "private_log": ".cache/remaining-v9-web-build.log",
+      "sha256": "325bc314f44a98479bad7a629d8bd5b11ca17f62eebe75b2b872228483f96ab4"
+    },
+    "frontend_format": {
+      "result": "All matched files use Prettier code style!",
+      "private_log": ".cache/remaining-v9-web-format.log",
+      "sha256": "17ed556bb3f73c253cbb41147e9a980e25ffb727cb48f8887419156a020e59d5"
+    }
+  },
+  "model_verifier": {
+    "schema": "extraction_test_verification_v1",
+    "status": "passed",
+    "returncode": 0,
+    "elapsed_seconds": 325.5150000000001,
+    "timeout_seconds": 600.0,
+    "last_test": "tests/integration/test_table_recovery.py::test_isolated_source_dash_is_recovered_as_uncertain_text"
+  },
+  "packaged_acceptance": {
+    "fresh_boundary": {
+      "ready": {
+        "ready": true,
+        "components": {
+          "database": true,
+          "journal": true,
+          "worker": true,
+          "models": true
+        }
+      },
+      "worker_uid": 10001,
+      "worker_network": "none",
+      "hard_memory_bytes": 6442450944,
+      "db_exposed": false
+    },
+    "absent_models": {
+      "ready": false,
+      "components": {
+        "database": true,
+        "journal": true,
+        "worker": true,
+        "models": false
+      }
+    },
+    "worker_network_probe": {
+      "interfaces": [
+        "lo"
+      ],
+      "outbound_denied": true
+    },
+    "real_parser": {
+      "elapsed_to_terminal_after_ready_probe": 35.327999999999975,
+      "ready_responses": 8,
+      "original_page": 2,
+      "table_count": 1,
+      "bounded_runner": {
+        "cgroup_version": 1,
+        "elapsed_seconds": 35.36961077000001,
+        "hard_memory_scope": "whole_container_including_controller",
+        "sampled_peak_rss_bytes": 1363427328,
+        "hard_memory_enforcement": true,
+        "rss_sample_interval_seconds": 0.1,
+        "container_memory_limit_bytes": 6442450944
+      },
+      "source_sha256": "a4111e6f1dfe3cc3e8835e6f9f0458ab961046b6ed8ec645066f85c03134ad1a",
+      "code_revision": "a5febd14175c4c7ff1ea7cc3c9d69fde0037e47769a5326022fc99b7a851fbe8"
+    },
+    "queue_limit": {
+      "accepted": 3,
+      "fourth_status": 429,
+      "all_cancelled": true
+    },
+    "kill_restart": {
+      "attempt_count": 2,
+      "published_tables": 1,
+      "recovered": true
+    },
+    "process_isolation": {
+      "timeout_code": "timeout",
+      "timeout_descendant_alive": false,
+      "parent_death_descendants_alive": 0,
+      "parent_death_descendant_count": 3
+    },
+    "kernel_memory_probe": {
+      "failure_code": "resource_exhaustion",
+      "oom_kill_delta": 1,
+      "memory_contract": {
+        "hard_memory_enforcement": true,
+        "container_memory_limit_bytes": 6442450944,
+        "hard_memory_scope": "whole_container_including_controller",
+        "cgroup_version": 1
+      },
+      "ready_after": true
+    },
+    "api_pdf_boundary": {
+      "codes": [
+        "pdf_timeout",
+        "resource_exhaustion"
+      ],
+      "memory_bytes": 536870912,
+      "probe_process_survived": true,
+      "ready_responses": 8,
+      "linux_limit": "RLIMIT_AS",
+      "fixture": "injected sleeping and oversized allocation child commands",
+      "fixture_timeout_seconds": 4,
+      "api_kernel_oom_claimed": false
+    },
+    "packaged_restore": {
+      "result": {
+        "ready": true,
+        "deleted_documents": 1,
+        "revoked_accounts": 1,
+        "reset_accounts": 0,
+        "recovered_blobs": 6,
+        "recovery_seconds": 0.379
+      },
+      "original_sha256": "ae417468eee899de2b5135150c68a2354df033f4eca6e6346195417e70b75e52",
+      "restored_sha256": "ae417468eee899de2b5135150c68a2354df033f4eca6e6346195417e70b75e52",
+      "regenerated_sha256": "ae417468eee899de2b5135150c68a2354df033f4eca6e6346195417e70b75e52",
+      "approval_preserved": true,
+      "deleted_files_removed": true,
+      "later_session_denied": true,
+      "differing_members": {}
+    },
+    "real_annual_workflow": {
+      "source_sha256": "54918aa92371de4691da903c1d7e4c60626134cf3679b5a0a6a4acb615793117",
+      "original_page": 48,
+      "cell_count": 175,
+      "revision_preserved": true,
+      "raw_text_preserved": true,
+      "export_sha256": "aca47fe6100d86e261383b3e6cd9be0f023e77e40bfdbbd7baa7426bc33b9c0a",
+      "automated_checking_only": true,
+      "financial_correctness_audited": false
+    }
+  },
+  "packaged_deployment_images": {
+    "api": "sha256:52b67be0e5ae4209471a6b06aee0549fc40faece2afcc533d850b48ce15bdbab",
+    "worker": "sha256:23892dbd2e74e85995a937ca192a24112443508b1181741048e6de52231cb173",
+    "db": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537"
+  },
+  "image_scope_note": "Packaged failure/recovery suite belongs to its initial fresh images. Final TLS and normal queued OCR use the final images. All share the verified Python source fingerprint.",
+  "https_rehearsal": {
+    "project": "table-review-acceptance-c044043633484243be1707176328720a",
+    "port": 52581,
+    "url": "https://localhost:53436",
+    "initialized_at": "2026-10-18T08:07:03.757879+00:00",
+    "model_volume": "table-review-models-20261018",
+    "schema_revision": "0013",
+    "worker_network": "none",
+    "worker_memory_bytes": 6442450944,
+    "worker_uid": 10001,
+    "fresh_deployment": false,
+    "initial_deployment_fresh": true,
+    "verified_at": "2026-10-18T08:33:28.367749+00:00",
+    "images": {
+      "api": "sha256:52b67be0e5ae4209471a6b06aee0549fc40faece2afcc533d850b48ce15bdbab",
+      "worker": "sha256:23892dbd2e74e85995a937ca192a24112443508b1181741048e6de52231cb173",
+      "db": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537"
+    },
+    "adapter_contract_version": "docling-en-ocr-mixed-recovery-cpu-v9",
+    "model_storage": "verified_named_volume",
+    "http_url": "http://localhost:53437",
+    "status": "stopped",
+    "rehearsal_ports": {
+      "https": 53436,
+      "http": 53437
+    },
+    "ca_path": ".cache\\table-review-acceptance-c044043633484243be1707176328720a-root.crt",
+    "certificate_verification": true,
+    "trust_root_installed": false,
+    "boundaries": {
+      "api": {
+        "image": "sha256:52b67be0e5ae4209471a6b06aee0549fc40faece2afcc533d850b48ce15bdbab",
+        "published_ports": {}
+      },
+      "db": {
+        "image": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537",
+        "published_ports": {}
+      },
+      "worker": {
+        "image": "sha256:23892dbd2e74e85995a937ca192a24112443508b1181741048e6de52231cb173",
+        "published_ports": {}
+      },
+      "proxy": {
+        "image": "sha256:bf265ac566ab8a6acfb7bfc745d17280684dd30efa27bce8e4b8e7986495608f",
+        "published_ports": {
+          "8080/tcp": [
+            {
+              "HostIp": "127.0.0.1",
+              "HostPort": "53437"
+            }
+          ],
+          "8443/tcp": [
+            {
+              "HostIp": "127.0.0.1",
+              "HostPort": "53436"
+            }
+          ]
+        }
+      }
+    },
+    "stopped_at": "2026-10-18T08:36:06.465246+00:00"
+  },
+  "https_acceptance": {
+    "tls_verified": true,
+    "trust_root_installed": false,
+    "authentication_boundary": {
+      "secure_session_cookie": true,
+      "csrf_cookie_secure": true,
+      "wrong_origin_rejected": true,
+      "missing_csrf_rejected": true,
+      "oversized_json_rejected": true,
+      "hsts_present": true
+    },
+    "source_to_export": {
+      "source_preview": true,
+      "original_bytes_unchanged": true,
+      "real_queued_extraction": true,
+      "owner_scoping": true,
+      "approval": true,
+      "captured_revision": true,
+      "workbook_sha256": "0456a6ca43185a3becc592dc52bb7c515f5a089cb8b9f1ee7b588509ee596bb3",
+      "report_deleted": true,
+      "signed_out_session_rejected": true,
+      "automated_fixture_not_financial_source_audit": true
+    }
+  },
+  "real_queued_ocr_export": {
+    "status": "verified_real_queued_ocr_and_exports",
+    "adapter_contract_version": "docling-en-ocr-mixed-recovery-cpu-v9",
+    "code_revision": "a5febd14175c4c7ff1ea7cc3c9d69fde0037e47769a5326022fc99b7a851fbe8",
+    "source_sha256": "8538dd57e4c21a485f189042bc76d11913b9cad69f7b97c6b8cf7822261e9a04",
+    "real_queued_ocr_extractions": 1,
+    "repaired_cells": 12,
+    "raw_and_coarse_source_evidence_exported": true,
+    "english_currency_recognition_verified": true,
+    "exports": {
+      "workbook": {
+        "sha256": "b8562ea5a450c424963cfbbfd3badcaa542a52cd82ee560e1a372950dd175918",
+        "bytes": 40597,
+        "captured_revision": true
+      },
+      "csv_package": {
+        "sha256": "624d83a6dc8ec71b39131e16d3729415b3a36d079a9197e8835b9221b8c0e58d",
+        "bytes": 23201,
+        "captured_revision": true
+      }
+    },
+    "disposable_report_cleanup_requested": true
+  },
+  "disposable_account_cleanup": {
+    "disposable_accounts": 2,
+    "all_revoked": true
+  },
+  "models_after_queue": {
+    "models_verified_after_queued_extraction": true
+  },
+  "models_after_final_packet": {
+    "model_bytes_verified_in_fresh_process_after_final_packet": true
+  },
+  "final_ocr_result_sha256": "7873209e163ba3287657acc41e5fa45dfb1ad132fafae7f72c7ecb59b8caf32b",
+  "model_store_replacement": {
+    "old_volume": "table-review-models-20261014",
+    "new_volume": "table-review-models-20261018",
+    "stage": {
+      "bytes": 740732187,
+      "manifest_sha256": "3e3ae47d13730fa2ad9aff7f0a01483d56103741c40ab6a1bceae41dae7a545f",
+      "model_count": 15,
+      "verified": true
+    },
+    "file": "docling-project--docling-models/model_artifacts/tableformer/accurate/tableformer_accurate.safetensors",
+    "expected_sha256": "2a7d6c924b3cd12fb99a09280ca9c33a89c5d60b93253617d2e088c1a40374d9",
+    "observed_old_sha256": "d3777a60cabc30757cfb8967c86a60d15e28660fbe4a89f0a41c7fddf874d6f3",
+    "diagnostic": {
+      "different_bytes": 1,
+      "first_differences": [
+        {
+          "offset": 142711567,
+          "xor": 128
+        }
+      ],
+      "compared_bytes": 212758388
+    },
+    "cause": "unknown",
+    "manifest_changed": false,
+    "old_volume_preserved": true
+  },
+  "independent_human_reviewers": 0,
+  "external_usability_participants": 0,
+  "public_deployment": false,
+  "remote_ci_run": false,
+  "boundaries": [
+    "Known development extraction references, not independent accuracy",
+    "Native v8 evidence retained without claiming a v9 rerun",
+    "Earlier Windows native access violation is not root-caused",
+    "Public host DNS ACME renewal remote backups and alert delivery remain unverified",
+    "Cross-page table joining deferred by user scope decision"
+  ]
+}

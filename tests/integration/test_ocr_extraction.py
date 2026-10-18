@@ -39,7 +39,7 @@ def test_digital_only_mode_still_rejects_scan_before_loading_models(tmp_path):
 
 
 @pytest.mark.extraction
-def test_mixed_native_prose_and_image_table_has_an_explicit_ocr_region_recovery(tmp_path):
+def test_mixed_native_prose_and_image_table_recovers_automatically_and_by_region(tmp_path):
     from table_review.documents.pdf import page_info
     from table_review.documents.types import PageBox
 
@@ -47,7 +47,14 @@ def test_mixed_native_prose_and_image_table_has_an_explicit_ocr_region_recovery(
     info = page_info(source, 1)
     assert info.digital_text_present and info.mixed_image_content and not info.requires_ocr
     full_page = DoclingExtractor().extract(ExtractionRequest(source_path=source, pages=(1,)))
-    assert full_page.manifest["ocr_pages"] == []
+    assert full_page.manifest["ocr_pages"] == [1]
+    assert any(
+        "1,234.50" in cell.text for table in full_page.tables for cell in table.content.cells
+    )
+    assert any("Revenue" in cell.text for table in full_page.tables for cell in table.content.cells)
+    assert (
+        full_page.manifest["page_outcomes"][0]["recovery_attempts"][0]["stage"] == "mixed_page_ocr"
+    )
     assert any("select its region for offline OCR" in w for w in full_page.warnings)
     region = PageBox(
         page=1, left=0, top=192, right=612, bottom=792, page_width=612, page_height=792

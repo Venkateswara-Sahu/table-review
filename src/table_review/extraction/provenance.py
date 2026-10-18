@@ -10,7 +10,7 @@ from pathlib import Path
 
 from table_review.jobs.runner import code_identity
 
-ADAPTER_CONTRACT_VERSION = "docling-auto-ocr-editable-gaps-cpu-v8"
+ADAPTER_CONTRACT_VERSION = "docling-en-ocr-mixed-recovery-cpu-v9"
 
 
 def json_safe(value):

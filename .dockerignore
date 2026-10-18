@@ -2,6 +2,7 @@
 !pyproject.toml
 !uv.lock
 !alembic.ini
+!infra/Caddyfile
 !migrations/**
 !src/**
 !web/package.json

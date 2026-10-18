@@ -417,6 +417,44 @@ class DoclingExtractor:
                         page_warnings.append(
                             f"Page {page.page_no}: caption context unavailable; primary tables retained"
                         )
+                    if (
+                        page.mixed_image_content
+                        and not use_ocr
+                        and request.region is None
+                        and request.config.ocr_mode == "auto"
+                        and request.config.table_recovery
+                    ):
+                        try:
+                            recovered, extra_warnings, attempts, extra_transforms = timing.call(
+                                "mixed_page_recovery",
+                                self._recover_mixed,
+                                request,
+                                page,
+                                page_tables,
+                                source_hash,
+                            )
+                        except (MemoryError, OSError):
+                            raise
+                        except Exception as error:  # noqa: BLE001 -- preserve primary native work
+                            recovered, extra_transforms = [], []
+                            attempts = [
+                                {
+                                    "stage": "mixed_page_ocr",
+                                    "status": "failure",
+                                    "exception_type": type(error).__name__,
+                                }
+                            ]
+                            extra_warnings = [
+                                f"Page {page.page_no}: mixed image recovery failed; native tables retained, select the missing image region to retry"
+                            ]
+                        page_tables.extend(recovered)
+                        page_warnings.extend(extra_warnings)
+                        outcome["recovery_attempts"] = attempts
+                        transforms.extend(extra_transforms)
+                        if attempts:
+                            ocr_pages.append(page.page_no)
+                            key = request.config.model_dump_json() + ":ocr=True"
+                            used_options["mixed_ocr"] = self._options.get(key)
                     tables.extend(page_tables)
                     warnings.extend(page_warnings)
                     outcome["adapter_status"] = "success"
@@ -477,7 +515,7 @@ class DoclingExtractor:
                 "ocr": bool(ocr_pages),
                 "ocr_pages": ocr_pages,
                 "ocr_policy": "image_area_15_percent_native_content_20_chars_min_3pt_v2",
-                "ocr_engine": "rapidocr-ppocrv6-onnx-cpu" if ocr_pages else None,
+                "ocr_engine": "rapidocr-ppocrv6-det-ppocrv5-en-rec-onnx-cpu" if ocr_pages else None,
                 "table_recovery_policy": "numeric_alignment_regions_v1",
                 "text_visibility_policy": "pdf_rendering_modes_3_and_7_excluded_v1",
                 "remote_services": False,
@@ -733,6 +771,93 @@ class DoclingExtractor:
                 attempt["elapsed_seconds"] = time.monotonic() - started
         return recovered, warnings, attempts, transforms
 
+    def _recover_mixed(self, request, page, original_tables, source_hash):
+        """One additional offline pass; retain native tables and reject overlaps."""
+        if any(table.region is None for table in original_tables):
+            return (
+                [],
+                [
+                    f"Page {page.page_no}: native table geometry is coarse; select the missing image region for OCR"
+                ],
+                [],
+                [],
+            )
+        converter = self._converter(request.config, True)
+        with tempfile.TemporaryDirectory() as temporary:
+            normalized = Path(temporary) / "mixed.pdf"
+            w, h, left, top = _vector_page(PdfReader(request.source_path), page, None, normalized)
+            result, attempt = self._convert(
+                converter,
+                normalized,
+                page.page_no,
+                1,
+                hashlib.sha256(normalized.read_bytes()).hexdigest(),
+            )
+        attempt["stage"] = "mixed_page_ocr"
+        transform = {
+            "original_page": page.page_no,
+            "backend_page": 1,
+            "offset_left": left,
+            "offset_top": top,
+            "width": w,
+            "height": h,
+            "kind": "mixed_page_ocr",
+            "input_sha256": attempt["input_sha256"],
+        }
+        if attempt["status"] not in {"success", "partial_success"}:
+            return (
+                [],
+                [
+                    f"Page {page.page_no}: mixed image recovery failed; native tables retained, select the missing image region to retry"
+                ],
+                [attempt],
+                [transform],
+            )
+        tokens, warnings = ocr_tokens(result, page, 1, source_hash, w, h, left, top)
+        candidates, extra_warnings = self._adapt_page(
+            result,
+            page,
+            1,
+            w,
+            h,
+            left,
+            top,
+            source_hash,
+            tokens,
+            ocr=True,
+            identity_scope="mixed_page_ocr",
+        )
+        accepted = []
+        for table in candidates:
+            if (
+                table.region is None
+                or table.content.rows < 3
+                or table.content.columns < 3
+                or any(intersects(table.region, t.region) for t in original_tables)
+                or any(intersects(table.region, t.region) for t in accepted)
+            ):
+                continue
+            content, changes = reconcile_ocr_currency_rows(table.content, tokens)
+            content = content.model_copy(
+                update={
+                    "context_sources": caption_sources(table.region, tokens),
+                }
+            )
+            accepted.append(table.model_copy(update={"content": content}))
+            if changes:
+                extra_warnings.append(
+                    f"Page {page.page_no}: currency markers regrouped from OCR evidence; cell locations are coarse, verify values against the image"
+                )
+        attempt.update(adapter_status="success", accepted_table_ids=[t.id for t in accepted])
+        # Rejected OCR duplicates must not introduce warnings about native tables.
+        messages = list(warnings)
+        if accepted:
+            messages.extend(extra_warnings)
+            messages.append(
+                f"Page {page.page_no}: {len(accepted)} additional table recovered automatically with offline OCR; verify its structure and source image"
+            )
+        return accepted, messages, [attempt], [transform]
+
     @staticmethod
     def _adapt_page(
         result,
@@ -785,6 +910,16 @@ class DoclingExtractor:
         for index, table in enumerate(result.document.tables):
             if not table.prov or table.prov[0].page_no != backend_page:
                 raise ValueError("Backend did not preserve original page numbering")
+            if (
+                page.mixed_image_content
+                and not ocr
+                and table.data.num_rows == table.data.num_cols == 0
+                and not table.data.table_cells
+            ):
+                warnings.append(
+                    f"Page {page.page_no}: image table has no native cells; offline OCR recovery is needed"
+                )
+                continue
             identity = f"{source_hash}:{page.page_no}:{index}"
             table_id = str(
                 uuid5(NAMESPACE_URL, f"{identity}:{identity_scope}" if identity_scope else identity)

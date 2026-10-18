@@ -13,7 +13,7 @@ permissions:
 jobs:
   contracts:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
@@ -34,9 +34,12 @@ jobs:
         with: {version: '0.10.11'}
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with: {node-version: '24'}
-      - run: uv sync --frozen --group dev
-      - run: uv run --frozen --group dev ruff check src evaluation tests scripts
-      - run: uv run --frozen --group dev pytest tests/domain tests/integration tests/acceptance -m 'not extraction and not packaged' -q
+      # Adapter/mark unit tests import the optional parser and OCR packages even
+      # when actual model execution is excluded. Install the matching profile;
+      # weights are not downloaded by these steps.
+      - run: uv sync --frozen --extra extraction --group dev
+      - run: uv run --frozen --extra extraction --group dev ruff check src evaluation tests scripts
+      - run: uv run --frozen --extra extraction --group dev pytest tests/domain tests/integration tests/acceptance -m 'not extraction and not packaged' -q
       - working-directory: web
         run: npm ci --ignore-scripts && npm run build
       - working-directory: web
@@ -58,10 +61,19 @@ jobs:
       - run: uv run --frozen --extra extraction python scripts/preload_ocr_models.py
       - run: uv run --frozen --extra extraction python scripts/deploy_local.py --fresh-acceptance
       - run: uv run --frozen --group dev pytest tests/acceptance/test_fresh_deploy.py -q
+      - run: uv run --frozen --group dev python scripts/rehearse_https.py
+      - run: uv run --frozen --group dev pytest tests/acceptance/test_https.py -q
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: runtime-aggregate-evidence
-          path: artifacts/runtime/evidence.json
+          path: |
+            artifacts/runtime/evidence.json
+            artifacts/https/evidence.json
+      - if: always()
+        run: |
+          if test -f .cache/https-rehearsal.json; then
+            uv run --frozen --group dev python scripts/rehearse_https.py --stop
+          fi
       - if: always()
         run: uv run --frozen python scripts/deploy_local.py --acceptance --stop

@@ -9,7 +9,17 @@ from table_review.extraction.types import ExtractionRequest, ExtractorConfig
 from tests.fixtures.pdf_factory import two_page_report
 
 
-def extract_with(tmp_path, monkeypatch, statuses, tables=(), *, ocr_pages=(), transform=None):
+def extract_with(
+    tmp_path,
+    monkeypatch,
+    statuses,
+    tables=(),
+    *,
+    ocr_pages=(),
+    mixed_pages=(),
+    ocr_mode="auto",
+    transform=None,
+):
     source = two_page_report(tmp_path / "report.pdf")
     models = tmp_path / "models"
     models.mkdir()
@@ -50,7 +60,7 @@ def extract_with(tmp_path, monkeypatch, statuses, tables=(), *, ocr_pages=(), tr
             return transform(page, result) if transform else result
 
     monkeypatch.setattr(DoclingExtractor, "_converter", lambda *args: Converter())
-    if ocr_pages:
+    if ocr_pages or mixed_pages:
         import table_review.extraction.docling_adapter as adapter
 
         real_page_info = adapter.page_info
@@ -58,14 +68,17 @@ def extract_with(tmp_path, monkeypatch, statuses, tables=(), *, ocr_pages=(), tr
             adapter,
             "page_info",
             lambda path, number: real_page_info(path, number).model_copy(
-                update={"requires_ocr": number in ocr_pages}
+                update={
+                    "requires_ocr": number in ocr_pages,
+                    "mixed_image_content": number in mixed_pages,
+                }
             ),
         )
     return DoclingExtractor().extract(
         ExtractionRequest(
             source_path=source,
             pages=tuple(statuses),
-            config=ExtractorConfig(artifacts_path=models),
+            config=ExtractorConfig(artifacts_path=models, ocr_mode=ocr_mode),
         )
     )
 
