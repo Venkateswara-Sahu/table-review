@@ -22,7 +22,7 @@ def stage(source, destination):
     source, destination = Path(source).resolve(), Path(destination).resolve()
     if source.is_relative_to(destination) or destination.is_relative_to(source):
         raise ValueError("Model source and destination must be separate stores")
-    if not destination.is_dir() or not models_available(source):
+    if not destination.is_dir() or not models_available(source, force_refresh=True):
         raise ValueError("Offline source model identity is unavailable")
     lock = "runtime-manifest.lock"
     manifest = json.loads((source / lock).read_text())
@@ -50,7 +50,10 @@ def stage(source, destination):
         target.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
         with original.open("rb") as incoming, target.open("xb") as outgoing:
             shutil.copyfileobj(incoming, outgoing, length=1024 * 1024)
-    if not models_available(destination) or digest(destination / lock) != expected[lock]:
+    if (
+        not models_available(destination, force_refresh=True)
+        or digest(destination / lock) != expected[lock]
+    ):
         raise ValueError("Copied model identity verification failed")
     return {
         "verified": True,

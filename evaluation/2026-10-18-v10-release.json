@@ -1,0 +1,603 @@
+{
+  "recorded_at": "2026-10-18T14:22:28.578367+00:00",
+  "status": "verified_private_local_release_not_public_hosting",
+  "normal_deployment": {
+    "project": "table-review-local",
+    "port": 8000,
+    "url": "http://127.0.0.1:8000",
+    "initialized_at": "2026-10-07T10:56:58.603665+00:00",
+    "worker_network": "none",
+    "worker_memory_bytes": 6442450944,
+    "worker_uid": 10001,
+    "fresh_deployment": false,
+    "initial_deployment_fresh": true,
+    "verified_at": "2026-10-18T14:16:54.149065+00:00",
+    "images": {
+      "api": "sha256:57ed90347b6dab603408830a7286fd746026c93f104ff0fbe5b9cc6f01474ee6",
+      "worker": "sha256:383c6258cc77d6badeeacbde7c8724c6a16b154a5a0f9bb8f479fc38a451e721",
+      "db": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537"
+    },
+    "adapter_contract_version": "docling-verified-image-grounding-mixed-cpu-v10",
+    "schema_revision": "0013",
+    "cell_review_policy": "explicit_blank_unreadable_v1",
+    "model_volume": "table-review-models-20261018",
+    "model_storage": "verified_named_volume"
+  },
+  "served_frontend": {
+    "assets": {
+      "index.html": "1ee6b9df8791c34aeee71ee8a7fbedeed8d576193eb74355aedcc4583ab5ae3a",
+      "assets/index-BOXZl_7I.css": "be394cbf66199132371c20edfcc27657091b2b2bf563038eaeca6d3f8439f8e9",
+      "assets/index-HtIihLJl.js": "23de58aa1473bddbfdab789b1afd4bc3483a667723a90378d579ad1b2a48d6be"
+    },
+    "readiness": {
+      "ready": true,
+      "components": {
+        "database": true,
+        "journal": true,
+        "worker": true,
+        "models": true
+      }
+    }
+  },
+  "verification": {
+    "ordinary": {
+      "result": "565 passed, 3 skipped, 29 deselected",
+      "private_log": ".cache/four-fixes-shipping-ordinary.log",
+      "sha256": "36c1e8e2fa1e8f607d6fac985e5dd6c8d7a197d8cb003b7f59c147161903a0eb"
+    },
+    "mixed_routing": {
+      "result": "24 passed",
+      "private_log": ".cache/coarse-single-green-real.log",
+      "sha256": "7ba121cd5d7a82996b3054cec722bc48731f89baf44e2ecb7a047e97f91834d3"
+    },
+    "native_models": {
+      "result": "17 passed",
+      "private_log": ".cache/four-fixes-models-shipping/stdout.log",
+      "sha256": "9e961f3b70108c2938b150d7f5fcc3debf5f95a0cdfb850a390998ab21e694a9"
+    },
+    "native_diagnostics": {
+      "result": "18 passed",
+      "private_log": ".cache/diagnostic-clock-green.log",
+      "sha256": "5ca45d0a72b3ecbc75d39fcd4f9e1e42059afc1f887cd55cf621e15ceac3222d"
+    },
+    "browser": {
+      "result": "69 passed",
+      "private_log": ".cache/four-fixes-browser.log",
+      "sha256": "4b11fc40394567ab3a5d641050caa7e3016c1513669be08e19433ca391ea9360"
+    },
+    "packaged": {
+      "result": "10 passed",
+      "private_log": ".cache/four-fixes-packaged.log",
+      "sha256": "25162de1d796a8752b0429d3100a681625c92d1432bb81f7609065668a16239c"
+    },
+    "https": {
+      "result": "2 passed",
+      "private_log": ".cache/four-fixes-release-https.log",
+      "sha256": "66c18ea871cd01c48f5d910d38f1f2089cc45be801c6e8a12c24327333dd0725"
+    }
+  },
+  "retained_failed_attempts": {
+    "ordinary_before_parent_deadline_fix": {
+      "result": "1 failed, 563 passed, 3 skipped, 29 deselected",
+      "private_log": ".cache/four-fixes-release-ordinary.log",
+      "sha256": "a1c5fe4bc612d3c35acad025778d28bad97ba14237aee5679b0abe81456620a2",
+      "failure": "Child-startup time put the diagnostic snapshot after the parent deadline."
+    },
+    "controlled_slow_start_red": {
+      "private_log": ".cache/diagnostic-clock-red.log",
+      "sha256": "ee59088fcbf37d80f6869d372a1345c11a4f2bea2e193f5dacf5dd1860367696",
+      "result": "Controlled 0.6-second bootstrap delay reproduced empty fault.log."
+    },
+    "single_value_duplicate_red": {
+      "private_log": ".cache/coarse-single-red.log",
+      "sha256": "110d498eb67a80bfd92fe9a9c04a5b07a4f1ad0a8af375e43ec5c308218c2261",
+      "result": "Coarse header-plus-single-value native table was duplicated by OCR cell splitting."
+    }
+  },
+  "execution_identity": {
+    "version": "page-packet-execution-v1",
+    "files": {
+      "evaluation/manifest.py": "d3ca625b3ab4cd28c7aa4d405c49b7becd610d93f074d674c69ccf1244be7ad5",
+      "evaluation/metrics.py": "b3cd0ec016424f4388d535a044348759bdc695e4e7c46a5d3321894f78fc299f",
+      "evaluation/pages.py": "e69b6213226983a905ef3b039d3bbc30be2d6dd9e72dd8191e839c0dfe8ebca9",
+      "evaluation/page_manifest.py": "bf2fc63b41762c9f580c8c726be541a247da502d72598c44ca3ef8033502b4cd",
+      "scripts/evaluate_page_packet.py": "b605c0c49496aa35decd5ebc41db0e8741b153c80cf1584645b6ecab7548db57"
+    },
+    "runtime": {
+      "code_revision": "b9d49aacf2d6272e598a0aa70e967dc702f52773327f87616fa18f1153dfce72",
+      "code_revision_kind": "installed_python_source_sha256",
+      "environment": {
+        "python": "3.12.15",
+        "system": "Linux",
+        "machine": "x86_64"
+      },
+      "adapter_contract_version": "docling-verified-image-grounding-mixed-cpu-v10",
+      "versions": {
+        "accelerate": "1.15.0",
+        "alembic": "1.20.0",
+        "annotated-doc": "0.0.5",
+        "annotated-types": "0.8.0",
+        "antlr4-python3-runtime": "4.9.3",
+        "anyio": "4.15.1",
+        "argon2-cffi": "25.1.0",
+        "argon2-cffi-bindings": "26.1.0",
+        "attrs": "26.1.0",
+        "beautifulsoup4": "4.15.0",
+        "certifi": "2026.7.22",
+        "cffi": "2.1.1",
+        "charset-normalizer": "3.5.2",
+        "click": "8.5.0",
+        "colorlog": "6.12.0",
+        "cryptography": "50.0.2",
+        "defusedxml": "0.7.1",
+        "dill": "0.4.1",
+        "doclang": "0.7.3",
+        "docling": "2.133.0",
+        "docling-core": "2.99.0",
+        "docling-ibm-models": "4.0.3",
+        "docling-parse": "7.22.2",
+        "docling-slim": "2.133.0",
+        "et-xmlfile": "2.0.0",
+        "faker": "40.40.0",
+        "fastapi": "0.142.2",
+        "filelock": "4.0.11",
+        "filetype": "1.2.0",
+        "flatbuffers": "25.12.19",
+        "fsspec": "2026.9.0",
+        "h11": "0.16.0",
+        "hf-xet": "1.6.0",
+        "httpcore": "1.0.9",
+        "httpx": "0.28.1",
+        "huggingface-hub": "1.33.0",
+        "idna": "3.20",
+        "jinja2": "3.1.6",
+        "jsonref": "1.1.0",
+        "jsonschema": "4.26.0",
+        "jsonschema-specifications": "2025.9.1",
+        "langcodes": "3.5.1",
+        "latex2mathml": "3.81.1",
+        "lxml": "6.1.3",
+        "mail-parser": "4.8.0",
+        "mako": "1.4.3",
+        "markdown-it-py": "4.2.0",
+        "marko": "2.2.4",
+        "markupsafe": "3.0.4",
+        "mdurl": "0.1.2",
+        "mpire": "2.10.2",
+        "mpmath": "1.3.0",
+        "multiprocess": "0.70.19",
+        "networkx": "3.7",
+        "numpy": "2.5.3",
+        "olefile": "0.47",
+        "omegaconf": "2.3.1",
+        "onnxruntime": "1.31.0",
+        "opencv-python": "5.0.0.93",
+        "openpyxl": "3.1.5",
+        "opentelemetry-api": "1.45.0",
+        "packaging": "26.3",
+        "pandas": "3.0.6",
+        "pillow": "12.3.0",
+        "pluggy": "1.6.0",
+        "polyfactory": "3.3.0",
+        "protobuf": "7.36.2",
+        "psutil": "7.2.2",
+        "psycopg": "3.3.6",
+        "psycopg-binary": "3.3.6",
+        "pyclipper": "1.4.0",
+        "pycparser": "3.0",
+        "pydantic": "2.13.5",
+        "pydantic-core": "2.46.5",
+        "pydantic-settings": "2.15.0",
+        "pygments": "2.21.0",
+        "pylatexenc": "2.11",
+        "pypdf": "6.19.0",
+        "pypdfium2": "5.14.0",
+        "python-dateutil": "2.9.0.post0",
+        "python-docx": "1.2.0",
+        "python-dotenv": "1.2.4",
+        "python-multipart": "0.0.32",
+        "python-oxmsg": "0.0.2",
+        "python-pptx": "1.0.2",
+        "pyyaml": "6.0.3",
+        "rapidocr": "3.9.2",
+        "referencing": "0.37.0",
+        "regex": "2026.9.29",
+        "requests": "2.34.2",
+        "rich": "15.0.0",
+        "rpds-py": "2026.9.1",
+        "rtree": "1.4.1",
+        "safetensors": "0.8.0",
+        "scipy": "1.18.1",
+        "semchunk": "3.2.5",
+        "setuptools": "84.0.0",
+        "shapely": "2.1.2",
+        "shellingham": "1.5.4",
+        "six": "1.17.0",
+        "soupsieve": "2.10",
+        "sqlalchemy": "2.1.3",
+        "starlette": "1.7.0",
+        "sympy": "1.14.0",
+        "table-review": "0.1.0",
+        "tabulate": "0.10.0",
+        "tokenizers": "0.23.2",
+        "torch": "2.14.1+cpu",
+        "torchvision": "0.29.1+cpu",
+        "tqdm": "4.70.1",
+        "transformers": "5.18.0",
+        "tree-sitter": "0.26.0",
+        "tree-sitter-c": "0.24.2",
+        "tree-sitter-javascript": "0.25.0",
+        "tree-sitter-python": "0.25.0",
+        "tree-sitter-typescript": "0.23.2",
+        "typer": "0.26.8",
+        "typing-extensions": "4.16.0",
+        "typing-inspection": "0.4.4",
+        "urllib3": "2.8.0",
+        "uvicorn": "0.54.0",
+        "websockets": "16.1.1",
+        "xlsxwriter": "3.2.9"
+      },
+      "dependency_lock_sha256": "a2ec2d8b8adb5e738955cfc3c4f955c58a2ea12d95fae3724016618abe1646c5",
+      "dependency_lock_available": true,
+      "thread_environment": {
+        "OMP_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null
+      }
+    },
+    "model_manifest_sha256": "3e3ae47d13730fa2ad9aff7f0a01483d56103741c40ab6a1bceae41dae7a545f",
+    "container_image": "sha256:6105ec5ca514b631e7efbf7a1311dd19b696e800b1d4f1402998d880884e557d",
+    "runtime_source": "read_only_bound_candidate_src",
+    "dataset_role": "development_after_initial_native_exposure",
+    "frozen_payload_sha256": "8b790f9d3d088a5e64b6d81464608f76c6b98e3d5f13492563cd2de78044162b"
+  },
+  "final_installed_source_identity": {
+    "isolated-api": {
+      "code_revision": "b9d49aacf2d6272e598a0aa70e967dc702f52773327f87616fa18f1153dfce72",
+      "code_revision_kind": "installed_python_source_sha256",
+      "environment": {
+        "python": "3.12.15",
+        "system": "Linux",
+        "machine": "x86_64"
+      }
+    },
+    "isolated-worker": {
+      "code_revision": "b9d49aacf2d6272e598a0aa70e967dc702f52773327f87616fa18f1153dfce72",
+      "code_revision_kind": "installed_python_source_sha256",
+      "environment": {
+        "python": "3.12.15",
+        "system": "Linux",
+        "machine": "x86_64"
+      }
+    },
+    "table-review-local-api": {
+      "code_revision": "b9d49aacf2d6272e598a0aa70e967dc702f52773327f87616fa18f1153dfce72",
+      "code_revision_kind": "installed_python_source_sha256",
+      "environment": {
+        "python": "3.12.15",
+        "system": "Linux",
+        "machine": "x86_64"
+      }
+    },
+    "table-review-local-worker": {
+      "code_revision": "b9d49aacf2d6272e598a0aa70e967dc702f52773327f87616fa18f1153dfce72",
+      "code_revision_kind": "installed_python_source_sha256",
+      "environment": {
+        "python": "3.12.15",
+        "system": "Linux",
+        "machine": "x86_64"
+      }
+    }
+  },
+  "native_model_verifier": {
+    "schema": "extraction_test_verification_v1",
+    "status": "passed",
+    "returncode": 0,
+    "elapsed_seconds": 267.5629999999983,
+    "timeout_seconds": 600.0,
+    "last_test": "tests/integration/test_table_recovery.py::test_isolated_source_dash_is_recovered_as_uncertain_text",
+    "last_phase": "session",
+    "windows_exception_code": null
+  },
+  "packaged_acceptance": {
+    "fresh_boundary": {
+      "ready": {
+        "ready": true,
+        "components": {
+          "database": true,
+          "journal": true,
+          "worker": true,
+          "models": true
+        }
+      },
+      "worker_uid": 10001,
+      "worker_network": "none",
+      "hard_memory_bytes": 6442450944,
+      "db_exposed": false
+    },
+    "absent_models": {
+      "ready": false,
+      "components": {
+        "database": true,
+        "journal": true,
+        "worker": true,
+        "models": false
+      }
+    },
+    "worker_network_probe": {
+      "interfaces": [
+        "lo"
+      ],
+      "outbound_denied": true
+    },
+    "real_parser": {
+      "elapsed_to_terminal_after_ready_probe": 18.360000000000582,
+      "ready_responses": 8,
+      "original_page": 2,
+      "table_count": 1,
+      "bounded_runner": {
+        "cgroup_version": 1,
+        "elapsed_seconds": 18.317452921997756,
+        "hard_memory_scope": "whole_container_including_controller",
+        "sampled_peak_rss_bytes": 1384177664,
+        "hard_memory_enforcement": true,
+        "rss_sample_interval_seconds": 0.1,
+        "container_memory_limit_bytes": 6442450944
+      },
+      "source_sha256": "a4111e6f1dfe3cc3e8835e6f9f0458ab961046b6ed8ec645066f85c03134ad1a",
+      "code_revision": "d7e23d7090859eca99e574d09bfbc38c57d68f595988f7719814bc0c840f89b2"
+    },
+    "queue_limit": {
+      "accepted": 3,
+      "fourth_status": 429,
+      "all_cancelled": true
+    },
+    "kill_restart": {
+      "attempt_count": 2,
+      "published_tables": 1,
+      "recovered": true
+    },
+    "process_isolation": {
+      "timeout_code": "timeout",
+      "timeout_descendant_alive": false,
+      "parent_death_descendants_alive": 0,
+      "parent_death_descendant_count": 3
+    },
+    "kernel_memory_probe": {
+      "failure_code": "resource_exhaustion",
+      "oom_kill_delta": 1,
+      "memory_contract": {
+        "hard_memory_enforcement": true,
+        "container_memory_limit_bytes": 6442450944,
+        "hard_memory_scope": "whole_container_including_controller",
+        "cgroup_version": 1
+      },
+      "ready_after": true
+    },
+    "api_pdf_boundary": {
+      "codes": [
+        "pdf_timeout",
+        "resource_exhaustion"
+      ],
+      "memory_bytes": 536870912,
+      "probe_process_survived": true,
+      "ready_responses": 8,
+      "linux_limit": "RLIMIT_AS",
+      "fixture": "injected sleeping and oversized allocation child commands",
+      "fixture_timeout_seconds": 4,
+      "api_kernel_oom_claimed": false
+    },
+    "packaged_restore": {
+      "result": {
+        "ready": true,
+        "deleted_documents": 1,
+        "revoked_accounts": 1,
+        "reset_accounts": 0,
+        "recovered_blobs": 6,
+        "recovery_seconds": 0.321
+      },
+      "original_sha256": "6d9ddebe34c8be3dc7a2080c43e67cb68a98e60d606f14946abff966a1c0ccbb",
+      "restored_sha256": "6d9ddebe34c8be3dc7a2080c43e67cb68a98e60d606f14946abff966a1c0ccbb",
+      "regenerated_sha256": "6d9ddebe34c8be3dc7a2080c43e67cb68a98e60d606f14946abff966a1c0ccbb",
+      "approval_preserved": true,
+      "deleted_files_removed": true,
+      "later_session_denied": true,
+      "differing_members": {}
+    },
+    "real_annual_workflow": {
+      "source_sha256": "54918aa92371de4691da903c1d7e4c60626134cf3679b5a0a6a4acb615793117",
+      "original_page": 48,
+      "cell_count": 175,
+      "revision_preserved": true,
+      "raw_text_preserved": true,
+      "export_sha256": "d5737dd8fbb4a0c16bf88c885420ca1abc72dfb1ab44dbc7a6a54969834eef37",
+      "automated_checking_only": true,
+      "financial_correctness_audited": false
+    }
+  },
+  "packaged_images": {
+    "api": "sha256:f5f9e5dce855022b4316803194d2f9f16b3c0c9e07d1bf3476d5f661007fa380",
+    "worker": "sha256:ba4b380a4271d015679ad5170886ec8996b7a7059a2d6d28508b8e159b29375b"
+  },
+  "source_scope_notes": [
+    "Final ordinary tests, frozen extraction, installed-source check, TLS and deployed queued exports cover the final Python source.",
+    "Seventeen real-model Windows tests cover final source and the repaired deadline diagnostics. Browser tests precede final native metadata and coarse duplicate refinements; they are not claimed as final-source reruns.",
+    "Ten fresh packaged failure/recovery tests belong to the recorded earlier v10 images/source before final association/box/duplicate refinements. Resource, queue and backup code did not change afterward.",
+    "Final TLS images and final normal serving images are recorded separately; rebuilt image IDs need not be identical."
+  ],
+  "https_rehearsal": {
+    "project": "table-review-acceptance-66d876071788471d95c4d6af4ba8da8f",
+    "port": 53168,
+    "url": "https://localhost:61457",
+    "initialized_at": "2026-10-18T13:43:49.296577+00:00",
+    "model_volume": "table-review-models-20261018",
+    "schema_revision": "0013",
+    "worker_network": "none",
+    "worker_memory_bytes": 6442450944,
+    "worker_uid": 10001,
+    "fresh_deployment": false,
+    "initial_deployment_fresh": true,
+    "verified_at": "2026-10-18T14:15:24.104076+00:00",
+    "images": {
+      "api": "sha256:4f8565e72276382fd2caa2a63c7da383b965fc6efd04a3272df4dea04085f37e",
+      "worker": "sha256:708619ee8363884b1950be6bcc6e69cf1a0688cf4db31e8d7265f6796ba42fd5",
+      "db": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537"
+    },
+    "adapter_contract_version": "docling-verified-image-grounding-mixed-cpu-v10",
+    "model_storage": "verified_named_volume",
+    "http_url": "http://localhost:61458",
+    "status": "stopped",
+    "rehearsal_ports": {
+      "https": 61457,
+      "http": 61458
+    },
+    "ca_path": ".cache\\table-review-acceptance-66d876071788471d95c4d6af4ba8da8f-root.crt",
+    "certificate_verification": true,
+    "trust_root_installed": false,
+    "boundaries": {
+      "api": {
+        "image": "sha256:4f8565e72276382fd2caa2a63c7da383b965fc6efd04a3272df4dea04085f37e",
+        "published_ports": {}
+      },
+      "db": {
+        "image": "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537",
+        "published_ports": {}
+      },
+      "worker": {
+        "image": "sha256:708619ee8363884b1950be6bcc6e69cf1a0688cf4db31e8d7265f6796ba42fd5",
+        "published_ports": {}
+      },
+      "proxy": {
+        "image": "sha256:d265ede11960b5f2059345562bcadfc2474f8eee98f5658afd2e6b91dc83cdb1",
+        "published_ports": {
+          "8080/tcp": [
+            {
+              "HostIp": "127.0.0.1",
+              "HostPort": "61458"
+            }
+          ],
+          "8443/tcp": [
+            {
+              "HostIp": "127.0.0.1",
+              "HostPort": "61457"
+            }
+          ]
+        }
+      }
+    },
+    "stopped_at": "2026-10-18T14:16:27.364523+00:00"
+  },
+  "https_acceptance": {
+    "tls_verified": true,
+    "trust_root_installed": false,
+    "authentication_boundary": {
+      "secure_session_cookie": true,
+      "csrf_cookie_secure": true,
+      "wrong_origin_rejected": true,
+      "missing_csrf_rejected": true,
+      "oversized_json_rejected": true,
+      "hsts_present": true
+    },
+    "source_to_export": {
+      "source_preview": true,
+      "original_bytes_unchanged": true,
+      "real_queued_extraction": true,
+      "owner_scoping": true,
+      "approval": true,
+      "captured_revision": true,
+      "workbook_sha256": "5c25480520af96a52c7d245a94461f1f7070bfd703169871e4bb3f7e821cad5a",
+      "report_deleted": true,
+      "signed_out_session_rejected": true,
+      "automated_fixture_not_financial_source_audit": true
+    }
+  },
+  "real_queued_ocr_export": {
+    "status": "verified_real_queued_ocr_and_exports",
+    "adapter_contract_version": "docling-verified-image-grounding-mixed-cpu-v10",
+    "code_revision": "b9d49aacf2d6272e598a0aa70e967dc702f52773327f87616fa18f1153dfce72",
+    "source_sha256": "8538dd57e4c21a485f189042bc76d11913b9cad69f7b97c6b8cf7822261e9a04",
+    "real_queued_ocr_extractions": 1,
+    "repaired_cells": 12,
+    "raw_and_source_evidence_exported": true,
+    "english_currency_recognition_verified": true,
+    "exports": {
+      "workbook": {
+        "sha256": "1075431f6267fd6b18463ff26f486eaf6809a1e96b50bca1cc16f566b20dea2f",
+        "bytes": 43225,
+        "captured_revision": true
+      },
+      "csv_package": {
+        "sha256": "86258881f378b16b6b7879bad1337cb70b733dc419f8d8ec334e45aff8f25ab5",
+        "bytes": 25187,
+        "captured_revision": true
+      }
+    },
+    "disposable_report_cleanup_requested": true
+  },
+  "disposable_account_cleanup": {
+    "disposable_accounts": 1,
+    "all_accounts_revoked": true,
+    "all_sessions_revoked": true,
+    "all_reports_deleted_or_removed": true,
+    "remaining_soft_deleted_reports": 1,
+    "remaining_active_report_files_removed": true
+  },
+  "operator_diagnostics_files_sha256": {
+    "scripts/native_test_process.py": "66d65a947002f81561ee1c4972efca141e75616bee668822a36ae92030a9dae3",
+    "scripts/native_test_diagnostics.py": "498fee7c1fe8cee4878cb1cd7a743f96031f88611dde71d8481cb36ff31801f3",
+    "scripts/verify_extraction.py": "b0b7559f3f756eeca7ba02fe8e4e8541ead7cdb7bd0ceaafab3d628281d4d113",
+    "tests/domain/test_extraction_verification.py": "655582bd6fbba8764daae43441eab5c7a1c399fc56e31f818850f5cb2a6d017e"
+  },
+  "saved_aggregate_counts_unchanged": true,
+  "saved_count_evidence_sha256": "0bf7c7a75e26b3c9808c6b810e554646ab325a77a7c013a66da765fa9bd1df11",
+  "models_after_queue": {
+    "fresh_model_hashes_after_all_checks": true
+  },
+  "final_extraction_record_sha256": "eeaf8523d74762cb2d69b8444f1b31ee148aa0a4db0bd71f3d360727afc4b28d",
+  "model_integrity": {
+    "manifest_sha256": "3e3ae47d13730fa2ad9aff7f0a01483d56103741c40ab6a1bceae41dae7a545f",
+    "model_files": 15,
+    "model_bytes": 740732187,
+    "original_manifest_and_weights_changed": false,
+    "historical_mismatch_cause": "unknown",
+    "current_old_replacement_and_original_reads_match": true,
+    "persistent_disk_corruption_established": false,
+    "per_extraction_hash_gate": true,
+    "readiness_cache_max_seconds": 30
+  },
+  "original_windows_crash": {
+    "root_cause_established": false,
+    "dump_inspected_privately": true,
+    "dump_sha256": "e2a83fad589d7f1bc49bd99d319b1a26574eb2bbd3a33193b38733d0facd93dc",
+    "diagnostic_loss_reproduced_and_repaired": true,
+    "system_crash_policy_changed": false
+  },
+  "remaining_extraction_differences": {
+    "native_strict_span_slots": 9,
+    "native_source_boxes_below_iou_threshold": 3,
+    "ocr_source_boxes_below_iou_threshold": 10,
+    "native_complete_tables": {
+      "correct": 1,
+      "total": 7
+    },
+    "ocr_complete_tables": {
+      "correct": 0,
+      "total": 2
+    },
+    "financial_unit_confirmation": "manual_by_contract",
+    "unsupported_mixed_page_tables": "may_require_region_or_manual_grid"
+  },
+  "independent_human_reviewers": 0,
+  "external_usability_participants": 0,
+  "public_deployment": false,
+  "remote_ci_run": false,
+  "boundaries": [
+    "Known development reports and derived images, not independently annotated natural scans.",
+    "Native section-span differences and source-box misses remain in strict denominators.",
+    "Financial unit confirmation and ambiguous mixed-table recovery remain reviewer actions.",
+    "Original model mismatch and Windows access violation causes remain unproven.",
+    "Existing saved revisions are preserved; new extraction requires explicit replacement adoption.",
+    "Public DNS ACME renewal remote backup and alert delivery remain unverified.",
+    "Cross-page table joining remains deferred by user scope decision."
+  ]
+}

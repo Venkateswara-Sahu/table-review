@@ -4,6 +4,25 @@ from table_review.extraction.types import SourceToken
 from table_review.tables.types import CellContent, TableContent
 
 
+def test_unchanged_native_literal_uses_its_exact_visible_token_bounds():
+    original = cell("amount", "120", 0, 100, 200)
+    content = TableContent(rows=1, columns=1, cells=(original,))
+    evidence = token("visible-number", "120", 130, 150)
+    updated, changes = reconcile_native_literals(content, (evidence,))
+    assert updated.cells[0].text == updated.cells[0].raw_text == "120"
+    assert updated.cells[0].reference.box == evidence.box
+    assert updated.cells[0].source_references == (evidence.provenance,)
+    assert changes[0]["reason"] == "source_literal_bounds"
+    assert reconcile_native_literals(updated, (evidence,)) == (updated, ())
+
+
+def test_native_bounds_do_not_use_a_neighbouring_or_disagreeing_literal():
+    original = cell("amount", "120", 0, 100, 200)
+    content = TableContent(rows=1, columns=1, cells=(original,))
+    evidence = (token("value", "120", 130, 150), token("neighbour", "90", 170, 190))
+    assert reconcile_native_literals(content, evidence) == (content, ())
+
+
 def box(left, right, top=20, bottom=30):
     return PageBox(
         page=1, left=left, right=right, top=top, bottom=bottom, page_width=600, page_height=800

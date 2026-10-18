@@ -5,8 +5,8 @@ comparing them with the original page, correcting a saved revision and exporting
 that exact revision to a spreadsheet. It runs locally on CPU with PostgreSQL,
 FastAPI, React and a separately bounded Docling worker.
 
-The [18 October release fixes](docs/evidence/2026-10-18-release-fixes.md)
-documents the current build, recovery tests and extraction limits. Open the local
+The [18 October v10 fixes](docs/evidence/2026-10-18-four-issue-fixes.md)
+document the current build, recovery tests and extraction limits. Open the local
 deployment at <http://127.0.0.1:8000> after following the local runbook.
 
 The workflow includes original-page highlights and zoom, region selection,
@@ -59,9 +59,11 @@ selectable native content is preserved where usable. OCR recognition and routing
 are fallible, and every extracted figure needs source-image review. An
 interrupted extraction has a bounded retry; a missed table can be recovered
 by selecting its region for OCR or creating a manual grid. Mixed text/image pages
-get one additional bounded OCR pass; only new, non-overlapping tables with at
-least three rows and three columns are admitted. Smaller, overlapping or uncertain
-regions still need explicit selection. Main OCR uses the preloaded English
+get one additional bounded OCR pass. Numeric/label evidence supports two-by-two
+tables, slight source-box overlap is tolerated, and duplicate/ambiguous candidates
+are rejected. Small ruled images can trigger recovery below the ordinary page-area
+threshold. Borderless small images and uncertain regions still need explicit
+selection. Main OCR uses the preloaded English
 recognizer. Omitted grid positions become uncertain editable
 blanks; compare the image and explicitly confirm blank or enter the missing value.
 The network-isolated worker has a hard 6 GiB container limit. Accounts,
@@ -88,8 +90,8 @@ Evidence and claim boundaries:
 - [Backup and recovery](docs/runbooks/backup-restore.md)
 
 Human review-time savings, the proposed 20% improvement, demand and adoption are
-unmeasured. There have been no external study participants. One current six-sheet
-export has been opened and inspected in native Excel; broader workbook/version
+unmeasured. There have been no external study participants. An earlier six-sheet
+export was opened and inspected in native Excel; broader workbook/version
 compatibility and hosted service reliability remain unestablished.
 
 Original reports, complete transcriptions, models, environments, passwords and

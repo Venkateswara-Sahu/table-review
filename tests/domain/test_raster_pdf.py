@@ -4,6 +4,59 @@ from table_review.documents.pdf import page_info, render_page
 from tests.fixtures.pdf_factory import two_page_report
 
 
+def small_mixed_image_report(tmp_path, *, kind="table"):
+    """Native prose plus a 4.6%-area raster; table pixels are a ruled 2x2."""
+    image_source = tmp_path / f"{kind}-source.pdf"
+    image_canvas = Canvas(str(image_source), pagesize=(250, 90), invariant=1)
+    image_canvas.setFont("Helvetica", 12)
+    if kind == "table":
+        for x in (5, 150, 245):
+            image_canvas.line(x, 5, x, 85)
+        for y in (5, 45, 85):
+            image_canvas.line(5, y, 245, y)
+        for label, number, y in (("Revenue", "100", 60), ("Expense", "20", 20)):
+            image_canvas.drawString(15, y, label)
+            image_canvas.drawString(165, y, number)
+    elif kind == "prose":
+        for y, text in (
+            (65, "Please review this report."),
+            (45, "All figures are preliminary."),
+            (25, "Further details follow below."),
+        ):
+            image_canvas.drawString(5, y, text)
+    else:
+        image_canvas.rect(5, 5, 240, 80)
+        image_canvas.drawString(45, 40, "ACME REPORTS")
+    image_canvas.save()
+    rendered = render_page(image_source, 1, 2)
+    path = tmp_path / f"small-mixed-{kind}.pdf"
+    canvas = Canvas(str(path), pagesize=(612, 792), invariant=1)
+    canvas.setFont("Helvetica", 12)
+    canvas.drawString(30, 750, "Native report commentary stays selectable and unchanged.")
+    canvas.drawImage(str(rendered.image_path), 30, 500, width=250, height=90)
+    canvas.save()
+    rendered.image_path.unlink()
+    return path
+
+
+def test_small_ruled_raster_table_routes_a_native_prose_page_to_mixed_recovery(tmp_path):
+    info = page_info(small_mixed_image_report(tmp_path), 1)
+    assert info.digital_text_present and not info.requires_ocr
+    assert info.mixed_image_content
+
+
+def test_small_raster_prose_does_not_start_a_mixed_table_pass(tmp_path):
+    info = page_info(small_mixed_image_report(tmp_path, kind="prose"), 1)
+    assert info.digital_text_present and not info.requires_ocr
+    assert not info.mixed_image_content
+
+
+def test_small_logo_does_not_start_a_mixed_table_pass(tmp_path):
+    info = page_info(small_mixed_image_report(tmp_path, kind="logo"), 1)
+    assert info.digital_text_present and not info.requires_ocr
+    assert not info.mixed_image_content
+
+
 def raster_report(tmp_path, *, misplaced_text=False):
     original = two_page_report(tmp_path / "digital.pdf")
     rendered = render_page(original, 2, 2)
@@ -85,6 +138,7 @@ def test_small_raster_table_can_be_selected_for_ocr(tmp_path, monkeypatch):
     from types import SimpleNamespace
 
     from table_review.extraction.types import ExtractionRequest, ExtractorConfig
+    from table_review.runtime import write_model_manifest
 
     rendered = render_page(two_page_report(tmp_path / "source.pdf"), 2, 1)
     path = tmp_path / "small-raster.pdf"
@@ -97,6 +151,7 @@ def test_small_raster_table_can_be_selected_for_ocr(tmp_path, monkeypatch):
     models = tmp_path / "models"
     models.mkdir()
     (models / "weights.pt").write_bytes(b"fixture")
+    write_model_manifest(models)
     modes = []
 
     class Converter:

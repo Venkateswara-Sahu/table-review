@@ -1,4 +1,5 @@
 import importlib.util
+import os
 from pathlib import Path
 
 import pytest
@@ -45,6 +46,20 @@ def test_staging_rejects_conflicting_destination_without_overwriting(tmp_path):
 def test_staging_rejects_unverified_source_before_copying(tmp_path):
     source, destination = source_model(tmp_path)
     (source / "model.onnx").write_bytes(b"tampered")
+    with pytest.raises(ValueError, match="identity"):
+        stager()(source, destination)
+    assert list(destination.iterdir()) == []
+
+
+def test_staging_rechecks_cached_source_before_copying_any_bytes(tmp_path):
+    from table_review.runtime import models_available
+
+    source, destination = source_model(tmp_path)
+    model = source / "model.onnx"
+    assert models_available(source)
+    before = model.stat()
+    model.write_bytes(b"X" * before.st_size)
+    os.utime(model, ns=(before.st_atime_ns, before.st_mtime_ns))
     with pytest.raises(ValueError, match="identity"):
         stager()(source, destination)
     assert list(destination.iterdir()) == []

@@ -29,7 +29,16 @@ def run_verification(command, output, *, timeout):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True, mode=0o700)
     files = {
-        name: output / name for name in ("stdout.log", "stderr.log", "result.json", "pytest.xml")
+        name: output / name
+        for name in (
+            "stdout.log",
+            "stderr.log",
+            "result.json",
+            "pytest.xml",
+            "fault.log",
+            "runtime.json",
+            "progress.jsonl",
+        )
     }
     if any(path.exists() for path in files.values()):
         raise FileExistsError("Use a new directory to preserve prior verification evidence")
@@ -39,6 +48,7 @@ def run_verification(command, output, *, timeout):
         with files["stdout.log"].open("xb") as stdout, files["stderr.log"].open("xb") as stderr:
             process = subprocess.Popen(
                 command,
+                env={**os.environ, "TABLE_REVIEW_VERIFY_DEADLINE": str(started + timeout)},
                 stdout=stdout,
                 stderr=stderr,
                 stdin=subprocess.DEVNULL,
@@ -84,10 +94,49 @@ def run_verification(command, output, *, timeout):
             "elapsed_seconds": time.monotonic() - started,
             "timeout_seconds": timeout,
             "last_test": tests[-1] if tests else None,
+            "last_phase": None,
+            "windows_exception_code": (
+                f"0x{returncode & 0xFFFFFFFF:08X}"
+                if status == "process_crash" and os.name == "nt"
+                else None
+            ),
         }
+        if files["progress.jsonl"].is_file():
+            for line in files["progress.jsonl"].read_text(encoding="utf-8").splitlines():
+                try:
+                    phase = json.loads(line)
+                except json.JSONDecodeError:
+                    continue  # A fatal exit may interrupt the final diagnostic write.
+                result["last_phase"] = phase["phase"]
+                if phase.get("nodeid"):
+                    result["last_test"] = phase["nodeid"]
         with files["result.json"].open("x", encoding="utf-8") as stream:
             json.dump(result, stream, indent=2)
     return result
+
+
+def verification_command(output, pytest_args, *, timeout):
+    bootstrap = (
+        "import os,runpy,sys; "
+        "from scripts.native_test_process import prepare_test_process,start_diagnostics; "
+        "prepare_test_process(); start_diagnostics(sys.argv[1],timeout=float(sys.argv[2]),"
+        "deadline=float(os.environ['TABLE_REVIEW_VERIFY_DEADLINE']) "
+        "if 'TABLE_REVIEW_VERIFY_DEADLINE' in os.environ else None); "
+        "sys.argv=['pytest','-p','no:faulthandler','-p','scripts.native_test_diagnostics',"
+        "*sys.argv[3:]]; "
+        "runpy.run_module('pytest',run_name='__main__')"
+    )
+    return [
+        sys.executable,
+        "-X",
+        "faulthandler",
+        "-u",
+        "-c",
+        bootstrap,
+        str(output),
+        str(timeout),
+        *pytest_args,
+    ]
 
 
 def main():
@@ -109,18 +158,7 @@ def main():
             + uuid4().hex[:8]
         )
     ).resolve()
-    bootstrap = (
-        "import faulthandler,runpy,sys; from scripts.native_test_process import prepare_test_process; "
-        "prepare_test_process(); faulthandler.enable(); "
-        "sys.argv=['pytest',*sys.argv[1:]]; runpy.run_module('pytest',run_name='__main__')"
-    )
-    command = [
-        sys.executable,
-        "-X",
-        "faulthandler",
-        "-u",
-        "-c",
-        bootstrap,
+    pytest_args = [
         "tests/domain",
         "tests/integration",
         "tests/acceptance",
@@ -134,6 +172,7 @@ def main():
         "--basetemp=" + str(output / "scratch"),
         "--junitxml=" + str(output / "pytest.xml"),
     ]
+    command = verification_command(output, pytest_args, timeout=args.timeout)
     result = run_verification(command, output, timeout=args.timeout)
     print(json.dumps({**result, "evidence_directory": str(output)}))
     raise SystemExit(0 if result["status"] == "passed" else 1)

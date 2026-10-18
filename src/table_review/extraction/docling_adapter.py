@@ -15,9 +15,12 @@ from table_review.documents.types import PageBox, SourceReference
 from table_review.extraction.context import caption_sources
 from table_review.extraction.literals import reconcile_native_literals, reconcile_ocr_currency_rows
 from table_review.extraction.marks import dash_candidates
+from table_review.extraction.mixed import select_mixed_candidates
 from table_review.extraction.ocr import mark_reader, ocr_options, ocr_tokens
+from table_review.extraction.ocr_fidelity import ground_ocr_content
 from table_review.extraction.provenance import conversion_outcome, runtime_manifest
 from table_review.extraction.recovery import candidate_regions, intersects
+from table_review.extraction.structure import infer_aligned_row_labels, normalize_header_stubs
 from table_review.extraction.timing import TimingLedger
 from table_review.extraction.types import (
     ExtractedTable,
@@ -30,22 +33,9 @@ from table_review.tables.types import CellContent, TableContent, infer_header_ro
 
 
 def model_hashes(root: str):
-    directory = Path(root)
-    files = [
-        file
-        for file in directory.rglob("*")
-        if file.is_file()
-        and ".cache" not in file.relative_to(directory).parts
-        and file.suffix in {".json", ".safetensors", ".onnx", ".pt", ".bin"}
-    ]
-    if not files:
-        raise ValueError("Extraction models must be downloaded before starting the worker")
-    hashes = {}
-    for file in sorted(files):
-        with file.open("rb") as stream:
-            digest = hashlib.file_digest(stream, "sha256").hexdigest()
-        hashes[file.relative_to(directory).as_posix()] = digest
-    return hashes
+    from table_review.runtime import verified_model_hashes
+
+    return verified_model_hashes(root)
 
 
 def _vector_page(reader, page, region, destination):
@@ -389,6 +379,11 @@ class DoclingExtractor:
                             page_warnings.append(
                                 f"Page {page.page_no}: OCR currency reconciliation unavailable; primary tables retained"
                             )
+                        page_tables, image_warnings, image_outcome = self._ground_tables(
+                            request, page, page_tables
+                        )
+                        page_warnings.extend(image_warnings)
+                        outcome["ocr_image_grounding"] = image_outcome
                     try:
                         enriched = [
                             table.model_copy(
@@ -545,6 +540,51 @@ class DoclingExtractor:
                 "exception_type": type(error).__name__,
                 "confidence": None,
             }
+
+    def _ground_tables(self, request, page, tables):
+        from PIL import Image
+
+        from table_review.settings import Settings
+
+        if not any(c.reference.box for t in tables for c in t.content.cells):
+            return tables, [], {"status": "success", "changes": []}
+        rendered = None
+        try:
+            scale = min(
+                4, math.sqrt(Settings().max_render_pixels / (page.width * page.height)) * 0.999
+            )
+            rendered = render_page(request.source_path, page.page_no, scale)
+            updated, changes = [], []
+            with Image.open(rendered.image_path) as image:
+                for table in tables:
+                    content, adjustments, derived = ground_ocr_content(
+                        table.content, table.source_tokens, image, scale
+                    )
+                    tokens = {t.id: t for t in (*table.source_tokens, *derived)}
+                    updated.append(
+                        table.model_copy(
+                            update={"content": content, "source_tokens": tuple(tokens.values())}
+                        )
+                    )
+                    changes.extend(adjustments)
+            return (
+                updated,
+                [],
+                {"status": "success", "changes": changes, "parser_raw_text_preserved": True},
+            )
+        except (MemoryError, OSError):
+            raise
+        except Exception as error:  # noqa: BLE001 -- image refinement is optional, keep primary evidence
+            return (
+                tables,
+                [
+                    f"Page {page.page_no}: image detail refinement unavailable; original OCR evidence retained"
+                ],
+                {"status": "failure", "exception_type": type(error).__name__},
+            )
+        finally:
+            if rendered is not None:
+                rendered.image_path.unlink(missing_ok=True)
 
     def _recover_marks(self, request, page, tables, source_hash):
         import numpy as np
@@ -773,15 +813,6 @@ class DoclingExtractor:
 
     def _recover_mixed(self, request, page, original_tables, source_hash):
         """One additional offline pass; retain native tables and reject overlaps."""
-        if any(table.region is None for table in original_tables):
-            return (
-                [],
-                [
-                    f"Page {page.page_no}: native table geometry is coarse; select the missing image region for OCR"
-                ],
-                [],
-                [],
-            )
         converter = self._converter(request.config, True)
         with tempfile.TemporaryDirectory() as temporary:
             normalized = Path(temporary) / "mixed.pdf"
@@ -828,15 +859,9 @@ class DoclingExtractor:
             identity_scope="mixed_page_ocr",
         )
         accepted = []
-        for table in candidates:
-            if (
-                table.region is None
-                or table.content.rows < 3
-                or table.content.columns < 3
-                or any(intersects(table.region, t.region) for t in original_tables)
-                or any(intersects(table.region, t.region) for t in accepted)
-            ):
-                continue
+        selected, decisions = select_mixed_candidates(candidates, original_tables, page.page_no)
+        attempt["candidate_decisions"] = decisions
+        for table in selected:
             content, changes = reconcile_ocr_currency_rows(table.content, tokens)
             content = content.model_copy(
                 update={
@@ -849,8 +874,11 @@ class DoclingExtractor:
                     f"Page {page.page_no}: currency markers regrouped from OCR evidence; cell locations are coarse, verify values against the image"
                 )
         attempt.update(adapter_status="success", accepted_table_ids=[t.id for t in accepted])
+        accepted, fidelity_warnings, fidelity_outcome = self._ground_tables(request, page, accepted)
+        attempt["ocr_image_grounding"] = fidelity_outcome
         # Rejected OCR duplicates must not introduce warnings about native tables.
         messages = list(warnings)
+        messages.extend(fidelity_warnings)
         if accepted:
             messages.extend(extra_warnings)
             messages.append(
@@ -1023,5 +1051,17 @@ class DoclingExtractor:
                 warnings.append(
                     f"Page {page.page_no}: {'OCR' if ocr else 'Parser'} omitted "
                     f"{len(missing)} table positions; blank cells added for manual image review"
+                )
+            labelled, label_changes = infer_aligned_row_labels(tables[index].content)
+            content, stub_changes = normalize_header_stubs(labelled)
+            if label_changes:
+                tables[index] = tables[index].model_copy(update={"content": content})
+                warnings.append(
+                    f"Page {page.page_no}: row labels inferred from aligned text and numeric columns; verify associations against the source"
+                )
+            if stub_changes:
+                tables[index] = tables[index].model_copy(update={"content": content})
+                warnings.append(
+                    f"Page {page.page_no}: row-label header structure inferred from the header band; empty positions remain uncertain, verify against the image"
                 )
         return tables, warnings

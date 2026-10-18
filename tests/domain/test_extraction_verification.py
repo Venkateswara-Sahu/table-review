@@ -28,6 +28,8 @@ def test_native_process_exit_is_not_reported_as_a_test_failure_or_success(tmp_pa
     assert result["status"] == "process_crash"
     assert result["returncode"] != 0
     assert json.loads((tmp_path / "result.json").read_text())["status"] == "process_crash"
+    if os.name == "nt":
+        assert result["windows_exception_code"] == "0xC0000005"
 
 
 def test_pytest_failure_is_retained_without_retry_or_masking(tmp_path):
@@ -100,3 +102,75 @@ def test_warning_summary_does_not_replace_the_last_executed_test(tmp_path):
         [sys.executable, "-c", "print(" + repr(text) + ")"], tmp_path, timeout=5
     )
     assert result["last_test"] == "tests/fixture.py::test_last"
+
+
+@pytest.mark.parametrize("phase", ["setup", "call", "teardown"])
+def test_crashed_pytest_retains_runtime_and_active_phase_without_a_summary(tmp_path, phase):
+    from scripts.verify_extraction import verification_command
+
+    fixture = tmp_path / "test_native_fixture.py"
+    fixture.write_text(
+        "import pytest\n"
+        "def die():\n"
+        "    import faulthandler\n"
+        "    faulthandler._read_null()\n"
+        "@pytest.fixture(autouse=True)\n"
+        "def crash():\n"
+        f"    if {phase!r} == 'setup': die()\n"
+        "    yield\n"
+        f"    if {phase!r} == 'teardown': die()\n"
+        "def test_interrupted():\n"
+        f"    if {phase!r} == 'call': die()\n"
+    )
+    output = tmp_path / "evidence"
+    command = verification_command(
+        output,
+        [str(fixture), "-q", "-p", "no:cacheprovider", "--basetemp=" + str(tmp_path / "scratch")],
+        timeout=10,
+    )
+    result = run_verification(command, output, timeout=10)
+    assert result["status"] == "process_crash"
+    if os.name == "nt":
+        assert result["windows_exception_code"] == "0xC0000005"
+    assert result["last_test"].endswith("test_native_fixture.py::test_interrupted")
+    assert result["last_phase"] == phase
+    runtime = json.loads((output / "runtime.json").read_text())
+    assert runtime["executable"] == sys.executable
+    assert runtime["python_version"] == sys.version
+    assert runtime["packages"]["pytest"] == pytest.__version__
+    events = [json.loads(line) for line in (output / "progress.jsonl").read_text().splitlines()]
+    assert events[0]["phase"] == "bootstrap"
+    assert events[-1]["phase"] == phase
+    assert events[-1]["event"] == "started"
+    assert "test_native_fixture.py" in (output / "fault.log").read_text()
+
+
+def test_diagnostic_evidence_is_not_overwritten_before_launch(tmp_path):
+    (tmp_path / "fault.log").write_text("earlier native stack")
+    with pytest.raises(FileExistsError):
+        run_verification([sys.executable, "-c", "pass"], tmp_path, timeout=5)
+    assert (tmp_path / "fault.log").read_text() == "earlier native stack"
+
+
+@pytest.mark.parametrize("bootstrap_delay", [0, 0.6])
+def test_timeout_emits_collection_stack_before_the_existing_deadline(tmp_path, bootstrap_delay):
+    from scripts.verify_extraction import verification_command
+
+    fixture = tmp_path / "test_collection_hang.py"
+    fixture.write_text("import time\ntime.sleep(60)\n")
+    output = tmp_path / "evidence"
+    command = verification_command(
+        output,
+        [str(fixture), "-q", "-p", "no:cacheprovider", "--basetemp=" + str(tmp_path / "scratch")],
+        timeout=3,
+    )
+    command[command.index("-c") + 1] = command[command.index("-c") + 1].replace(
+        "prepare_test_process();",
+        f"import time; time.sleep({bootstrap_delay}); prepare_test_process();",
+    )
+    result = run_verification(command, output, timeout=3)
+    assert result["status"] == "timeout"
+    assert result["timeout_seconds"] == 3
+    assert result["last_phase"] == "collection"
+    assert result["last_test"] is None
+    assert "test_collection_hang.py" in (output / "fault.log").read_text()

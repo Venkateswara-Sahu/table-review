@@ -47,8 +47,6 @@ def reconcile_native_literals(content, tokens):
     changes = []
 
     def replace(cell, text, evidence, reason):
-        if text == cell.text:
-            return
         original = evidence[0].box
         box = original.model_copy(
             update={
@@ -58,6 +56,8 @@ def reconcile_native_literals(content, tokens):
                 "bottom": max(t.box.bottom for t in evidence),
             }
         )
+        if text == cell.text and cell.reference.precision == "cell" and cell.reference.box == box:
+            return
         cells[cell.id] = cell.model_copy(
             update={
                 "text": text,
@@ -138,8 +138,17 @@ def reconcile_native_literals(content, tokens):
     for cell in tuple(cells.values()):
         evidence = _ordered([t for t in tokens if _inside(t, cell)])
         literal = " ".join(t.text for t in evidence)
-        if evidence and literal != cell.text and _fold(literal) == _fold(cell.text):
-            replace(cell, literal, evidence, "source_typographic_literal")
+        if (
+            evidence
+            and _fold(literal) == _fold(cell.text)
+            and (literal != cell.text or "$" not in cell.text)
+        ):
+            replace(
+                cell,
+                literal,
+                evidence,
+                "source_typographic_literal" if literal != cell.text else "source_literal_bounds",
+            )
     return content.model_copy(update={"cells": tuple(cells.values())}), tuple(changes)
 
 

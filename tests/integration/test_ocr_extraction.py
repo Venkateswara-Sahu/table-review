@@ -71,3 +71,20 @@ def test_mixed_native_prose_and_image_table_recovers_automatically_and_by_region
         for table in result.tables
         for token in table.source_tokens
     )
+
+
+@pytest.mark.extraction
+def test_small_ruled_two_by_two_image_table_is_recovered_beside_native_prose(tmp_path):
+    import hashlib
+
+    from tests.domain.test_raster_pdf import small_mixed_image_report
+
+    source = small_mixed_image_report(tmp_path)
+    before = hashlib.sha256(source.read_bytes()).hexdigest()
+    result = DoclingExtractor().extract(ExtractionRequest(source_path=source, pages=(1,)))
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == before
+    assert result.manifest["ocr_pages"] == [1]
+    assert any(t.content.rows == 2 and t.content.columns == 2 for t in result.tables)
+    text = {c.text for t in result.tables for c in t.content.cells}
+    assert {"Revenue", "100", "Expense", "20"} <= text
+    assert all(t.page_no == 1 for t in result.tables)

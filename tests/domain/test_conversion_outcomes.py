@@ -24,6 +24,9 @@ def extract_with(
     models = tmp_path / "models"
     models.mkdir()
     (models / "weights.pt").write_bytes(b"weights")
+    from table_review.runtime import write_model_manifest
+
+    write_model_manifest(models)
 
     class Converter:
         def convert(self, path, *, page_range, raises_on_error=True):
@@ -415,12 +418,18 @@ def test_adapter_rejection_retains_parser_outcome_and_publishes_no_page_tables(
     assert page["adapter_exception_type"] == "ValueError"
 
 
-def test_model_identity_is_rehashed_when_artifacts_change(tmp_path):
+def test_model_identity_rejects_changed_artifacts_instead_of_recording_bad_hashes(tmp_path):
+    from table_review.runtime import write_model_manifest
+
     model = tmp_path / "weights.pt"
     model.write_bytes(b"one")
+    write_model_manifest(tmp_path)
     first = model_hashes(str(tmp_path))
     model.write_bytes(b"two")
-    assert model_hashes(str(tmp_path)) != first
+    with pytest.raises(ValueError, match="Offline model identity"):
+        model_hashes(str(tmp_path))
+    model.write_bytes(b"one")
+    assert model_hashes(str(tmp_path)) == first
 
 
 def test_manifest_captures_parser_dependencies_and_code_even_without_runner(tmp_path, monkeypatch):

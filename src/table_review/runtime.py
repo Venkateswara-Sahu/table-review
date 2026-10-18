@@ -4,7 +4,9 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import threading
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -14,6 +16,8 @@ from table_review.lifecycle.journal import JournalUnavailable, LifecycleJournal
 from table_review.settings import Settings
 
 _verified_models = {}
+_model_verification_lock = threading.RLock()
+_MODEL_READINESS_TTL_SECONDS = 30
 
 
 def write_model_manifest(root):
@@ -38,30 +42,101 @@ def write_model_manifest(root):
     return manifest
 
 
-def models_available(root):
+def _model_paths(root):
+    manifest = json.loads((root / "runtime-manifest.lock").read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict) or not manifest:
+        raise ValueError("Offline model identity is unavailable")
+    assets = {
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if path.is_file()
+        and path.suffix in {".json", ".safetensors", ".onnx", ".pt", ".bin"}
+        and ".cache" not in path.relative_to(root).parts
+    }
+    if set(manifest) != assets:
+        raise ValueError("Offline model identity is unavailable")
+    paths = []
+    for name, expected in manifest.items():
+        if (
+            not isinstance(name, str)
+            or not isinstance(expected, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", expected)
+        ):
+            raise ValueError("Offline model identity is unavailable")
+        relative = Path(name)
+        original = root / relative
+        path = original.resolve()
+        if (
+            relative.is_absolute()
+            or ".." in relative.parts
+            or not path.is_relative_to(root)
+            or not path.is_file()
+            or original.is_symlink()
+        ):
+            raise ValueError("Offline model identity is unavailable")
+        paths.append((name, path, expected))
+    return paths
+
+
+def _model_signature(paths):
+    result = []
+    for name, path, expected in paths:
+        stat = path.stat()
+        result.append(
+            (
+                name,
+                str(path),
+                expected,
+                stat.st_size,
+                stat.st_mtime_ns,
+                stat.st_ctime_ns,
+                stat.st_ino,
+            )
+        )
+    return tuple(result)
+
+
+def verified_model_hashes(root):
+    """Rehash frozen model bytes on every extraction; readiness cache is never trusted."""
+    root = Path(root).resolve()
+    with _model_verification_lock:
+        _verified_models.pop(str(root), None)
+        try:
+            paths = _model_paths(root)
+            signature = _model_signature(paths)
+            hashes = {}
+            for name, path, expected in paths:
+                with path.open("rb") as stream:
+                    actual = hashlib.file_digest(stream, "sha256").hexdigest()
+                if actual != expected:
+                    raise ValueError("Offline model identity is unavailable")
+                hashes[name] = actual
+            if _model_signature(_model_paths(root)) != signature:
+                raise ValueError("Offline model identity changed during verification")
+            _verified_models[str(root)] = (signature, time.monotonic())
+            return hashes
+        except (OSError, ValueError, TypeError) as error:
+            raise ValueError("Offline model identity is unavailable") from error
+
+
+def models_available(root, *, force_refresh=False):
+    """Readiness may reuse a successful check for at most 30 seconds."""
     root = Path(root).resolve()
     try:
-        manifest = json.loads((root / "runtime-manifest.lock").read_text(encoding="utf-8"))
-        if not isinstance(manifest, dict) or not manifest:
-            return False
-        paths = []
-        for name, expected in manifest.items():
-            path = (root / name).resolve()
-            if not path.is_relative_to(root) or not path.is_file() or path.is_symlink():
-                return False
-            paths.append((path, expected))
-        signature = tuple(
-            (str(p), expected, p.stat().st_size, p.stat().st_mtime_ns) for p, expected in paths
-        )
-        if _verified_models.get(str(root)) == signature:
+        with _model_verification_lock:
+            signature = _model_signature(_model_paths(root))
+            cached = _verified_models.get(str(root))
+            if not force_refresh and cached:
+                previous, checked_at = cached
+                if (
+                    previous == signature
+                    and 0 <= time.monotonic() - checked_at < _MODEL_READINESS_TTL_SECONDS
+                ):
+                    return True
+            verified_model_hashes(root)
             return True
-        for path, expected in paths:
-            with path.open("rb") as stream:
-                if hashlib.file_digest(stream, "sha256").hexdigest() != expected:
-                    return False
-        _verified_models[str(root)] = signature
-        return True
     except (OSError, ValueError, TypeError):
+        _verified_models.pop(str(root), None)
         return False
 
 
