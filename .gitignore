@@ -39,3 +39,7 @@ desktop.ini
 *.p12
 *.pfx
 *.bundle
+*.trbackup
+
+# Local-only notes and scratch work
+.internal/

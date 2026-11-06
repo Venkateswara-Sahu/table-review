@@ -1,103 +1,103 @@
 # Table Review
 
-A private application for extracting English annual-report tables from digital PDFs and page images,
-comparing them with the original page, correcting a saved revision and exporting
-that exact revision to a spreadsheet. It runs locally on CPU with PostgreSQL,
-FastAPI, React and a separately bounded Docling worker.
+**A local-first review desk for turning annual-report PDF tables into source-backed spreadsheets.**
 
-The [18 October v10 fixes](docs/evidence/2026-10-18-four-issue-fixes.md)
-document the current build, recovery tests and extraction limits. Open the local
-deployment at <http://127.0.0.1:8000> after following the local runbook.
+Table Review extracts tables from digital or scanned PDF pages, places the extracted grid beside the original page, and lets a reviewer correct values, record decisions and export the exact revision they approved. It runs on CPU, on your machine, with PostgreSQL, FastAPI and a separately bounded Docling worker.
 
-The workflow includes original-page highlights and zoom, region selection,
-explicit manual grids, keyboard editing, immutable edit history, checked-cell
-audit events, source discrepancy decisions, approval and workbook/CSV downloads.
-Exports retain raw text, current text, source references, revision checksum and
-review status. Warnings remain visible; marking cells checked is a user action,
-not an automatic correctness guarantee.
+![Table Review review screen](docs/assets/review-screen.png)
 
-Use the **Context** review tab to inspect a cell's canonical header path and
-source-backed period, currency, scale and measure proposals. Confirmations are
-explicit reviewer actions, carry actor/time and source evidence into XLSX/CSV,
-and reopen after dependent edits. Confirming scale does not multiply values.
-See the [source-context checkpoint](docs/evidence/2026-10-15-source-context.md).
+*Synthetic fixture shown. The application is designed for private, local documents.*
 
-Use **History** for an ordered cell/table timeline explaining saved changes and
-stale review evidence. Workbook `Timeline` and CSV `timeline.json` retain the
-events captured when the export was requested. Earlier history remains available
-with an explicit recording boundary. See the
-[timeline checkpoint](docs/evidence/2026-10-16-review-timeline.md).
+## What it does
 
-**Checks** offers previous/next unresolved navigation and current-issue progress;
-**Keyboard help** describes the working controls. **Remove table** removes a table
-from active work with an inline explanation. Use **Removed tables** on its source
-page to restore it while the report is retained. Cell reviews, issue decisions and
-approval must be renewed; saved content/history and existing exports are retained.
-Report deletion or expiry removes recovery. See the
-[navigation/removal checkpoint](docs/evidence/2026-10-16-navigation-and-table-removal.md).
+- Upload a PDF (up to 50 MiB / 500 pages) and select one to five pages, or a region for OCR.
+- Extract native or image-based tables with Docling; build an explicit manual grid when detection misses a table.
+- Compare every cell with a highlighted, zoomable source page.
+- Edit values, record explicit blanks and unreadable cells, and add source context: period, currency, scale and measure.
+- Declare subtotals, run consistency checks and keep an immutable review timeline.
+- Export XLSX or CSV with source references, review state and a revision checksum.
+- Use private accounts, owner checks, retention, deletion and encrypted recovery.
 
-Use **Subtotals** to declare a signed sum of selected currency amounts and a
-separate total, with an explicit absolute tolerance. Every participant needs
-current confirmed source period, currency and scale. Unsupported/unreadable
-inputs stay unavailable; edits reopen confirmation. Results and input evidence
-are captured in workbook `Subtotals` and CSV `subtotals.json` when declarations
-exist. A match checks this selected relation only. See the
-[declared-subtotal checkpoint](docs/evidence/2026-10-16-declared-subtotal-checks.md).
+## Stack
 
-In **Extraction history**, use **Review replacement** to compare a rerun candidate
-with current saved work and explicitly adopt the complete original extraction as
-a new draft. Earlier corrections remain in History. Reviews, context confirmations
-and subtotal declarations reset; matching source areas require confirmation.
-Ambiguous candidates need explicit selection. See the
-[safe-adoption checkpoint](docs/evidence/2026-10-16-safe-extraction-adoption.md).
+| Layer | Technology |
+|---|---|
+| API | Python 3.12, FastAPI, SQLAlchemy, Alembic, PostgreSQL |
+| Extraction | Docling, ONNX Runtime and RapidOCR on CPU, in an isolated Docker worker |
+| Web | React 19, TypeScript, Vite |
+| Tests | pytest, Playwright |
+| Deployment | Docker Compose; optional Caddy HTTPS |
 
-Start with the [local runbook](docs/runbooks/local.md). It gives exact dependency,
-model preload, deployment and private-account commands. The product supports PDFs
-up to 50 MiB/500 pages, one to five selected pages per run, and grids up to
-500 rows/60 columns/10,000 slots. Image-based pages can use preloaded offline OCR;
-selectable native content is preserved where usable. OCR recognition and routing
-are fallible, and every extracted figure needs source-image review. An
-interrupted extraction has a bounded retry; a missed table can be recovered
-by selecting its region for OCR or creating a manual grid. Mixed text/image pages
-get one additional bounded OCR pass. Numeric/label evidence supports two-by-two
-tables, slight source-box overlap is tolerated, and duplicate/ambiguous candidates
-are rejected. Small ruled images can trigger recovery below the ordinary page-area
-threshold. Borderless small images and uncertain regions still need explicit
-selection. Main OCR uses the preloaded English
-recognizer. Omitted grid positions become uncertain editable
-blanks; compare the image and explicitly confirm blank or enter the missing value.
-The network-isolated worker has a hard 6 GiB container limit. Accounts,
-owner checks, cancellation, deletion, retention and encrypted recovery belong to
-the same workflow.
+## Quick start
 
-This is an implemented, locally tested private product; production readiness
-is not established. Automatic extraction is unreliable on some layouts and
-does not attach financial units automatically. The frozen 40-region evaluation
-separates literal recovery, placement, associations, geometry and exact tables;
-its reference is source-assisted agent annotation, not independent human gold.
-The original held-out baseline is preserved. Results after inspecting those
-reports are validation on known examples.
+Prerequisites: Python 3.12, [uv](https://docs.astral.sh/uv/) and Docker with at least 8 GiB available RAM. Node 24 is only needed for frontend development.
 
-Evidence and claim boundaries:
+```powershell
+git clone https://github.com/Venkateswara-Sahu/table-review.git
+cd table-review
+uv sync --frozen --extra extraction --group dev
+uv run --frozen --extra extraction python scripts/preload_models.py
+uv run --frozen --extra extraction python scripts/preload_ocr_models.py
+uv run --frozen python scripts/deploy_local.py
+```
 
-- [Acceptance matrix](docs/evidence/acceptance-matrix.md)
-- [Claims and limitations](docs/evidence/claims.md)
-- [Extraction evaluation](docs/evidence/extraction-evaluation.md)
-- [Review-study status](docs/evidence/review-study-status.md)
-- [Final branch review](docs/evidence/final-branch-review.md)
-- [Execution decisions and verification](docs/evidence/execution-ledger.md)
-- [All implementation decisions and costs](docs/evidence/implementation-decisions.md)
-- [Backup and recovery](docs/runbooks/backup-restore.md)
+Open <http://127.0.0.1:8000>. Create the first account from the host:
 
-Human review-time savings, the proposed 20% improvement, demand and adoption are
-unmeasured. There have been no external study participants. An earlier six-sheet
-export was opened and inspected in native Excel; broader workbook/version
-compatibility and hosted service reliability remain unestablished.
+```powershell
+docker compose --env-file .cache/local.env -p table-review-local -f infra/compose.yaml exec api python -m table_review.accounts.admin create your-username
+```
 
-Original reports, complete transcriptions, models, environments, passwords and
-private execution artifacts are excluded from Git. `uv.lock`, the npm lockfile,
-image digests and model hashes record dependencies; Debian package repositories
-are not date-snapshot pinned, so later builds are not claimed bit-identical.
-Evaluation reproduction and source hashes are in the linked evidence. This
-repository is public source; the application remains a private local deployment
-and has not been deployed to an external service.
+The full setup, configuration, stop/start and troubleshooting guide is in [docs/local-deployment.md](docs/local-deployment.md). Data retention and backup instructions are in [docs/data-and-backups.md](docs/data-and-backups.md).
+
+## Configuration
+
+Copy `.env.example` to `.env` for local overrides. The deployment generates its database password into ignored `.cache/local.env`; never commit either file. The main settings are `POSTGRES_PASSWORD`, `TABLE_REVIEW_MODELS`, `TABLE_REVIEW_PORT`, `TABLE_REVIEW_PUBLIC_ORIGIN` and `TABLE_REVIEW_SECURE_COOKIES`.
+
+## Testing
+
+```powershell
+uv run --frozen --group dev pytest tests/domain tests/integration -q
+uv run --frozen --group dev pytest tests/acceptance -m "not packaged" -q
+cd web
+npm ci
+npm run build
+npm run test:e2e
+```
+
+Integration tests use PostgreSQL; extraction tests require the preloaded models. The acceptance suite can start an isolated deployment; see [docs/local-deployment.md](docs/local-deployment.md).
+
+## Evaluation
+
+`evaluation/` records frozen extraction and check benchmarks, including strict literal, placement, association and geometry scores. The source PDFs and crops are not redistributed. Read [evaluation/README.md](evaluation/README.md) for the protocol, files and limitations.
+
+## Limits
+
+- Automatic extraction is unreliable on some layouts; every figure needs review against the source image.
+- OCR is fallible and financial units are not attached automatically.
+- CPU-only extraction runs one job at a time; each run selects one to five pages.
+- The evaluation is not an independent human gold standard, and no time-savings or hosted-reliability claim is made.
+- This is an early-stage local-first tool, not a hosted SaaS and not production-certified.
+
+## Project layout
+
+```text
+src/table_review/   API, domain services and extraction adapters
+web/                React/TypeScript review UI
+infra/              Docker Compose, Dockerfiles and optional Caddy proxy
+migrations/         Alembic migrations
+tests/              Domain, integration and acceptance tests
+evaluation/         Frozen benchmark results and protocol
+docs/               Local deployment, data/backup guide and API schema
+```
+
+## Security and privacy
+
+Table Review is designed for loopback or private-network use. Do not expose it directly to the internet without HTTPS, secure cookies, a reverse proxy and independent backups. There is no public signup route; accounts are created from the host. Report vulnerabilities privately from the repository's Security tab, not in a public issue. See [SECURITY.md](SECURITY.md).
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+## Acknowledgements
+
+Built on Docling, RapidOCR, FastAPI, React and the other open-source packages pinned in `pyproject.toml` and `web/package.json`.
