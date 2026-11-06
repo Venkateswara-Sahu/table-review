@@ -99,4 +99,5 @@ private execution artifacts are excluded from Git. `uv.lock`, the npm lockfile,
 image digests and model hashes record dependencies; Debian package repositories
 are not date-snapshot pinned, so later builds are not claimed bit-identical.
 Evaluation reproduction and source hashes are in the linked evidence. This
-repository has not been published or deployed to an external service.
+repository is public source; the application remains a private local deployment
+and has not been deployed to an external service.

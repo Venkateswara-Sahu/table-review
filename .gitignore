@@ -1,19 +1,41 @@
+# Python
 .venv/
-.cache/
 __pycache__/
+*.egg-info/
 .pytest_cache/
 .ruff_cache/
+
+# Local runtime state and generated data
+.cache/
 .superpowers/
 artifacts/
 data/
 models/
+output/
 evaluation/corpus.json
-.env*
-!.env.example
+
+# Secrets and local configuration
+.env
 .env.*
 !.env.example
-*.egg-info/
+
+# Web build and test output
 web/node_modules/
 web/dist/
 web/test-results/
 web/playwright-report/
+web/blob-report/
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Local keys and archives
+*.pem
+*.key
+*.p12
+*.pfx
+*.bundle
