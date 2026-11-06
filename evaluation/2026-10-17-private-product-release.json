@@ -2,8 +2,8 @@
   "version": "private-product-v8-release-1",
   "recorded_at": "2026-10-17T11:24:36.540196+00:00",
   "status": "verified_private_local_product_independent_validation_pending",
-  "code_commit": "b62411b",
-  "evaluation_commit": "cb10331",
+  "code_commit": "6f1d0b1",
+  "evaluation_commit": "e7bf2f7",
   "verification": {
     "ordinary": {
       "summary": "492 passed, 3 skipped, 24 deselected",
