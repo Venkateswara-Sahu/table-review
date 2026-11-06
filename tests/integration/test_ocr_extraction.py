@@ -24,6 +24,7 @@ def test_offline_ocr_recovers_image_table_and_image_grounded_tokens(tmp_path, mi
     assert any("offline OCR" in warning for warning in result.warnings)
 
 
+@pytest.mark.extraction
 def test_digital_only_mode_still_rejects_scan_before_loading_models(tmp_path):
     from table_review.extraction.types import ExtractorConfig
 

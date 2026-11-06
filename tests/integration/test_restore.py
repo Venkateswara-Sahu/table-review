@@ -160,7 +160,8 @@ def test_real_restore_reconciles_current_journal_and_reproduces_retained_export(
         "revision_preserved": True,
         "export_reproduced": True,
     }
-    evidence_dir = Path(".superpowers/sdd/2026-10-05-table-review")
+    evidence_dir = Path("artifacts/test-evidence")
+    evidence_dir.mkdir(parents=True, exist_ok=True)
     (evidence_dir / "restore-drill.json").write_text(
         __import__("json").dumps(evidence, indent=2), encoding="utf-8"
     )
