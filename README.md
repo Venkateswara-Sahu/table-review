@@ -1,5 +1,8 @@
 # Table Review
 
+[![CI](https://github.com/Venkateswara-Sahu/table-review/actions/workflows/ci.yml/badge.svg)](https://github.com/Venkateswara-Sahu/table-review/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **A local-first review desk for turning annual-report PDF tables into source-backed spreadsheets.**
 
 Table Review extracts tables from digital or scanned PDF pages, places the extracted grid beside the original page, and lets a reviewer correct values, record decisions and export the exact revision they approved. It runs on CPU, on your machine, with PostgreSQL, FastAPI and a separately bounded Docling worker.
@@ -89,6 +92,14 @@ tests/              Domain, integration and acceptance tests
 evaluation/         Frozen benchmark results and protocol
 docs/               Local deployment, data/backup guide and API schema
 ```
+
+## API
+
+The OpenAPI schema is recorded at [docs/api/openapi.json](docs/api/openapi.json). The web client types are generated from it.
+
+## Contributing
+
+Issues and pull requests are welcome. For substantial changes, open an issue first so the approach can be discussed. Run the test commands above before opening a pull request.
 
 ## Security and privacy
 
