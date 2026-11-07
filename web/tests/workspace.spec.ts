@@ -1,175 +1,206 @@
 import { test, expect } from "@playwright/test";
-import { signIn, openPageTwoTable } from "./helpers";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
+import {
+  goToPage,
+  openFirstTable,
+  openPageTwoTable,
+  openReport,
+  resetTable,
+  reviewProgress,
+} from "./helpers";
 
-test("Enter and page buttons navigate without losing a table draft", async ({
+test("page navigation, the table overview and source stay in sync", async ({
   page,
 }) => {
-  await openPageTwoTable(page);
-  await page
-    .getByLabel("Cell text", { exact: true })
-    .fill("keep my correction");
-  await page
-    .getByRole("button", { name: "Previous page", exact: true })
-    .click();
-  await expect(page.getByLabel("Original page", { exact: true })).toHaveValue(
-    "1",
-  );
-  await expect(page.getByLabel("Cell text", { exact: true })).toHaveValue(
-    "keep my correction",
-  );
+  await openReport(page, "report.pdf");
+  await expect(page.getByLabel("Page number")).toHaveValue("1");
   await expect(
-    page.getByRole("button", { name: "Return to table source", exact: true }),
+    page.getByRole("button", { name: "Previous page" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("heading", { name: "Tables on page 1" }),
   ).toBeVisible();
-  await page.getByLabel("Original page", { exact: true }).fill("2");
-  await page.getByLabel("Original page", { exact: true }).press("Enter");
-  await expect(page.getByLabel("Original page", { exact: true })).toHaveValue(
-    "2",
-  );
-  await expect(page.getByLabel("Cell text", { exact: true })).toHaveValue(
-    "keep my correction",
-  );
-  await page
-    .getByRole("button", { name: "Discard unsaved changes", exact: true })
-    .click();
-});
+  await expect(page.getByTestId("source-image")).toBeVisible();
 
-test("a source rectangle is visible during drawing and Escape cancels it", async ({
-  page,
-}) => {
-  await signIn(page);
-  await page
-    .getByRole("button", { name: "Open report.pdf", exact: true })
-    .click();
-  await page
-    .getByRole("button", { name: "Select region", exact: true })
-    .click();
-  const box = await page.getByTestId("source-image").boundingBox();
-  if (!box) throw new Error("Source image unavailable");
-  await page.mouse.move(box.x + 30, box.y + 70);
-  await page.mouse.down();
-  await page.mouse.move(box.x + 180, box.y + 150, { steps: 6 });
-  await expect(page.getByTestId("region-preview")).toBeVisible();
-  await page.keyboard.press("Escape");
-  await page.mouse.up();
-  await expect(page.getByTestId("region-preview")).toHaveCount(0);
+  await goToPage(page, 2);
   await expect(
-    page.getByRole("button", { name: "Select region", exact: true }),
-  ).toHaveAttribute("aria-pressed", "false");
-});
-
-test("the continuous reader reaches another page while retaining the selected table", async ({
-  page,
-}) => {
-  await openPageTwoTable(page);
-  await page
-    .getByRole("button", { name: "Previous page", exact: true })
-    .click();
-  const reader = page.getByRole("region", {
-    name: "Scrollable report pages",
-    exact: true,
-  });
-  await reader.hover();
-  await page.mouse.wheel(0, 1000);
-  await expect(page.getByLabel("Original page", { exact: true })).toHaveValue(
-    "2",
-  );
-  await expect(
-    page.getByRole("grid", { name: "Review table", exact: true }),
+    page.getByRole("heading", { name: "Tables on page 2" }),
   ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next page" })).toBeDisabled();
+  await expect(
+    page.getByRole("tab", { name: "Table 1" }).first(),
+  ).toBeVisible();
+
+  await openFirstTable(page);
+  await resetTable(page);
+  await expect(
+    page.getByRole("tab", { name: /^Table /, selected: true }),
+  ).toBeVisible();
+  await expect(reviewProgress(page)).toContainText("0/12");
+
+  await page.getByRole("tab", { name: "Page overview" }).click();
+  await expect(page).toHaveURL(/\/pages\/2$/);
+  await expect(
+    page.getByRole("heading", { name: "Tables on page 2" }),
+  ).toBeVisible();
+  await expect(page.getByTestId("source-image")).toBeVisible();
 });
 
-test("source selection, issue navigation and the responsive workspace remain usable", async ({
+test("the activity drawer lists extraction work and opens its table", async ({
   page,
 }) => {
-  await openPageTwoTable(page);
-  const sourceCell = page
-    .getByRole("button", { name: /^Select source cell A1:/ })
-    .first();
-  await sourceCell.click();
-  await expect(page.locator(".grid-context")).toContainText("A1");
-  await page
-    .getByRole("grid", { name: "Review table", exact: true })
-    .getByRole("button")
+  await openReport(page, "report.pdf");
+  await goToPage(page, 2);
+  await page.getByRole("button", { name: /^Activity/ }).click();
+  const activity = page.getByRole("dialog", { name: "Activity" });
+  await expect(activity).toBeVisible();
+  await expect(
+    activity.getByRole("heading", { name: "Extraction queue" }),
+  ).toBeVisible();
+  await expect(
+    activity.getByRole("heading", { name: "Extraction runs" }),
+  ).toBeVisible();
+  await expect(activity).toContainText(
+    /Synthetic test fixture|Conversion completed/,
+  );
+  await expect(activity).toContainText("Pages 2");
+
+  await activity
+    .getByRole("button", { name: /^Open / })
     .first()
-    .focus();
-  await page.keyboard.press("Enter");
-  await expect(page.getByLabel("Cell text", { exact: true })).toBeFocused();
-  const output = path.resolve("../.cache/workspace-redesign");
-  mkdirSync(output, { recursive: true });
-  async function settledSource() {
-    await expect(page.getByLabel("Original page", { exact: true })).toHaveValue(
-      "2",
-    );
-    await expect(page.getByTestId("source-image")).toBeVisible();
-    await expect(page.getByTestId("source-image")).toHaveJSProperty(
-      "complete",
-      true,
-    );
-    expect(
-      await page
-        .getByTestId("source-image")
-        .evaluate((image: HTMLImageElement) => image.naturalWidth),
-    ).toBeGreaterThan(0);
-  }
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await settledSource();
-  await page.screenshot({ path: path.join(output, "desktop-edit.png") });
-  await page
-    .getByRole("button", { name: "Source: 1,234.50", exact: true })
     .click();
-  await page.getByLabel("Cell text", { exact: true }).fill("123450");
-  await page.getByLabel("Cell text", { exact: true }).press("Control+Enter");
-  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
-  await page.getByRole("tab", { name: /^Checks/ }).click();
-  const next = page.getByRole("button", {
-    name: "Next unresolved issue",
-    exact: true,
+  await expect(activity).toHaveCount(0);
+  await expect(page.getByRole("grid", { name: "Review table" })).toBeVisible();
+});
+
+test("extraction validates pages and reports its queued work", async ({
+  page,
+}) => {
+  await openReport(page, "report.pdf");
+  await page
+    .locator(".docbar-actions")
+    .getByRole("button", { name: "Extract page", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog", { name: "Extract tables" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Pages").fill("9");
+  await dialog.getByRole("button", { name: "Start extraction" }).click();
+  await expect(dialog.getByRole("alert")).toContainText(
+    "Page 9 is outside this report.",
+  );
+
+  await dialog.getByLabel("Pages").fill("1");
+  await dialog.getByRole("button", { name: "Start extraction" }).click();
+  await expect(page.locator(".toast")).toContainText(
+    "Extraction queued for page 1.",
+  );
+  const activity = page.getByRole("dialog", { name: "Activity" });
+  await expect(activity).toBeVisible();
+  await expect(activity.locator(".task-list")).toContainText("Pages 1");
+  await page.keyboard.press("Escape");
+  await expect(activity).toHaveCount(0);
+});
+
+test("drawing a source region creates a blank manual table with honest geometry", async ({
+  page,
+}) => {
+  await openReport(page, "report.pdf");
+  await goToPage(page, 2);
+  await page.getByRole("button", { name: "Select region" }).click();
+  await expect(page.getByRole("button", { name: "Drawing…" })).toBeVisible();
+
+  const image = page.getByTestId("source-image");
+  const box = await image.boundingBox();
+  if (!box) throw new Error("Original source image unavailable");
+  await page.mouse.move(box.x + 60, box.y + 124);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 480, box.y + 252, { steps: 8 });
+  await page.mouse.up();
+
+  await expect(page.locator(".region-help-active")).toContainText(
+    "Region selected · page 2",
+  );
+  await page.getByRole("button", { name: "Manual table", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Create a manual table" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Rows").fill("2");
+  await dialog.getByLabel("Columns").fill("3");
+  await dialog.getByRole("button", { name: "Create grid" }).click();
+
+  await expect(page).toHaveURL(/\/tables\/[0-9a-f-]+$/);
+  const grid = page.getByRole("grid", { name: "Review table" });
+  await expect(grid).toHaveAttribute("aria-rowcount", "2");
+  await expect(grid).toHaveAttribute("aria-colcount", "3");
+  await expect(reviewProgress(page)).toContainText("0/6");
+  await expect(
+    page.getByText("Exact cell location is unavailable."),
+  ).toBeVisible();
+});
+
+test("a dirty edit blocks leaving until it is saved or discarded", async ({
+  page,
+}) => {
+  await openPageTwoTable(page);
+  const editor = page.locator("textarea[data-cell-text-editor]");
+  await editor.fill("1234.51");
+  await page.getByRole("tab", { name: "Page overview" }).click();
+  await expect(page.locator(".toast")).toContainText(
+    "Save or discard the open edit before leaving this table.",
+  );
+  await expect(page).toHaveURL(/\/tables\/[0-9a-f-]+$/);
+  await expect(editor).toHaveValue("1234.51");
+
+  await editor.press("Escape");
+  await expect(editor).toHaveValue("1,234.50");
+  await page.getByRole("tab", { name: "Page overview" }).click();
+  await expect(page).toHaveURL(/\/pages\/2$/);
+});
+
+test("a removed table can be restored into a fresh review", async ({
+  page,
+}) => {
+  await openPageTwoTable(page);
+  await page.getByRole("tab", { name: "More" }).click();
+  await page.getByRole("button", { name: /Revision details/ }).click();
+
+  await page.getByRole("button", { name: "Remove table" }).click();
+  let dialog = page.getByRole("dialog", {
+    name: "Remove this table from active work?",
   });
-  await expect(next).toBeEnabled();
-  await next.click();
-  await expect(page.locator(".issue-card.active-issue")).toBeVisible();
-  await settledSource();
-  await page.screenshot({ path: path.join(output, "desktop-checks.png") });
-  await page.setViewportSize({ width: 1100, height: 800 });
-  await settledSource();
-  await page.screenshot({ path: path.join(output, "laptop.png") });
+  await expect(dialog).toContainText("Removed tables");
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page.getByRole("grid", { name: "Review table" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Remove table" }).click();
+  dialog = page.getByRole("dialog", {
+    name: "Remove this table from active work?",
+  });
+  await dialog.getByRole("button", { name: "Remove table" }).click();
+  await expect(page).toHaveURL(/\/pages\/2$/);
+  await expect(
+    page.getByRole("heading", { name: "Tables on page 2" }),
+  ).toBeVisible();
+
+  await page.getByText("Removed tables (1)").click();
+  await page.getByRole("button", { name: "Restore", exact: true }).click();
+  await expect(page.getByRole("grid", { name: "Review table" })).toBeVisible();
+  await expect(reviewProgress(page)).toContainText("0/12");
+});
+
+test("the mobile workspace switches between source and table without overflow", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator(".inspector-body").hover();
-  await page.mouse.wheel(0, 1200);
-  await page.getByRole("tab", { name: "Edit cell", exact: true }).click();
-  await expect(page.getByLabel("Cell text", { exact: true })).toBeVisible();
-  await expect
-    .poll(async () => {
-      const panel = await page.locator(".inspector-body").boundingBox();
-      const field = await page
-        .getByLabel("Cell text", { exact: true })
-        .boundingBox();
-      return (
-        !!panel &&
-        !!field &&
-        field.y >= panel.y &&
-        field.y + field.height <= panel.y + panel.height
-      );
-    })
-    .toBe(true);
+  await openPageTwoTable(page);
+  await expect(page.getByRole("grid", { name: "Review table" })).toBeVisible();
+
+  const switcher = page.getByRole("group", { name: "Workspace view" });
+  await switcher.getByRole("button", { name: "Source", exact: true }).click();
+  await expect(page.getByTestId("source-image")).toBeVisible();
+  await switcher.getByRole("button", { name: "Table", exact: true }).click();
+  await expect(page.getByRole("grid", { name: "Review table" })).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await page.screenshot({ path: path.join(output, "phone-edit.png") });
-  await page
-    .getByRole("button", { name: "Source: 123450", exact: true })
-    .click();
-  await page.getByLabel("Cell text", { exact: true }).fill("1,234.50");
-  await page.getByLabel("Cell text", { exact: true }).press("Control+Enter");
-  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Source", exact: true }).click();
-  await expect(
-    page.getByRole("region", { name: "Scrollable report pages", exact: true }),
-  ).toBeVisible();
-  await settledSource();
-  await page.screenshot({ path: path.join(output, "phone-source.png") });
 });
