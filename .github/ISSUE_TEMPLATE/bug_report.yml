@@ -1,0 +1,67 @@
+name: Bug report
+description: Report a reproducible problem with Table Review
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include private report data, passwords, keys or deployment secrets in this issue.
+        For a security vulnerability, use the repository's Security tab instead.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the actual behaviour and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the smallest reliable sequence and the kind of PDF page involved.
+      placeholder: |
+        1. Start the deployment with ...
+        2. Upload a two-page digital PDF ...
+        3. Select page 1 and choose ...
+        4. See ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version
+      description: The commit SHA, tag or image you ran.
+      placeholder: 28e158b
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Extraction or OCR
+        - Review or editing
+        - Export
+        - Accounts or sessions
+        - Deployment or Docker
+        - Web interface
+        - Evaluation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Python, Node, Docker and PostgreSQL versions as relevant.
+      placeholder: Windows 11, Python 3.12, Docker Desktop 4.x, PostgreSQL 17
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Remove paths, usernames, tokens and document content before pasting.
+      render: text
+    validations:
+      required: false

@@ -99,7 +99,7 @@ The OpenAPI schema is recorded at [docs/api/openapi.json](docs/api/openapi.json)
 
 ## Contributing
 
-Issues and pull requests are welcome. For substantial changes, open an issue first so the approach can be discussed. Run the test commands above before opening a pull request.
+Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, checks and pull request expectations. For substantial changes, open an issue first so the approach can be discussed. This project follows the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Security and privacy
 

@@ -1,0 +1,46 @@
+name: Feature request
+description: Propose a change or an addition to Table Review
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project is local-first and deliberately conservative about accuracy, privacy and hosted claims.
+        Explain the user need before the implementation.
+  - type: textarea
+    id: need
+    attributes:
+      label: User need
+      description: What problem should this solve, and for whom?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: Describe the change at a level someone could review. Note alternatives you considered.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Extraction or OCR
+        - Review or editing
+        - Export
+        - Accounts or sessions
+        - Deployment or Docker
+        - Web interface
+        - Evaluation
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and limitations
+      description: Privacy, security, accuracy, performance or maintenance effects.
+    validations:
+      required: false

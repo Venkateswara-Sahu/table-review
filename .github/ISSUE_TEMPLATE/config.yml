@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Venkateswara-Sahu/table-review/security/advisories/new
+    about: Report a vulnerability privately. Do not open a public issue.
+  - name: Local deployment guide
+    url: https://github.com/Venkateswara-Sahu/table-review/blob/main/docs/local-deployment.md
+    about: Setup, configuration, logs and troubleshooting.
