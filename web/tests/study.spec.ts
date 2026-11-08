@@ -176,7 +176,7 @@ for (const condition of [
       page.getByRole("button", { name: "Finish", exact: true }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("tab", { name: "More", exact: true }),
+      page.getByRole("tab", { name: "Details", exact: true }),
     ).toHaveCount(0);
     const checks = page.getByRole("tab", { name: /^Checks/ });
     if (condition === "review_with_checks") {

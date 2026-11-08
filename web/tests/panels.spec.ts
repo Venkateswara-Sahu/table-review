@@ -15,14 +15,24 @@ function view(page: Page) {
 }
 
 async function openMoreSection(page: Page, name: RegExp) {
-  await page.getByRole("tab", { name: "More", exact: true }).click();
+  await page.getByRole("tab", { name: "Details", exact: true }).click();
   await page.getByRole("button", { name }).click();
+}
+
+/** The synthetic report has no detected header row; mark row 1 and column 1. */
+async function setHeaderRoles(page: Page) {
+  await openMoreSection(page, /^Table structure/);
+  await page.getByLabel("Header rows").fill("1");
+  await page.getByLabel("Row label columns").fill("1");
+  await page.getByRole("button", { name: "Save header roles" }).click();
+  await expectSaved(page);
 }
 
 test("source context is confirmed, hovers its evidence and reopens after reload", async ({
   page,
 }) => {
   await openPageTwoTable(page);
+  await setHeaderRoles(page);
   await openMoreSection(page, /^Source context/);
   await expect(
     page.getByRole("heading", { name: "Header path" }),
@@ -94,6 +104,7 @@ test("a declared subtotal matches, then needs confirmation after its total chang
 }) => {
   test.setTimeout(120_000);
   await openPageTwoTable(page);
+  await setHeaderRoles(page);
   await openMoreSection(page, /^Source context/);
 
   for (const label of ["reporting period", "currency", "scale wording"]) {
@@ -135,11 +146,43 @@ test("a declared subtotal matches, then needs confirmation after its total chang
   await page.getByRole("tab", { name: "Cell", exact: true }).click();
   await cell(page, 3, 1).click();
   await page.locator("textarea[data-cell-text-editor]").fill("1112.05");
-  await page.getByRole("button", { name: "Save value", exact: true }).click();
-  await expectSaved(page);
+  await page
+    .getByRole("button", { name: "Confirm value", exact: true })
+    .click();
+  await expect(page.locator(".review-dirty-chip")).toContainText(
+    "confirmed against source",
+  );
   await openMoreSection(page, /^Declared subtotals/);
-  await expect(results).toContainText(/Differs|Confirm again|Unavailable/);
+  await expect(results).toContainText("Unavailable");
+  await expect(results).toContainText("Confirm current source context");
   await expect(results).not.toContainText("Within tolerance");
+
+  await openMoreSection(page, /^Source context/);
+  await cell(page, 3, 1).click();
+  for (const label of ["reporting period", "currency", "scale wording"]) {
+    await page
+      .getByRole("button", {
+        name: `Confirm ${label}`,
+        exact: true,
+      })
+      .click();
+    await expectSaved(page);
+  }
+  await openMoreSection(page, /^Declared subtotals/);
+  await expect(results).toContainText("Confirm again");
+  await expect(results).not.toContainText("Within tolerance");
+
+  await page.getByRole("button", { name: "Review relation" }).click();
+  await page
+    .getByRole("checkbox", {
+      name: "I checked the source scope and the selected relation",
+    })
+    .check();
+  await page
+    .getByRole("button", { name: "Confirm subtotal", exact: true })
+    .click();
+  await expectSaved(page);
+  await expect(results).toContainText("Differs");
 });
 
 test("history explains the edit and restores the original as a fresh draft", async ({
@@ -151,8 +194,12 @@ test("history explains the edit and restores the original as a fresh draft", asy
     .click();
   await expect(reviewProgress(page)).toContainText("1/12");
   await page.locator("textarea[data-cell-text-editor]").fill("1,234.51");
-  await page.getByRole("button", { name: "Save value", exact: true }).click();
-  await expectSaved(page);
+  await page
+    .getByRole("button", { name: "Confirm value", exact: true })
+    .click();
+  await expect(page.locator(".review-dirty-chip")).toContainText(
+    "confirmed against source",
+  );
 
   await openMoreSection(page, /^History and restore/);
   const timeline = page.locator(".timeline-list");

@@ -4,7 +4,6 @@ import type { ReviewState, TableView } from "../src/api/models";
 import {
   apiHeaders,
   cell,
-  expectSaved,
   openPageTwoTable,
   reviewProgress,
   tableIdFromUrl,
@@ -59,6 +58,10 @@ async function downloadLatest(page: Page) {
 
 test("a draft export is explicit before approval", async ({ page }, info) => {
   await openPageTwoTable(page);
+  const tableId = tableIdFromUrl(page);
+  const view = (await (
+    await page.request.get(`/api/v1/tables/${tableId}`)
+  ).json()) as TableView;
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Finish this table" });
   await expect(dialog).toBeVisible();
@@ -76,7 +79,10 @@ test("a draft export is explicit before approval", async ({ page }, info) => {
   );
   await dialog.getByRole("button", { name: "Workbook", exact: true }).click();
   const request = await posting;
-  expect(request.postDataJSON()).toMatchObject({ format: "workbook" });
+  expect(request.postDataJSON()).toEqual({
+    revision_id: view.revision.id,
+    format: "workbook",
+  });
   await expect(page.locator(".toast")).toContainText("Workbook export started");
   await expect(dialog.getByText("Workbook (.xlsx)")).toBeVisible({
     timeout: 30_000,
@@ -84,6 +90,7 @@ test("a draft export is explicit before approval", async ({ page }, info) => {
   await expect(dialog).toContainText("Draft");
 
   const download = await downloadLatest(page);
+  expect(download.suggestedFilename()).toContain(view.revision.id);
   expect(download.suggestedFilename()).toMatch(
     /^table-draft-[0-9a-f-]+\.xlsx$/,
   );
@@ -101,16 +108,22 @@ test("approval with warnings exports the pinned warning record and an edit clear
   test.setTimeout(120_000);
   await openPageTwoTable(page);
   await editor(page).fill("1234.50");
-  await page.getByRole("button", { name: "Save value", exact: true }).click();
-  await expectSaved(page);
+  await page
+    .getByRole("button", { name: "Confirm value", exact: true })
+    .click();
+  await expect(reviewProgress(page)).toContainText("1/12");
 
   await cell(page, 0, 0).click();
   await cell(page, 3, 2).click({ modifiers: ["Shift"] });
-  await expect(page.locator(".bulk-strip")).toContainText("12 cells selected");
+  await expect(page.locator(".verdict-scope")).toContainText("12 selected");
   await page
-    .getByRole("button", { name: "Confirm values", exact: true })
+    .getByRole("button", { name: "Confirm selection", exact: true })
     .click();
   await expect(reviewProgress(page)).toContainText("12/12");
+  const approvedTableId = tableIdFromUrl(page);
+  const approvedView = (await (
+    await page.request.get(`/api/v1/tables/${approvedTableId}`)
+  ).json()) as TableView;
 
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   const preflight = page.getByRole("dialog", { name: "Finish this table" });
@@ -127,11 +140,21 @@ test("approval with warnings exports the pinned warning record and an edit clear
   });
   await expect(approved).toBeVisible();
   await expect(approved).toContainText("Reviewed with warnings");
+  const posting = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && request.url().endsWith("/exports"),
+  );
   await approved
     .getByRole("button", { name: "Export workbook", exact: true })
     .click();
+  const request = await posting;
+  expect(request.postDataJSON()).toEqual({
+    revision_id: approvedView.revision.id,
+    format: "workbook",
+  });
   const download = await downloadLatest(page);
   expect(download.suggestedFilename()).toContain("reviewed_with_warnings");
+  expect(download.suggestedFilename()).toContain(approvedView.revision.id);
   expect(download.suggestedFilename()).toMatch(/\.xlsx$/);
   await download.saveAs(info.outputPath("reviewed-warnings.xlsx"));
   expect(
@@ -150,14 +173,21 @@ test("approval with warnings exports the pinned warning record and an edit clear
 
   await cell(page, 1, 1).click();
   await editor(page).fill("1234.51");
-  await page.getByRole("button", { name: "Save value", exact: true }).click();
-  await expectSaved(page);
+  await page
+    .getByRole("button", { name: "Confirm value", exact: true })
+    .click();
+  await expect(page.locator(".review-dirty-chip")).toContainText(
+    "confirmed against source",
+  );
+  await expect(reviewProgress(page)).toContainText("12/12");
   await expect(page.locator(".review-approved-inline")).toHaveCount(0);
-  await expect(reviewProgress(page)).toContainText("11/12");
 
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   const invalidated = page.getByRole("dialog", { name: "Finish this table" });
-  await expect(invalidated).toContainText("Review the remaining 1 cell");
+  await expect(invalidated).toContainText("1 unresolved check warning");
+  await expect(invalidated).toContainText(
+    "This revision can only be approved with warnings",
+  );
   await expect(
     invalidated.getByRole("button", { name: "Approve table", exact: true }),
   ).toBeDisabled();
@@ -166,7 +196,7 @@ test("approval with warnings exports the pinned warning record and an edit clear
       name: "Approve with warnings",
       exact: true,
     }),
-  ).toBeDisabled();
+  ).toBeEnabled();
 
   const tableId = tableIdFromUrl(page);
   const view = (await (

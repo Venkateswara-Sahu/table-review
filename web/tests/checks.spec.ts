@@ -1,7 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import {
   cell,
-  expectSaved,
   gridCell,
   openBlankManualTable,
   openPageTwoTable,
@@ -44,7 +43,9 @@ test("unreviewed blank cells stay open until the source decision is recorded", a
   ).toHaveCount(5);
 
   await page.getByRole("tab", { name: "Cell", exact: true }).click();
-  await page.getByRole("button", { name: /Next unchecked/ }).click();
+  await page
+    .getByRole("button", { name: "Next unchecked cell", exact: true })
+    .click();
   await expect(editor(page)).toBeFocused();
   await expect(editor(page)).toHaveValue("");
   await expect(page.locator(".grid-footnote").first()).toContainText("1:2");
@@ -115,8 +116,12 @@ test("an edit that drops a source literal raises a coverage discrepancy", async 
 }) => {
   await openPageTwoTable(page);
   await editor(page).fill("123450");
-  await page.getByRole("button", { name: "Save value", exact: true }).click();
-  await expectSaved(page);
+  await page
+    .getByRole("button", { name: "Confirm value", exact: true })
+    .click();
+  await expect(page.locator(".review-dirty-chip")).toContainText(
+    "confirmed against source",
+  );
 
   await page.getByRole("tab", { name: /^Checks/ }).click();
   const issue = page
@@ -155,8 +160,12 @@ test("an edit that drops a source literal raises a coverage discrepancy", async 
   await page.getByRole("tab", { name: "Cell", exact: true }).click();
   await cell(page, 1, 1).click();
   await editor(page).fill("1,234.50");
-  await page.getByRole("button", { name: "Save value", exact: true }).click();
-  await expectSaved(page);
+  await page
+    .getByRole("button", { name: "Confirm value", exact: true })
+    .click();
+  await expect(page.locator(".review-dirty-chip")).toContainText(
+    "confirmed against source",
+  );
   await page.getByRole("tab", { name: /^Checks/ }).click();
   await expect(
     page.getByRole("region", { name: "Source checks" }),

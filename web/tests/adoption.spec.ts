@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import type { ReviewState, Run, TableView } from "../src/api/models";
-import { expectSaved, openPageTwoTable, tableIdFromUrl } from "./helpers";
+import { cell, openPageTwoTable, tableIdFromUrl } from "./helpers";
 
 function documentIdFromUrl(page: Page) {
   const parts = new URL(page.url()).pathname.split("/").filter(Boolean);
@@ -12,8 +12,12 @@ async function rerunAndCompare(page: Page) {
   await page
     .locator("textarea[data-cell-text-editor]")
     .fill("retained earlier correction");
-  await page.getByRole("button", { name: "Save value", exact: true }).click();
-  await expectSaved(page);
+  await page
+    .getByRole("button", { name: "Confirm value", exact: true })
+    .click();
+  await expect(page.locator(".review-dirty-chip")).toContainText(
+    "confirmed against source",
+  );
 
   const documentId = documentIdFromUrl(page);
   const tableId = tableIdFromUrl(page);
@@ -21,7 +25,11 @@ async function rerunAndCompare(page: Page) {
     await page.request.get(`/api/v1/tables/${tableId}`)
   ).json()) as TableView;
 
-  await page.getByRole("button", { name: "Extract page", exact: true }).click();
+  await page.getByRole("button", { name: "Page overview" }).click();
+  await page
+    .locator(".pane-main")
+    .getByRole("button", { name: /^Extract page/ })
+    .click();
   const dialog = page.getByRole("dialog", { name: "Extract tables" });
   await dialog.getByRole("button", { name: "Start extraction" }).click();
   const activity = page.getByRole("dialog", { name: "Activity" });
@@ -55,14 +63,15 @@ async function rerunAndCompare(page: Page) {
   await expect(panel).toBeVisible();
   await expect(panel).toContainText("retained earlier correction");
   await expect(panel).toContainText("1,234.50");
-  return { activity, panel, tableId, before };
+  return { activity, panel, documentId, tableId, before };
 }
 
 test("a rerun compares by position and adopts only the candidate the reviewer confirms", async ({
   page,
 }) => {
   test.setTimeout(150_000);
-  const { activity, panel, tableId, before } = await rerunAndCompare(page);
+  const { activity, panel, documentId, tableId, before } =
+    await rerunAndCompare(page);
 
   await expect(
     panel.getByRole("button", { name: "Adopt as new draft", exact: true }),
@@ -71,10 +80,15 @@ test("a rerun compares by position and adopts only the candidate the reviewer co
     .getByRole("button", { name: "Keep current", exact: true })
     .click();
   await expect(panel).toHaveCount(0);
+
+  await page.goto(`/reports/${documentId}/pages/2/tables/${tableId}`);
+  await expect(page.getByRole("grid", { name: "Review table" })).toBeVisible();
+  await cell(page, 1, 1).click();
   await expect(page.locator("textarea[data-cell-text-editor]")).toHaveValue(
     "retained earlier correction",
   );
 
+  await page.getByRole("button", { name: /^Activity/ }).click();
   await activity
     .getByRole("button", { name: "Compare replacement", exact: true })
     .first()

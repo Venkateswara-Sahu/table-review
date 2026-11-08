@@ -302,7 +302,6 @@ export function ChecksPanel({
                   <div className="row">
                     <Button
                       size="sm"
-                      variant="primary"
                       icon={<Check size={13} />}
                       disabled={busy || dirty || !reason.trim()}
                       onClick={() => {
@@ -314,6 +313,7 @@ export function ChecksPanel({
                     </Button>
                     <Button
                       size="sm"
+                      variant="ink"
                       disabled={busy || dirty || !reason.trim()}
                       onClick={() => {
                         onDecision(issue.id, "resolved", reason.trim());

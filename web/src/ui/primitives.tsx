@@ -15,7 +15,8 @@ export function cx(
   return values.filter(Boolean).join(" ");
 }
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "quiet";
+type ButtonVariant =
+  "primary" | "secondary" | "ghost" | "danger" | "quiet" | "ink";
 type ButtonSize = "sm" | "md";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -201,48 +202,6 @@ export function Badge({
       {dot && <span className="badge-dot" aria-hidden="true" />}
       {children}
     </span>
-  );
-}
-
-export function Progress({
-  value,
-  max = 100,
-  label,
-  tone = "accent",
-  showValue = false,
-  hideLabel = false,
-}: {
-  value: number;
-  max?: number;
-  label?: string;
-  tone?: "accent" | "success" | "warning";
-  showValue?: boolean;
-  hideLabel?: boolean;
-}) {
-  const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
-  return (
-    <div className={cx("progress", `progress-${tone}`)}>
-      {label && !hideLabel && (
-        <div className="progress-meta">
-          <span>{label}</span>
-          {showValue && (
-            <span className="num">
-              {value} / {max}
-            </span>
-          )}
-        </div>
-      )}
-      <div
-        className="progress-track"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={max}
-        aria-valuenow={value}
-        aria-label={label ?? "Progress"}
-      >
-        <span className="progress-fill" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
   );
 }
 

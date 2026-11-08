@@ -2,12 +2,14 @@ import { useState } from "react";
 import {
   AlertTriangle,
   ArrowUpRight,
+  ChevronDown,
   CircleSlash2,
   Clock3,
   Download,
   FileSearch,
   LoaderCircle,
   RotateCcw,
+  Table2,
   XCircle,
 } from "lucide-react";
 import { useCancelTask, useRetryTask, useRuns } from "../../api/hooks";
@@ -17,16 +19,94 @@ import { Badge, Button, InlineNote, Spinner } from "../../ui/primitives";
 import { Dialog, DialogContent } from "../../ui/dialog";
 import { AdoptionPanel } from "../review/AdoptionPanel";
 
-function taskLabel(task: Task) {
+function taskPages(task: Task) {
   const pages = Array.isArray(task.input.pages)
     ? (task.input.pages as number[])
     : [];
   const region = task.input.region as { page?: number } | null | undefined;
-  return region
-    ? `Region · page ${region.page}`
-    : pages.length
-      ? `Pages ${pages.join(", ")}`
-      : task.kind.replaceAll("_", " ");
+  if (region?.page && !pages.includes(region.page))
+    return [...pages, region.page].sort((a, b) => a - b);
+  return pages.sort((a, b) => a - b);
+}
+
+function pageGroupLabel(tasks: Task[]) {
+  const pages = taskPages(tasks[0]);
+  if (!pages.length) return "Document work";
+  return pages.length === 1 ? `Page ${pages[0]}` : `Pages ${pages.join(", ")}`;
+}
+
+function taskStatus(task: Task) {
+  switch (task.state) {
+    case "queued":
+      return { label: "Queued", tone: "warning" as const };
+    case "running":
+      return { label: "Extracting", tone: "warning" as const };
+    case "failed":
+      return { label: "Extraction stopped", tone: "danger" as const };
+    case "cancelled":
+      return { label: "Cancelled", tone: "neutral" as const };
+    default:
+      return { label: "Ready", tone: "success" as const };
+  }
+}
+
+function taskSummary(task: Task) {
+  if (task.state === "failed")
+    return task.failure_code === "unsupported_page"
+      ? "This page has no usable digital text."
+      : task.failure_code === "ocr_unavailable"
+        ? "Offline OCR models were unavailable."
+        : "Extraction stopped before it finished.";
+  if (task.state === "queued") return "Waiting for the extractor.";
+  if (task.state === "running") return "Reading the page and building a draft.";
+  if (task.state === "cancelled") return "Stopped on request.";
+  if (task.result?.conversion_outcome === "partial_success")
+    return "Completed with warnings. Inspect the evidence before trusting every cell.";
+  if (task.kind !== "extract") return "Completed.";
+  return "Completed. Saved tables are ready to review.";
+}
+
+function timeOf(value: string) {
+  return new Date(value).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function isActive(task: Task) {
+  return task.state === "queued" || task.state === "running";
+}
+
+function taskTables(task: Task) {
+  const ids = task.result?.table_ids;
+  return Array.isArray(ids)
+    ? ids.filter((id): id is string => typeof id === "string")
+    : [];
+}
+
+function groupTasks(tasks: Task[]) {
+  const groups = new Map<string, Task[]>();
+  for (const task of tasks) {
+    const key = taskPages(task).join(",") || "other";
+    groups.set(key, [...(groups.get(key) ?? []), task]);
+  }
+  return [...groups.entries()]
+    .map(([key, items]) => ({
+      key,
+      tasks: [...items].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      ),
+    }))
+    .sort((a, b) => {
+      const activeA = a.tasks.some(isActive) ? 1 : 0;
+      const activeB = b.tasks.some(isActive) ? 1 : 0;
+      if (activeA !== activeB) return activeB - activeA;
+      return (
+        new Date(b.tasks[0].created_at).getTime() -
+        new Date(a.tasks[0].created_at).getTime()
+      );
+    });
 }
 
 function outcome(run: Run) {
@@ -93,13 +173,65 @@ export function ActivityDrawer({
     }
   }
 
-  const activeTasks = tasks.filter(
-    (task) => task.state === "queued" || task.state === "running",
-  );
-  const pastTasks = tasks.filter(
-    (task) => task.state !== "queued" && task.state !== "running",
-  );
+  const groups = groupTasks(tasks);
+  const activeCount = tasks.filter(isActive).length;
   const runItems = runs.data?.items ?? [];
+
+  function taskRow(task: Task, { retry = true }: { retry?: boolean } = {}) {
+    return (
+      <li key={task.id} className={`task-row task-${task.state}`}>
+        <span className="task-icon" aria-hidden="true">
+          {isActive(task) ? (
+            <LoaderCircle className="button-spin" size={15} />
+          ) : task.state === "failed" ? (
+            <XCircle size={15} />
+          ) : task.state === "cancelled" ? (
+            <CircleSlash2 size={15} />
+          ) : (
+            <FileSearch size={15} />
+          )}
+        </span>
+        <div className="task-main">
+          <p>{task.kind.replaceAll("_", " ")}</p>
+          <p className="tiny muted">
+            attempt {task.attempt_count} ·{" "}
+            {new Date(task.created_at).toLocaleString()}
+          </p>
+          {task.failure_code && (
+            <p className="tiny error">
+              {task.failure_code === "unsupported_page"
+                ? "A selected page has no usable digital text."
+                : task.failure_code === "ocr_unavailable"
+                  ? "Offline OCR models are unavailable."
+                  : task.failure_code.replaceAll("_", " ")}
+            </p>
+          )}
+        </div>
+        <div className="task-actions">
+          {isActive(task) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={task.cancellation_requested}
+              onClick={() => void cancelTask(task.id)}
+            >
+              {task.cancellation_requested ? "Stopping…" : "Cancel"}
+            </Button>
+          )}
+          {(task.state === "failed" || task.state === "cancelled") && retry && (
+            <Button
+              size="sm"
+              variant="ghost"
+              icon={<RotateCcw size={13} />}
+              onClick={() => void retryTask(task.id)}
+            >
+              Retry
+            </Button>
+          )}
+        </div>
+      </li>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -116,10 +248,10 @@ export function ActivityDrawer({
         <div className="activity-drawer">
           <section className="activity-section">
             <div className="activity-head">
-              <h3>Extraction queue</h3>
-              {!!activeTasks.length && (
+              <h3>By page</h3>
+              {!!activeCount && (
                 <Badge tone="warning" dot>
-                  {activeTasks.length} active
+                  {activeCount} active
                 </Badge>
               )}
             </div>
@@ -128,78 +260,110 @@ export function ActivityDrawer({
                 No extraction work yet. Start one to create tables.
               </p>
             )}
-            <ul className="task-list">
-              {[...activeTasks, ...pastTasks].map((task) => (
-                <li key={task.id} className={`task-row task-${task.state}`}>
-                  <span className="task-icon" aria-hidden="true">
-                    {task.state === "queued" || task.state === "running" ? (
-                      <LoaderCircle className="button-spin" size={15} />
-                    ) : task.state === "failed" ? (
-                      <XCircle size={15} />
-                    ) : task.state === "cancelled" ? (
-                      <CircleSlash2 size={15} />
-                    ) : (
-                      <FileSearch size={15} />
-                    )}
-                  </span>
-                  <div className="task-main">
-                    <p>
-                      {taskLabel(task)}
-                      <Badge
-                        tone={
-                          task.state === "succeeded"
-                            ? "success"
-                            : task.state === "failed"
-                              ? "danger"
-                              : task.state === "cancelled"
-                                ? "neutral"
-                                : "warning"
-                        }
-                        className="badge-mini"
-                      >
-                        {task.state}
-                      </Badge>
-                    </p>
-                    <p className="tiny muted">
-                      {task.kind} · attempt {task.attempt_count} ·{" "}
-                      {new Date(task.created_at).toLocaleString()}
-                    </p>
-                    {task.failure_code && (
-                      <p className="tiny error">
-                        {task.failure_code === "unsupported_page"
-                          ? "A selected page has no usable digital text."
-                          : task.failure_code === "ocr_unavailable"
-                            ? "Offline OCR models are unavailable."
-                            : task.failure_code.replaceAll("_", " ")}
-                      </p>
-                    )}
+            {groups.map((group) => {
+              const active = group.tasks.filter(isActive);
+              const past = group.tasks.filter((task) => !isActive(task));
+              const lead = active[0] ?? past[0];
+              if (!lead) return null;
+              const status = taskStatus(lead);
+              const older = active.length ? past : past.slice(1);
+              const savedIds = [
+                ...new Set(group.tasks.flatMap((task) => taskTables(task))),
+              ];
+              return (
+                <div className="activity-group" key={group.key}>
+                  <div className="activity-group-head">
+                    <span className={`dot ${lead.state}`} aria-hidden="true" />
+                    <strong>{pageGroupLabel(group.tasks)}</strong>
+                    <Badge tone={status.tone} className="badge-mini">
+                      {status.label}
+                    </Badge>
+                    <span className="activity-time">
+                      {timeOf(lead.created_at)}
+                    </span>
                   </div>
-                  <div className="task-actions">
-                    {(task.state === "queued" || task.state === "running") && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={task.cancellation_requested}
-                        onClick={() => void cancelTask(task.id)}
-                      >
-                        {task.cancellation_requested ? "Stopping…" : "Cancel"}
-                      </Button>
-                    )}
-                    {(task.state === "failed" ||
-                      task.state === "cancelled") && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        icon={<RotateCcw size={13} />}
-                        onClick={() => void retryTask(task.id)}
-                      >
-                        Retry
-                      </Button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  <p className="activity-summary">
+                    {taskSummary(lead)}
+                    {past.length > 1
+                      ? ` ${past.length} attempts kept; earlier work was not replaced.`
+                      : ""}
+                  </p>
+                  <ul className="task-list">
+                    {active.map((task) => taskRow(task))}
+                    {!active.length && taskRow(lead, { retry: false })}
+                  </ul>
+                  {(!!savedIds.length ||
+                    lead.state === "failed" ||
+                    lead.state === "cancelled") && (
+                    <div className="activity-saved">
+                      <span className="activity-saved-label">
+                        <Table2 size={13} aria-hidden="true" />
+                        {savedIds.length
+                          ? `${savedIds.length} saved table${
+                              savedIds.length === 1 ? "" : "s"
+                            }`
+                          : "No saved table"}
+                      </span>
+                      <div className="row">
+                        {savedIds.map((id, index) => (
+                          <Button
+                            key={id}
+                            size="sm"
+                            variant="ghost"
+                            icon={<ArrowUpRight size={12} />}
+                            onClick={() => onOpenTable(id)}
+                          >
+                            Open table
+                            {savedIds.length > 1 ? ` ${index + 1}` : ""}
+                          </Button>
+                        ))}
+                        {(lead.state === "failed" ||
+                          lead.state === "cancelled") && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            icon={<RotateCcw size={13} />}
+                            onClick={() => void retryTask(lead.id)}
+                          >
+                            Retry page
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {!!older.length && (
+                    <details className="activity-attempts">
+                      <summary className="attempt-head">
+                        <ChevronDown size={13} aria-hidden="true" />
+                        {older.length} earlier attempt
+                        {older.length === 1 ? "" : "s"}
+                        <span className="attempt-count">
+                          {timeOf(older[older.length - 1].created_at)} –{" "}
+                          {timeOf(older[0].created_at)}
+                        </span>
+                      </summary>
+                      <div className="timeline">
+                        {older.map((task) => (
+                          <div className="timeline-row" key={task.id}>
+                            <span className="timeline-dot" />
+                            <div className="timeline-main">
+                              <strong>{taskStatus(task).label}</strong>
+                              <span>
+                                {taskSummary(task).replace(/\.$/, "")} ·{" "}
+                                {task.kind.replaceAll("_", " ")}
+                              </span>
+                            </div>
+                            <span className="timeline-time">
+                              {timeOf(task.created_at)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              );
+            })}
           </section>
 
           <section className="activity-section">
@@ -299,7 +463,7 @@ export function ActivityDrawer({
                     )}
 
                     <div className="run-actions">
-                      {run.table_ids.map((id) => (
+                      {run.table_ids.map((id, index) => (
                         <Button
                           key={id}
                           size="sm"
@@ -307,7 +471,8 @@ export function ActivityDrawer({
                           icon={<ArrowUpRight size={12} />}
                           onClick={() => onOpenTable(id)}
                         >
-                          Open {id.slice(0, 8)}
+                          Open table
+                          {run.table_ids.length > 1 ? ` ${index + 1}` : ""}
                         </Button>
                       ))}
                       <Button

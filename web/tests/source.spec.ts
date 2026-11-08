@@ -74,7 +74,7 @@ test("rotated pages keep their shape and coarse references stay honest", async (
 }) => {
   await openReport(page, "rotated.pdf");
   await page
-    .getByRole("button", { name: "Review", exact: true })
+    .getByRole("button", { name: /Review table/ })
     .first()
     .click();
   await expect(page.getByRole("grid", { name: "Review table" })).toBeVisible();
@@ -88,7 +88,7 @@ test("rotated pages keep their shape and coarse references stay honest", async (
     .getByRole("button", { name: "Open", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Review", exact: true })
+    .getByRole("button", { name: /Review table/ })
     .first()
     .click();
   await expect(page.getByRole("grid", { name: "Review table" })).toBeVisible();

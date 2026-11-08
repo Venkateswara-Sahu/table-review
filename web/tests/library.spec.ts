@@ -27,7 +27,7 @@ test("the library filters and opens a report", async ({ page }) => {
   await expect(page).toHaveURL(/\/reports\/[0-9a-f-]+\/pages\/1$/);
   await expect(page.locator(".docbar-title h1")).toHaveText("report.pdf");
   await expect(
-    page.getByRole("heading", { name: "Tables on page 1" }),
+    page.getByRole("heading", { name: "Page 1", exact: true }),
   ).toBeVisible();
 });
 

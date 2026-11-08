@@ -232,7 +232,7 @@ export function AdoptionPanel({
         </label>
         <Button
           size="sm"
-          variant="primary"
+          variant="ink"
           icon={<Play size={13} />}
           disabled={!same || !replacement || busy}
           onClick={() => void adopt()}

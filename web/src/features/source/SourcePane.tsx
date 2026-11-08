@@ -261,86 +261,58 @@ export function SourcePane({
   const currentScale = scaleFor(page);
   return (
     <section className="source-pane" aria-label="Report source">
-      <div className="source-head">
-        <div className="source-head-title">
-          <h2>Source</h2>
-          <span className="source-page-count">
-            Page {visiblePage} of {pageCount}
-          </span>
-        </div>
-        <div className="source-toolbar">
-          <IconButton
-            label="Zoom out"
-            disabled={currentScale <= 0.25}
-            onClick={() => {
-              setZoom(Math.max(0.2, currentScale - 0.15));
-              setSizing("custom");
-            }}
-          >
-            <Minus size={15} />
-          </IconButton>
-          <span className="zoom-label num">
-            {Math.round(currentScale * 100)}%
-          </span>
-          <IconButton
-            label="Zoom in"
-            disabled={currentScale >= 3}
-            onClick={() => {
-              setZoom(Math.min(3, currentScale + 0.15));
-              setSizing("custom");
-            }}
-          >
-            <Plus size={15} />
-          </IconButton>
-          <Select
-            className="select-compact"
-            aria-label="Page sizing"
-            value={sizing}
-            onChange={(event) => setSizing(event.target.value)}
-          >
-            <option value="width">Fit width</option>
-            <option value="page">Fit page</option>
-            <option value="custom">Custom</option>
-          </Select>
-          <Button
-            size="sm"
-            variant={selecting ? "primary" : "secondary"}
-            aria-pressed={selecting}
-            icon={<ScanLine size={14} />}
-            onClick={() => {
-              if (selecting) cancel();
-              else {
-                setSelecting(true);
-                onRegion(null);
-              }
-            }}
-          >
-            {selecting ? "Drawing…" : "Select region"}
-          </Button>
-        </div>
+      <div className="source-tools">
+        <IconButton
+          label="Zoom out"
+          disabled={currentScale <= 0.25}
+          onClick={() => {
+            setZoom(Math.max(0.2, currentScale - 0.15));
+            setSizing("custom");
+          }}
+        >
+          <Minus size={14} />
+        </IconButton>
+        <span className="zoom-value num">
+          {Math.round(currentScale * 100)}%
+        </span>
+        <IconButton
+          label="Zoom in"
+          disabled={currentScale >= 3}
+          onClick={() => {
+            setZoom(Math.min(3, currentScale + 0.15));
+            setSizing("custom");
+          }}
+        >
+          <Plus size={14} />
+        </IconButton>
+        <Select
+          className="select-compact source-fit"
+          aria-label="Page sizing"
+          value={sizing}
+          onChange={(event) => setSizing(event.target.value)}
+        >
+          <option value="width">Fit width</option>
+          <option value="page">Fit page</option>
+          <option value="custom">Custom</option>
+        </Select>
+        <span className="rule-v" aria-hidden="true" />
+        <Button
+          size="sm"
+          variant={selecting ? "primary" : "ghost"}
+          className="source-region-button"
+          aria-pressed={selecting}
+          icon={<ScanLine size={13} />}
+          onClick={() => {
+            if (selecting) cancel();
+            else {
+              setSelecting(true);
+              onRegion(null);
+            }
+          }}
+        >
+          {selecting ? "Drawing…" : "Select region"}
+        </Button>
       </div>
-
-      {reference ? (
-        <div className="source-caption">
-          <span>
-            {referenceLabel ? (
-              <>
-                Source for <span className="mono">{referenceLabel}</span>
-              </>
-            ) : (
-              "Source location"
-            )}
-          </span>
-          <span className="muted">
-            page {reference.page} · {reference.precision} reference
-          </span>
-        </div>
-      ) : (
-        <div className="source-caption">
-          <span>Scroll to read</span>
-          <span className="muted">Select a cell to compare</span>
-        </div>
-      )}
 
       {reference && reference.precision !== "cell" && (
         <div className="source-precision-note">
@@ -413,10 +385,31 @@ export function SourcePane({
         )}
       </div>
       <div className="source-foot">
-        <span>
-          Page {visiblePage} of {pageCount}
+        <span className="page-pill">
+          Page <b>{visiblePage}</b>
+          <span className="page-pill-total">/ {pageCount}</span>
         </span>
-        <span>Scroll to read · Click a cell box to compare</span>
+        {reference ? (
+          <div className="source-caption">
+            <span>
+              {referenceLabel ? (
+                <>
+                  Source for <span className="mono">{referenceLabel}</span>
+                </>
+              ) : (
+                "Source location"
+              )}
+            </span>
+            <span className="muted">
+              page {reference.page} · {reference.precision} reference
+            </span>
+          </div>
+        ) : (
+          <div className="source-caption">
+            <span>Scroll to read</span>
+            <span className="muted">Select a cell to compare</span>
+          </div>
+        )}
       </div>
     </section>
   );

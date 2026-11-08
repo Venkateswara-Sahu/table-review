@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Table Review — review v3</title>
+    <link rel="stylesheet" href="workspace-v3.css" />
+  </head>
+  <body class="mobile-review">
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol>
+      <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <path d="M14 2v6h6" />
+        <path d="M16 13H8" />
+        <path d="M16 17H8" />
+        <path d="M10 9H8" />
+      </symbol>
+      <symbol id="i-activity" viewBox="0 0 24 24">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+      </symbol>
+      <symbol id="i-more" viewBox="0 0 24 24">
+        <circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" />
+        <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+        <circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24">
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+        <path d="M12 9v4" />
+        <path d="M12 17h.01" />
+      </symbol>
+      <symbol id="i-zoom-in" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+        <path d="M11 8v6" />
+        <path d="M8 11h6" />
+      </symbol>
+      <symbol id="i-zoom-out" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+        <path d="M8 11h6" />
+      </symbol>
+      <symbol id="i-fit" viewBox="0 0 24 24">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+        <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+        <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+        <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+      </symbol>
+      <symbol id="i-scan" viewBox="0 0 24 24">
+        <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+        <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+        <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+        <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+        <path d="M7 12h10" />
+      </symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24">
+        <path d="M5 12h14" />
+        <path d="m12 5 7 7-7 7" />
+      </symbol>
+      <symbol id="i-locate" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="7" />
+        <path d="M12 2v3" />
+        <path d="M12 19v3" />
+        <path d="M2 12h3" />
+        <path d="M19 12h3" />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14" />
+        <path d="M5 12h14" />
+      </symbol>
+      <symbol id="i-eye-off" viewBox="0 0 24 24">
+        <path d="M10.7 5.1A10.4 10.4 0 0 1 12 5c7 0 10 7 10 7a13.2 13.2 0 0 1-1.7 2.8" />
+        <path d="M6.6 6.6C3.6 8.4 2 12 2 12s3 7 10 7a10.8 10.8 0 0 0 5.4-1.4" />
+        <path d="m2 2 20 20" />
+        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+      </symbol>
+      <symbol id="i-corner" viewBox="0 0 24 24">
+        <path d="m15 10 5 5-5 5" />
+        <path d="M4 4v7a4 4 0 0 0 4 4h12" />
+      </symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24">
+        <path d="M3 12a9 9 0 0 1 15.5-6.3L21 8" />
+        <path d="M21 3v5h-5" />
+        <path d="M21 12a9 9 0 0 1-15.5 6.3L3 16" />
+        <path d="M3 21v-5h5" />
+      </symbol>
+      <symbol id="i-info" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 16v-4" />
+        <path d="M12 8h.01" />
+      </symbol>
+      <symbol id="i-panel" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M9 4v16" />
+      </symbol>
+    </svg>
+
+    <div class="app">
+      <header class="command">
+        <div class="command-left">
+          <button class="icon-button back-button" aria-label="Back to reports">
+            <svg class="icon"><use href="#i-back" /></svg>
+          </button>
+          <span style="color: var(--muted)" aria-hidden="true">
+            <svg class="icon" style="width: 17px; height: 17px"><use href="#i-file" /></svg>
+          </span>
+          <div class="file-identity">
+            <span class="file-name">report.pdf</span>
+            <span class="status preparing">
+              <span class="dot"></span>
+              <span class="status-text">In review</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="command-center">
+          <div class="page-stepper" aria-label="Page navigation">
+            <button aria-label="Previous page">
+              <svg class="icon" style="width: 13px; height: 13px"><use href="#i-back" /></svg>
+            </button>
+            <span class="page-number"><b>2</b> / 2</span>
+            <button aria-label="Next page">
+              <svg class="icon" style="width: 13px; height: 13px"><use href="#i-right" /></svg>
+            </button>
+          </div>
+          <button class="icon-button" aria-label="All pages">
+            <svg class="icon"><use href="#i-grid" /></svg>
+          </button>
+        </div>
+
+        <div class="command-right">
+          <button class="button button-quiet mobile-source" aria-label="Show source">
+            <svg class="icon"><use href="#i-panel" /></svg>
+            Source
+          </button>
+          <button class="icon-button" aria-label="Activity">
+            <svg class="icon"><use href="#i-activity" /></svg>
+          </button>
+          <button class="icon-button" aria-label="More actions">
+            <svg class="icon"><use href="#i-more" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section class="source" aria-label="Source page">
+          <div class="page-sheet">
+            <img src="assets/page-2.png" alt="Source page 2" />
+            <div class="cell-box"></div>
+          </div>
+
+          <div class="source-tools">
+            <button class="tool-button" aria-label="Zoom out">
+              <svg class="icon" style="width: 13px; height: 13px"><use href="#i-zoom-out" /></svg>
+            </button>
+            <span class="zoom-value">100%</span>
+            <button class="tool-button" aria-label="Zoom in">
+              <svg class="icon" style="width: 13px; height: 13px"><use href="#i-zoom-in" /></svg>
+            </button>
+            <button class="fit-button">Fit</button>
+            <span class="rule-v"></span>
+            <button class="tool-button" aria-label="Select region">
+              <svg class="icon" style="width: 13px; height: 13px"><use href="#i-scan" /></svg>
+            </button>
+          </div>
+
+          <div class="source-foot">
+            <span class="page-pill">Page <b>2</b></span>
+            <div class="source-mode" role="group" aria-label="Source mode">
+              <button aria-pressed="true">Page</button>
+              <button aria-pressed="false">Table</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="review" aria-label="Table review">
+          <div class="table-area">
+            <article class="sheet">
+              <header class="sheet-head">
+                <div class="sheet-title">
+                  <button class="table-switch">
+                    <strong>Table 1</strong>
+                    <span style="color: var(--faint); font-size: 9.5px">of 1</span>
+                    <svg class="icon"><use href="#i-down" /></svg>
+                  </button>
+                  <span>4 rows, 3 columns, 12 cells</span>
+                </div>
+                <span class="spacer"></span>
+                <button class="button button-ghost">
+                  <svg class="icon"><use href="#i-check" /></svg>
+                  Finish
+                </button>
+                <button class="icon-button" aria-label="Table options">
+                  <svg class="icon"><use href="#i-more" /></svg>
+                </button>
+              </header>
+
+              <table class="review-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th class="num">2025</th>
+                    <th class="num">2024</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="checked">
+                      Revenue
+                      <svg class="icon cell-check"><use href="#i-check" /></svg>
+                    </td>
+                    <td class="num selected">1,234.50</td>
+                    <td class="num checked">
+                      1,100.00
+                      <svg class="icon cell-check"><use href="#i-check" /></svg>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="checked">
+                      Expense
+                      <svg class="icon cell-check"><use href="#i-check" /></svg>
+                    </td>
+                    <td class="num checked">
+                      (123.45)
+                      <svg class="icon cell-check"><use href="#i-check" /></svg>
+                    </td>
+                    <td class="num checked">
+                      (100.00)
+                      <svg class="icon cell-check"><use href="#i-check" /></svg>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      Total
+                    </td>
+                    <td class="num">1,111.05</td>
+                    <td class="num">1,000.00</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="sheet-foot">
+                <span>7 of 12 reviewed · 2 checks open</span>
+                <span class="hint">Arrows move · Enter edits</span>
+              </div>
+
+            </article>
+            <div class="mat-note">
+              <span class="dot"></span>
+              Source-backed draft, pinned to revision 002654d4
+            </div>
+
+            <div class="verdict" aria-label="Cell verdict">
+              <div class="verdict-head">
+                <span class="cell-badge">B2</span>
+                <strong class="verdict-cell">Revenue, 2025</strong>
+                <span class="spacer"></span>
+                <span class="verdict-status"><span class="dot"></span> Not reviewed</span>
+              </div>
+              <div class="verdict-body">
+                <input
+                  class="verdict-input mono"
+                  aria-label="Cell value"
+                  value="1,234.50"
+                  spellcheck="false"
+                />
+                <button class="button button-ink">
+                  <svg class="icon"><use href="#i-check" /></svg>
+                  Confirm value
+                </button>
+                <button class="button button-ghost blank">Blank</button>
+                <button class="button button-ghost unreadable">
+                  <svg class="icon"><use href="#i-eye-off" /></svg>
+                  Unreadable
+                </button>
+                <button class="next">
+                  Next cell
+                  <kbd>N</kbd>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="rail" aria-label="Cell details">
+            <div class="rail-tabs" role="tablist" aria-label="Cell, checks and details">
+              <button role="tab" aria-selected="true">Cell</button>
+              <button role="tab" aria-selected="false">
+                Checks <span class="tab-count">2</span>
+              </button>
+              <button role="tab" aria-selected="false">Details</button>
+            </div>
+
+            <div class="rail-body">
+              <section class="rail-cell">
+                <div class="rail-cell-head">
+                  <span class="cell-badge">B2</span>
+                  <span class="type">Revenue, 2025</span>
+                </div>
+                <div class="rail-literal">
+                  Literal <b>1,234.50</b> <span>→</span> <b>1234.50</b>
+                </div>
+
+                <div class="rail-label">Interpretation</div>
+                <select class="select">
+                  <option>English US number</option>
+                </select>
+
+                <div class="lens">
+                  <div class="lens-frame">
+                    <img src="assets/lens-b2.png" alt="Source crop around B2" />
+                    <i class="lens-box"></i>
+                  </div>
+                  <div class="lens-foot">
+                    <span>Page 2, B2</span>
+                    <button>
+                      <svg class="icon" style="width: 10px; height: 10px"><use href="#i-locate" /></svg>
+                      Locate
+                    </button>
+                  </div>
+                </div>
+
+                <button class="note-row">
+                  <svg class="icon"><use href="#i-plus" /></svg>
+                  Add a note to this cell
+                </button>
+
+                <button class="rail-alert">
+                  <span class="dot"></span>
+                  Review 2 open checks
+                  <svg class="icon"><use href="#i-arrow-right" /></svg>
+                </button>
+              </section>
+            </div>
+          </aside>
+        </section>
+      </div>
+    </div>
+  </body>
+</html>

@@ -9,8 +9,8 @@ import {
   type Selection,
 } from "./selection";
 
-const ROW = 40;
-const COL = 132;
+const ROW = 52;
+const COL = 148;
 const HEIGHT = 420;
 
 export function TableGrid({
@@ -40,11 +40,14 @@ export function TableGrid({
     height: HEIGHT,
   });
   // Narrow tables use the full pane width; wide tables keep a readable
-  // fixed column so scanning stays dense.
+  // fixed column so scanning stays dense. On phones the base column is
+  // narrower so a typical three-column table still fits without sideways
+  // scrolling.
+  const base = viewport.width < 480 ? 118 : COL;
   const colWidth =
-    content.columns * COL < viewport.width
+    content.columns * base < viewport.width
       ? Math.floor(viewport.width / content.columns)
-      : COL;
+      : base;
   const firstRow = Math.max(0, Math.floor(viewport.top / ROW) - 2);
   const lastRow = Math.min(
     content.rows,
@@ -222,6 +225,9 @@ export function TableGrid({
                       verdict === "unreadable" && "cell-unreadable",
                       highlightedCells.has(cell.id) && "cell-issue-focused",
                       isHeader && "cell-header",
+                      cell.role === "column_header" &&
+                        cell.col > 0 &&
+                        "cell-column-header",
                       selected.has(cell.id) && "cell-selected",
                       cell.interpretation === "en_us_number" ||
                       cell.interpretation === "percent"

@@ -189,7 +189,7 @@ export function ContextPanel({
                   <div className="row">
                     <Button
                       size="sm"
-                      variant="primary"
+                      variant="ink"
                       icon={<Check size={13} />}
                       disabled={disabled || !candidate || !selectedIds.length}
                       onClick={() =>

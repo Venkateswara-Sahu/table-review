@@ -84,7 +84,7 @@ export async function openFirstTable(page: Page) {
     .getByRole("listitem")
     .filter({ hasText: revisionId.slice(0, 8) })
     .first();
-  const review = card.getByRole("button", { name: "Review", exact: true });
+  const review = card.getByRole("button", { name: /Review table/ });
   if (await review.isVisible().catch(() => false)) await review.click();
   else {
     // Already inside a table view: keep the SPA (and study state) alive.

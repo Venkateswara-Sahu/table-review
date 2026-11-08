@@ -4,14 +4,17 @@
     sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
 
-  --paper: #f4f5f1;
-  --surface: #ffffff;
-  --surface-2: #eef0eb;
-  --surface-3: #e5e8e2;
-  --surface-raised: #fbfcf9;
+  --paper: #f1f2ed;
+  --surface: #fffefa;
+  --surface-2: #f4f5f0;
+  --surface-3: #eceee8;
+  --surface-raised: #fbfbf7;
+  --surface-rail: #f7f8f3;
+  --desk: #ebede7;
 
   --ink: #141816;
   --ink-2: #35423b;
+  --ink-strong: #232b26;
   --muted: #68736c;
   --faint: #929b95;
   --line: #d9ded7;
@@ -28,8 +31,6 @@
   --danger: #a5362a;
   --danger-soft: #fbeae7;
 
-  --source-bg: #e6e9e3;
-  --highlight: #2447c9;
   --highlight-fill: rgba(36, 71, 201, 0.12);
 
   --radius-xs: 3px;
@@ -46,7 +47,7 @@
   --dur: 150ms;
 
   --topbar-h: 56px;
-  --commandbar-h: 48px;
-  --review-head-h: 58px;
-  --inspector-h: 284px;
+  --command-h: 52px;
+  --rail-w: 288px;
+  --review-head-h: 52px;
 }

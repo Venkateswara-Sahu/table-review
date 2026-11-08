@@ -4,10 +4,9 @@ import {
   Activity,
   ChevronLeft,
   ChevronRight,
-  FilePlus2,
   FileText,
   Grid2X2,
-  ScanLine,
+  Keyboard,
   Sparkles,
 } from "lucide-react";
 import { apiRequest, errorMessage } from "../api/client";
@@ -27,9 +26,9 @@ import {
   type TableView,
 } from "../api/models";
 import { useNotices } from "../app/notices";
+import { AccountMenu } from "../app/AccountMenu";
+import { useShortcuts } from "../app/shortcuts";
 import {
-  Badge,
-  Button,
   EmptyState,
   IconButton,
   InlineNote,
@@ -43,6 +42,7 @@ import { PdfPreviews } from "../features/source/PdfPreviews";
 import { SourcePane } from "../features/source/SourcePane";
 import { TablePanel } from "../features/table/TablePanel";
 import { ReviewPane } from "../features/review/ReviewPane";
+import { StudyIndicator } from "../features/study/StudyIndicator";
 import { useStudy } from "../features/study/StudyRecorder";
 import { BootScreen } from "../ui/BootScreen";
 import { NotFoundScreen } from "./NotFound";
@@ -70,6 +70,7 @@ export function WorkspaceScreen() {
   }>();
   const navigate = useNavigate();
   const { notify, notifyError } = useNotices();
+  const { open: openShortcuts } = useShortcuts();
   const documentId = params.documentId ?? "";
   const pageNo = Number(params.pageNo ?? 1);
   const tableId = params.tableId;
@@ -295,7 +296,7 @@ export function WorkspaceScreen() {
 
   const report = documentQuery.data;
   const page = pageQuery.data;
-  const latestTask = [...(tasksQuery.data?.items ?? [])]
+  const pageTasks = [...(tasksQuery.data?.items ?? [])]
     .filter((task) => {
       const pages = Array.isArray(task.input.pages)
         ? (task.input.pages as number[])
@@ -306,7 +307,8 @@ export function WorkspaceScreen() {
     .sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    )[0];
+    );
+  const latestTask = pageTasks[0];
   const selectedTableIndex = tables.findIndex((item) => item.id === tableId);
 
   if (tableId && viewQuery.isError) {
@@ -337,11 +339,11 @@ export function WorkspaceScreen() {
 
   return (
     <main className={`workspace mobile-${mobilePane}`}>
-      <header className="docbar">
-        <div className="docbar-main">
+      <header className="command">
+        <div className="command-left">
           <Link
             to="/"
-            className="docbar-back"
+            className="command-back"
             aria-label="Back to reports"
             onClick={(event) => {
               if (!leaveReview()) event.preventDefault();
@@ -349,180 +351,127 @@ export function WorkspaceScreen() {
           >
             <ChevronLeft size={17} />
           </Link>
-          <span className="docbar-file" aria-hidden="true">
-            <FileText size={17} />
+          <span className="command-file" aria-hidden="true">
+            <FileText size={16} />
           </span>
           <div className="docbar-title">
             <h1 title={report.filename}>{report.filename}</h1>
-            <p>
-              <span className="num">{report.page_count}</span> pages
-              <span className="dot-sep" />
-              <Badge
-                tone={
-                  report.preparation_state === "ready"
-                    ? "success"
-                    : report.preparation_state === "failed"
-                      ? "danger"
-                      : "warning"
-                }
-                dot
-                className="badge-mini"
-              >
+            <span
+              className={`status ${
+                report.preparation_state === "ready"
+                  ? tableId
+                    ? "in-review"
+                    : "ready"
+                  : report.preparation_state === "failed"
+                    ? "failed"
+                    : "preparing"
+              }`}
+            >
+              <span className="dot" />
+              <span className="status-text">
                 {report.preparation_state === "ready"
-                  ? "Ready"
+                  ? tableId
+                    ? "In review"
+                    : "Ready"
                   : report.preparation_state === "failed"
                     ? "Needs attention"
                     : "Preparing"}
-              </Badge>
-            </p>
-          </div>
-        </div>
-        <div className="docbar-actions">
-          <Button
-            size="sm"
-            variant="ghost"
-            icon={processing ? <Spinner size={14} /> : <Activity size={15} />}
-            onClick={() => setActivityOpen(true)}
-          >
-            Activity
-            {!!tasksQuery.data?.items.filter(
-              (task) => task.state === "queued" || task.state === "running",
-            ).length && (
-              <span className="button-count">
-                {
-                  tasksQuery.data.items.filter(
-                    (task) =>
-                      task.state === "queued" || task.state === "running",
-                  ).length
-                }
               </span>
-            )}
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            icon={<ScanLine size={15} />}
-            disabled={page.extraction_supported === false || processing}
-            onClick={onExtractPage}
-          >
-            Extract page
-          </Button>
-        </div>
-      </header>
-
-      <div className="workspace-bar">
-        <div className="page-stepper" aria-label="Page navigation">
-          <IconButton
-            label="Previous page"
-            size="sm"
-            disabled={pageNo <= 1}
-            onClick={() => changePage(pageNo - 1)}
-          >
-            <ChevronLeft size={15} />
-          </IconButton>
-          <form
-            className="page-jump"
-            onSubmit={(event) => {
-              event.preventDefault();
-              changePage(Number(pageInput));
-            }}
-          >
-            <span className="sr-only">Page number</span>
-            <Input
-              aria-label="Page number"
-              inputMode="numeric"
-              value={pageInput}
-              onChange={(event) => setPageInput(event.target.value)}
-              onBlur={() => changePage(Number(pageInput))}
-            />
-            <span className="page-total num">/ {report.page_count}</span>
-          </form>
-          <IconButton
-            label="Next page"
-            size="sm"
-            disabled={pageNo >= report.page_count}
-            onClick={() => changePage(pageNo + 1)}
-          >
-            <ChevronRight size={15} />
-          </IconButton>
+            </span>
+          </div>
+          {study && <StudyIndicator />}
         </div>
 
-        <div
-          className="workspace-tabs"
-          role="tablist"
-          aria-label="Tables on this page"
-        >
+        <div className="command-center">
+          <div className="page-stepper" aria-label="Page navigation">
+            <IconButton
+              label="Previous page"
+              size="sm"
+              disabled={pageNo <= 1}
+              onClick={() => changePage(pageNo - 1)}
+            >
+              <ChevronLeft size={15} />
+            </IconButton>
+            <form
+              className="page-jump"
+              onSubmit={(event) => {
+                event.preventDefault();
+                changePage(Number(pageInput));
+              }}
+            >
+              <span className="sr-only">Page number</span>
+              <Input
+                aria-label="Page number"
+                inputMode="numeric"
+                value={pageInput}
+                onChange={(event) => setPageInput(event.target.value)}
+                onBlur={() => changePage(Number(pageInput))}
+              />
+              <span className="page-total num">/ {report.page_count}</span>
+            </form>
+            <IconButton
+              label="Next page"
+              size="sm"
+              disabled={pageNo >= report.page_count}
+              onClick={() => changePage(pageNo + 1)}
+            >
+              <ChevronRight size={15} />
+            </IconButton>
+          </div>
           <button
             type="button"
-            role="tab"
-            aria-selected={!tableId}
-            className={!tableId ? "workspace-tab active" : "workspace-tab"}
+            className={`icon-button command-grid ${!tableId ? "is-current" : ""}`}
+            aria-label="Page overview"
+            aria-current={!tableId ? "page" : undefined}
             onClick={() => {
               if (!leaveReview()) return;
               navigate(`/reports/${documentId}/pages/${pageNo}`);
             }}
           >
-            Page overview
-          </button>
-          {tables.map((table, index) => (
-            <button
-              key={table.id}
-              type="button"
-              role="tab"
-              aria-selected={tableId === table.id}
-              className={
-                tableId === table.id ? "workspace-tab active" : "workspace-tab"
-              }
-              onClick={() => openTable(table.id)}
-            >
-              Table {index + 1}
-            </button>
-          ))}
-          {tableId && selectedTableIndex < 0 && (
-            <button
-              type="button"
-              role="tab"
-              aria-selected
-              className="workspace-tab active"
-            >
-              {view?.table.origin === "manual" ? "Manual table" : "Table"}
-            </button>
-          )}
-          <button
-            type="button"
-            className="workspace-tab workspace-tab-add"
-            aria-label="Create a manual table"
-            onClick={() => {
-              requestRegion();
-              setManualOpen(true);
-              setMobilePane("source");
-            }}
-          >
-            <FilePlus2 size={14} />
+            <Grid2X2 size={15} />
           </button>
         </div>
 
-        <div
-          className="workspace-mobile-toggle"
-          role="group"
-          aria-label="Workspace view"
-        >
-          <button
-            type="button"
-            aria-pressed={mobilePane === "source"}
-            onClick={() => setMobilePane("source")}
+        <div className="command-right">
+          <div
+            className="workspace-mobile-toggle"
+            role="group"
+            aria-label="Workspace view"
           >
-            Source
-          </button>
-          <button
-            type="button"
-            aria-pressed={mobilePane === "table"}
-            onClick={() => setMobilePane("table")}
+            <button
+              type="button"
+              aria-label="Source"
+              aria-pressed={mobilePane === "source"}
+              onClick={() => setMobilePane("source")}
+            >
+              <FileText size={13} aria-hidden="true" />
+              <span>Source</span>
+            </button>
+            <button
+              type="button"
+              aria-label="Table"
+              aria-pressed={mobilePane === "table"}
+              onClick={() => setMobilePane("table")}
+            >
+              <Grid2X2 size={13} aria-hidden="true" />
+              <span>Table</span>
+            </button>
+          </div>
+          <IconButton label="Activity" onClick={() => setActivityOpen(true)}>
+            {processing ? <Spinner size={14} /> : <Activity size={16} />}
+          </IconButton>
+          <IconButton
+            label="Keyboard shortcuts"
+            className="command-shortcuts"
+            onClick={openShortcuts}
           >
-            Table
-          </button>
+            <Keyboard size={16} />
+          </IconButton>
+          <span className="command-account">
+            <AccountMenu />
+          </span>
         </div>
-      </div>
+      </header>
 
       {report.preparation_state !== "ready" && (
         <div className="workspace-banner">
@@ -539,7 +488,7 @@ export function WorkspaceScreen() {
         </div>
       )}
 
-      <div className="workspace-panes">
+      <div className="workspace-desk">
         <div className="source-column">
           <SourcePane
             documentId={documentId}
@@ -567,7 +516,20 @@ export function WorkspaceScreen() {
         <div className="table-column">
           {tableId && view ? (
             <ReviewPane
+              key={view.table.id}
               view={view}
+              tableLabel={
+                selectedTableIndex >= 0
+                  ? `Table ${selectedTableIndex + 1}`
+                  : view.table.origin === "manual"
+                    ? "Manual table"
+                    : "Table"
+              }
+              tableOptions={tables.map((table, index) => ({
+                id: table.id,
+                label: `Table ${index + 1}`,
+              }))}
+              onOpenTable={openTable}
               sourceSelection={sourceSelection}
               onSource={(source, label) =>
                 setReference({ reference: source, label })
@@ -592,10 +554,13 @@ export function WorkspaceScreen() {
               tables={tables}
               removed={removedQuery.data?.items ?? []}
               latest={latestTask}
+              tasks={pageTasks}
               busy={processing}
               onOpenTable={openTable}
               onRestore={(table) => void restoreTable(table)}
               onExtract={onExtractPage}
+              onManual={onManualSelection}
+              onActivity={() => setActivityOpen(true)}
               onRequestRegion={() => {
                 requestRegion();
                 setMobilePane("source");

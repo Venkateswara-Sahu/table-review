@@ -1,13 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   CheckCheck,
-  ChevronRight,
-  Download,
-  FileText,
-  GripVertical,
+  ChevronDown,
   Info,
+  MoreHorizontal,
   ShieldCheck,
 } from "lucide-react";
 import {
@@ -30,13 +28,7 @@ import type {
 } from "../../api/models";
 import { useConfirm } from "../../app/confirm";
 import { useNotices } from "../../app/notices";
-import {
-  Badge,
-  Button,
-  IconButton,
-  InlineNote,
-  Progress,
-} from "../../ui/primitives";
+import { Button, IconButton, InlineNote } from "../../ui/primitives";
 import { TabBar } from "../../ui/TabBar";
 import { Dialog, DialogContent } from "../../ui/dialog";
 import { TableGrid } from "../table/TableGrid";
@@ -46,11 +38,13 @@ import {
   type Position,
   type Selection,
 } from "../table/selection";
-import { CellInspector } from "./CellInspector";
+import { CellRail } from "./CellRail";
 import { ChecksPanel } from "./ChecksPanel";
 import { draftFor, type EditDraft } from "./draft";
 import { FinishDialog } from "./FinishDialog";
 import { MorePanel } from "./MorePanel";
+import { VerdictTray } from "./VerdictTray";
+import { tableShape } from "./cellMeta";
 
 type Tool = "cell" | "checks" | "more";
 
@@ -68,6 +62,9 @@ function firstCell(view: TableView): Cell | undefined {
 
 export function ReviewPane({
   view,
+  tableLabel,
+  tableOptions,
+  onOpenTable,
   onSource,
   onRevision,
   onDirty,
@@ -77,6 +74,9 @@ export function ReviewPane({
   study = false,
 }: {
   view: TableView;
+  tableLabel: string;
+  tableOptions: Array<{ id: string; label: string }>;
+  onOpenTable: (id: string) => void;
   onSource: (reference: SourceReference, label?: string) => void;
   onRevision: (revision: Revision) => void;
   onDirty: (dirty: boolean) => void;
@@ -102,6 +102,7 @@ export function ReviewPane({
   const [tool, setTool] = useState<Tool>("cell");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [errorTitle, setErrorTitle] = useState("Change not saved");
   const [conflict, setConflict] = useState(false);
   const [invalidation, setInvalidation] = useState("");
   const [busy, setBusy] = useState(false);
@@ -127,6 +128,14 @@ export function ReviewPane({
 
   useEffect(() => {
     if (view.revision.id === revision.id) return;
+    if (dirty || busy || subtotalDirty) {
+      setConflict(true);
+      setErrorTitle("New revision available");
+      setError(
+        "A newer revision arrived while you were editing. Load it to keep your draft, or discard your changes before continuing.",
+      );
+      return;
+    }
     setRevision(view.revision);
     const position = {
       row: Math.min(selection.focus.row, view.revision.content.rows - 1),
@@ -245,6 +254,35 @@ export function ReviewPane({
     }
   }
 
+  const nextUncheckedRef = useRef(nextUnchecked);
+  nextUncheckedRef.current = nextUnchecked;
+
+  useEffect(() => {
+    const keydown = (event: KeyboardEvent) => {
+      if (
+        event.key.toLowerCase() !== "n" ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.defaultPrevented
+      )
+        return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+          target.closest('[role="dialog"]') ||
+          (!target.closest(".review-pane") && target !== document.body))
+      )
+        return;
+      event.preventDefault();
+      nextUncheckedRef.current();
+    };
+    window.addEventListener("keydown", keydown);
+    return () => window.removeEventListener("keydown", keydown);
+  }, []);
+
   function inspectIssue(issue: Issue): boolean {
     if (busy) return false;
     const affected = content.cells.filter((value) =>
@@ -272,19 +310,27 @@ export function ReviewPane({
     return true;
   }
 
-  function setReviewState(next: import("../../api/models").ReviewState) {
-    client.setQueryData(queryKeys.review(revision.id), next);
+  function setReviewState(
+    next: import("../../api/models").ReviewState,
+    revisionId = revision.id,
+  ) {
+    client.setQueryData(queryKeys.review(revisionId), next);
   }
 
-  async function markVerdict(verdict: CellVerdict, reason = "") {
-    if (busy || dirty) return;
+  async function markVerdict(
+    verdict: CellVerdict,
+    reason = "",
+    options?: { revisionId?: string; allowDirty?: boolean },
+  ): Promise<boolean> {
+    if (busy || (dirty && !options?.allowDirty)) return false;
     const ids = selected.map((item) => item.id);
-    if (!ids.length) return;
+    if (!ids.length) return false;
+    const revisionId = options?.revisionId ?? revision.id;
     setBusy(true);
     setError("");
     try {
       const next = await apiRequest<import("../../api/models").ReviewState>(
-        `/api/v1/revisions/${revision.id}/cell-review`,
+        `/api/v1/revisions/${revisionId}/cell-review`,
         {
           method: "POST",
           body: JSON.stringify({
@@ -294,7 +340,7 @@ export function ReviewPane({
           }),
         },
       );
-      setReviewState(next);
+      setReviewState(next, revisionId);
       const words =
         verdict === "confirmed_value"
           ? "confirmed against source"
@@ -304,8 +350,11 @@ export function ReviewPane({
               ? "recorded unreadable"
               : "returned to review";
       setStatus(`${ids.length} cell${ids.length === 1 ? "" : "s"} ${words}.`);
+      return true;
     } catch (caught) {
+      setErrorTitle("Decision not recorded");
       setError(errorMessage(caught));
+      return false;
     } finally {
       setBusy(false);
     }
@@ -326,6 +375,7 @@ export function ReviewPane({
       setReviewState(next);
       setStatus(`Issue ${kind === "reopen" ? "reopened" : kind}.`);
     } catch (caught) {
+      setErrorTitle("Decision not recorded");
       setError(errorMessage(caught));
     } finally {
       setBusy(false);
@@ -362,8 +412,8 @@ export function ReviewPane({
     void client.invalidateQueries({ queryKey: ["table", view.table.id] });
   }
 
-  async function save(operation: EditOperation) {
-    if (busy) return;
+  async function save(operation: EditOperation): Promise<Revision | null> {
+    if (busy) return null;
     if (
       subtotalDirty &&
       operation.kind !== "confirm_subtotal" &&
@@ -373,7 +423,7 @@ export function ReviewPane({
         "Save or discard the subtotal setup before saving this change.",
         "warning",
       );
-      return;
+      return null;
     }
     const expected = { ...baseline };
     if (operation.kind === "set_text") expected.text = draft.text;
@@ -383,7 +433,7 @@ export function ReviewPane({
       setError(
         "Save one edited field at a time, or discard the other changes first.",
       );
-      return;
+      return null;
     }
     setBusy(true);
     setStatus("Saving…");
@@ -404,17 +454,58 @@ export function ReviewPane({
         },
       );
       accept(next, "Saved");
+      return next;
     } catch (caught) {
       setStatus("");
+      setErrorTitle("Change not saved");
       if (caught instanceof ApiError && caught.status === 409) {
         setConflict(true);
         setError(
           "This table changed in another tab. Your unsaved fields are retained. Load the latest revision before saving again.",
         );
       } else setError(errorMessage(caught));
+      return null;
     } finally {
       setBusy(false);
     }
+  }
+
+  async function confirmValue() {
+    if (busy || !cell) return;
+    if (draft.interpretation !== cell.interpretation) {
+      setError(
+        "Save or discard the interpretation change before confirming the value.",
+      );
+      return;
+    }
+    const prospective = selected.map((item) =>
+      item.id === cell.id ? draft.text : item.text,
+    );
+    if (!prospective.every((value) => value.trim())) {
+      setErrorTitle("Value not confirmed");
+      setError(
+        "Every selected cell needs text before it can be confirmed. Save or clear the empty cell first.",
+      );
+      return;
+    }
+    if (draft.text !== cell.text) {
+      const next = await save({
+        kind: "set_text",
+        cell_id: cell.id,
+        text: draft.text,
+      });
+      if (!next) return;
+      const recorded = await markVerdict("confirmed_value", "", {
+        revisionId: next.id,
+        allowDirty: true,
+      });
+      if (!recorded)
+        setError(
+          "The value was saved, but its confirmation was not recorded. Confirm again to record the decision.",
+        );
+      return;
+    }
+    await markVerdict("confirmed_value");
   }
 
   async function reload() {
@@ -445,6 +536,7 @@ export function ReviewPane({
       setStatus("Latest revision loaded; unsaved fields retained");
       pending.current = null;
     } catch (caught) {
+      setErrorTitle("Latest revision not loaded");
       setError(errorMessage(caught));
     } finally {
       setBusy(false);
@@ -467,6 +559,7 @@ export function ReviewPane({
       setStatus(warnings ? "Approved with warnings." : "Table approved.");
       return true;
     } catch (caught) {
+      setErrorTitle("Approval not recorded");
       setError(errorMessage(caught));
       return false;
     } finally {
@@ -493,6 +586,7 @@ export function ReviewPane({
       accept(next, "Restored as a new draft. Review every cell again.");
       setPreviewRevision(null);
     } catch (caught) {
+      setErrorTitle("Restore not completed");
       setError(errorMessage(caught));
     } finally {
       setBusy(false);
@@ -539,6 +633,7 @@ export function ReviewPane({
         );
       onRemoved(table);
     } catch (caught) {
+      setErrorTitle("Removal not completed");
       setError(errorMessage(caught));
     } finally {
       setBusy(false);
@@ -548,6 +643,7 @@ export function ReviewPane({
   const approval = review?.current_approval;
   const reviewed = review?.checked_cell_ids.length ?? 0;
   const total = content.cells.length;
+  const unresolved = review?.unresolved_count ?? 0;
   const issueCells = useMemo(
     () =>
       new Set(
@@ -582,157 +678,211 @@ export function ReviewPane({
         id: "checks",
         label: "Checks",
       });
-    if (!study) items.push({ id: "more", label: "More" });
+    if (!study) items.push({ id: "more", label: "Details" });
     return items;
   }, [showChecks, study]);
 
   return (
     <div className="review-pane" ref={screen}>
-      <header className="review-pane-head">
-        <div className="review-identity">
-          <span className="review-table-glyph" aria-hidden="true">
-            <GripVertical size={14} />
-          </span>
-          <div>
-            <h2>
-              {view.table.origin === "manual"
-                ? "Manual table"
-                : "Extracted table"}
-            </h2>
-            <p className="tiny muted">
-              Revision <span className="mono">{revision.id.slice(0, 8)}</span>
-              {approval ? (
-                <>
-                  {" "}
-                  ·{" "}
-                  <span className="review-approved-inline">
-                    <ShieldCheck size={11} aria-hidden="true" />
-                    {approval.label === "reviewed"
-                      ? "Approved"
-                      : "Approved with warnings"}
-                  </span>
-                </>
-              ) : (
-                " · Draft"
+      <div className="table-area">
+        <article className="sheet">
+          <header className="sheet-head">
+            <div className="sheet-title">
+              <span className="table-glyph sheet-glyph" aria-hidden="true">
+                <i className="ok" />
+                <i className="ok" />
+                <i className="ok" />
+                <i className="ok" />
+                <i />
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+              <div className="sheet-title-copy">
+                <label className="table-switch">
+                  <span className="sr-only">Switch table</span>
+                  <select
+                    value={view.table.id}
+                    disabled={busy}
+                    onChange={(event) => onOpenTable(event.target.value)}
+                  >
+                    {tableOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                    {!tableOptions.some(
+                      (option) => option.id === view.table.id,
+                    ) && <option value={view.table.id}>{tableLabel}</option>}
+                  </select>
+                  <ChevronDown size={12} aria-hidden="true" />
+                </label>
+                <span className="sheet-shape">{tableShape(content)}</span>
+              </div>
+              {approval && (
+                <span className="review-approved-inline">
+                  <ShieldCheck size={12} aria-hidden="true" />
+                  {approval.label === "reviewed"
+                    ? "Approved"
+                    : "Approved with warnings"}
+                </span>
               )}
-            </p>
-          </div>
-        </div>
-        <div className="review-progress-inline">
-          <div className="review-progress-copy">
-            <span className="num">
-              {reviewed}/{total}
-            </span>{" "}
-            reviewed
-            {!!review?.unreadable_count && (
-              <span className="review-unreadable">
-                {" "}
-                · {review.unreadable_count} unreadable
+            </div>
+            <span className="spacer" />
+            {dirtyLabel && (
+              <span
+                className={`review-dirty-chip ${
+                  subtotalDirty || status || dirty ? "is-active" : ""
+                }`}
+                role="status"
+              >
+                {dirtyLabel}
               </span>
             )}
-          </div>
-          <Progress
-            value={reviewed}
-            max={total}
-            label="Cells reviewed"
-            hideLabel
-            tone={reviewed === total && total > 0 ? "success" : "accent"}
-          />
-        </div>
-        <div className="review-head-actions">
-          {dirtyLabel && (
-            <span
-              className={`review-dirty-chip ${
-                subtotalDirty || status || dirty ? "is-active" : ""
-              }`}
-              role="status"
-            >
-              {dirtyLabel}
-            </span>
-          )}
-          {!study && (
-            <Button
-              size="sm"
-              variant="primary"
-              icon={<CheckCheck size={15} />}
-              disabled={busy || dirty || subtotalDirty || !review}
-              onClick={() => setFinishOpen(true)}
-            >
-              Finish
-            </Button>
-          )}
-        </div>
-      </header>
-
-      {(error || conflict || invalidation || reviewQuery.isError) && (
-        <div className="review-alerts">
-          {error && (
-            <InlineNote tone="danger" title="Change not saved">
-              <p>{error}</p>
-              {conflict && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => void reload()}
-                >
-                  Load latest revision
-                </Button>
-              )}
-            </InlineNote>
-          )}
-          {invalidation && !error && (
-            <InlineNote tone="warning" icon={<AlertTriangle size={15} />}>
-              <p>{invalidation}</p>
-            </InlineNote>
-          )}
-          {reviewQuery.isError && !error && (
-            <InlineNote tone="warning" icon={<Info size={15} />}>
-              <p>
-                Review status could not be loaded. {reviewQuery.error.message}
-              </p>
-              <Button size="sm" onClick={() => void reviewQuery.refetch()}>
-                Retry
+            {!study && (
+              <Button
+                size="sm"
+                variant={reviewed === total && total > 0 ? "primary" : "ghost"}
+                className="finish-button"
+                icon={<CheckCheck size={15} />}
+                disabled={busy || dirty || subtotalDirty || !review}
+                onClick={() => setFinishOpen(true)}
+              >
+                Finish
               </Button>
-            </InlineNote>
-          )}
-        </div>
-      )}
+            )}
+            {!study && (
+              <IconButton
+                label="Table options"
+                size="sm"
+                onClick={() => openTool("more")}
+              >
+                <MoreHorizontal size={16} />
+              </IconButton>
+            )}
+          </header>
 
-      <div className="review-grid-area">
-        <TableGrid
-          content={content}
-          selection={selection}
-          checked={new Set(review?.checked_cell_ids ?? [])}
-          cellReviews={review?.cell_reviews ?? {}}
-          onSelect={(position, extend) => selectPosition(position, extend)}
-          issueCells={issueCells}
-          highlightedCells={highlightedCells}
-          onActivate={() => {
-            setTool("cell");
-            requestAnimationFrame(() =>
-              screen.current
-                ?.querySelector<HTMLTextAreaElement>(
-                  "textarea[data-cell-text-editor]",
-                )
-                ?.focus(),
-            );
-          }}
-        />
-        <div className="grid-footnote">
-          <span>
-            <span className="mono">
-              {cell ? `${cell.row + 1}:${cell.col + 1}` : "—"}
-            </span>{" "}
-            · {selected.length} selected
-          </span>
-          <span className="grid-footnote-hint">
-            Arrows move · Shift selects · Enter edits · Ctrl + Enter saves
-          </span>
+          {(error || conflict || invalidation || reviewQuery.isError) && (
+            <div className="review-alerts" aria-live="assertive">
+              {error && (
+                <InlineNote tone="danger" title={errorTitle}>
+                  <p>{error}</p>
+                  {conflict && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => void reload()}
+                    >
+                      Load latest revision
+                    </Button>
+                  )}
+                </InlineNote>
+              )}
+              {invalidation && !error && (
+                <InlineNote tone="warning" icon={<AlertTriangle size={15} />}>
+                  <p>{invalidation}</p>
+                </InlineNote>
+              )}
+              {reviewQuery.isError && !error && (
+                <InlineNote tone="warning" icon={<Info size={15} />}>
+                  <p>
+                    Review status could not be loaded.{" "}
+                    {reviewQuery.error.message}
+                  </p>
+                  <Button size="sm" onClick={() => void reviewQuery.refetch()}>
+                    Retry
+                  </Button>
+                </InlineNote>
+              )}
+            </div>
+          )}
+
+          <div className="review-grid-area">
+            <TableGrid
+              content={content}
+              selection={selection}
+              checked={new Set(review?.checked_cell_ids ?? [])}
+              cellReviews={review?.cell_reviews ?? {}}
+              onSelect={(position, extend) => selectPosition(position, extend)}
+              issueCells={issueCells}
+              highlightedCells={highlightedCells}
+              onActivate={() => {
+                setTool("cell");
+                requestAnimationFrame(() =>
+                  screen.current
+                    ?.querySelector<HTMLTextAreaElement>(
+                      "textarea[data-cell-text-editor]",
+                    )
+                    ?.focus(),
+                );
+              }}
+            />
+            <div className="grid-footnote">
+              <span className="grid-footnote-selection">
+                <span className="mono">
+                  {cell ? `${cell.row + 1}:${cell.col + 1}` : "—"}
+                </span>{" "}
+                · {selected.length} selected
+              </span>
+              <span className="grid-footnote-progress">
+                <span className="review-progress-copy">
+                  <span className="num">
+                    {reviewed}/{total}
+                  </span>{" "}
+                  reviewed
+                  {!!review?.unreadable_count && (
+                    <span className="review-unreadable">
+                      {" "}
+                      · {review.unreadable_count} unreadable
+                    </span>
+                  )}
+                </span>
+                {unresolved > 0 && (
+                  <button
+                    type="button"
+                    className="grid-check-link"
+                    onClick={() => openTool(showChecks ? "checks" : "more")}
+                  >
+                    Review {unresolved} open check{unresolved === 1 ? "" : "s"}
+                  </button>
+                )}
+              </span>
+              <span className="grid-footnote-hint">
+                Arrows move · Enter edits
+              </span>
+            </div>
+          </div>
+        </article>
+
+        <div className="mat-note">
+          <span className="dot" aria-hidden="true" />
+          Source-backed draft, pinned to revision{" "}
+          <span className="mono">{revision.id.slice(0, 8)}</span>
         </div>
+
+        <VerdictTray
+          cell={cell}
+          content={content}
+          selected={selected}
+          review={review}
+          draft={draft}
+          onDraft={setDraft}
+          onDiscard={() => {
+            setDraft(baseline);
+            setStatus("");
+            setError("");
+          }}
+          onConfirm={() => void confirmValue()}
+          onVerdict={(verdict, reason) => void markVerdict(verdict, reason)}
+          onNextUnchecked={nextUnchecked}
+          busy={busy}
+          dirty={dirty}
+        />
       </div>
 
-      <section className="inspector">
-        <div className="inspector-bar">
+      <aside className="rail" aria-label="Cell and checks">
+        <div className="rail-head">
           <TabBar
             value={tool}
             onChange={(value) => openTool(value as Tool)}
@@ -749,50 +899,26 @@ export function ReviewPane({
                   }
                 : tab,
             )}
-            label="Cell, checks and more"
+            label="Cell, checks and details"
           />
-          <div className="inspector-context tiny muted">
-            {cell ? (
-              <>
-                <span className="mono">
-                  {cell.row + 1}:{cell.col + 1}
-                </span>
-                {cell.text ? ` · ${cell.text.slice(0, 42)}` : " · blank"}
-              </>
-            ) : (
-              "No cell selected"
-            )}
-          </div>
         </div>
-        <div
-          className="inspector-body"
-          role="tabpanel"
-          aria-label={`${tool} panel`}
-        >
+        <div className="rail-body" role="tabpanel" aria-label={`${tool} panel`}>
           {tool === "cell" && (
-            <CellInspector
+            <CellRail
               cell={cell}
               content={content}
-              selected={selected}
+              review={review}
               draft={draft}
               onDraft={setDraft}
               onSave={(operation) => void save(operation)}
-              onDiscard={() => {
-                setDraft(baseline);
-                setStatus("");
-                setError("");
-              }}
               busy={busy}
               dirty={dirty}
-              review={review}
-              onVerdict={(verdict, reason) => void markVerdict(verdict, reason)}
               onSource={(reference) =>
                 onSource(
                   reference,
                   cell ? `${cell.row + 1}:${cell.col + 1}` : undefined,
                 )
               }
-              onNextUnchecked={nextUnchecked}
             />
           )}
           {tool === "checks" && review && (
@@ -846,7 +972,7 @@ export function ReviewPane({
             />
           )}
         </div>
-      </section>
+      </aside>
 
       {!study && review && (
         <FinishDialog
@@ -882,7 +1008,7 @@ export function ReviewPane({
                   Close
                 </Button>
                 <Button
-                  variant="primary"
+                  variant="ink"
                   disabled={busy || dirty || subtotalDirty}
                   onClick={() => void restore(previewRevision.id)}
                 >

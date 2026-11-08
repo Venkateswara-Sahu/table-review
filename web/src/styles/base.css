@@ -169,10 +169,6 @@ ol {
   font-size: 11px;
 }
 
-.nowrap {
-  white-space: nowrap;
-}
-
 .truncate {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -189,12 +185,6 @@ ol {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-}
-
-.stack {
-  display: flex;
-  flex-direction: column;
   gap: 12px;
 }
 

@@ -171,7 +171,7 @@ export function FinishDialog({
                   Approve with warnings
                 </Button>
                 <Button
-                  variant="primary"
+                  variant="ink"
                   icon={<ShieldCheck size={15} />}
                   disabled={
                     busy ||
@@ -284,7 +284,7 @@ export function FinishDialog({
             >
               <p>
                 {!allReviewed
-                  ? `Review the remaining ${total - reviewed} cell${total - reviewed === 1 ? "" : "s"} before approving. Use Next unchecked in the cell inspector.`
+                  ? `Review the remaining ${total - reviewed} cell${total - reviewed === 1 ? "" : "s"} before approving. Use Next cell in the verdict tray.`
                   : unresolved || unreadable
                     ? "This revision can only be approved with warnings. The warnings stay attached to the approval and every export."
                     : "Every requirement is met. You can approve this revision now."}

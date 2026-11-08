@@ -1,11 +1,13 @@
 import { test, expect } from "@playwright/test";
 import {
+  cell,
   goToPage,
   openFirstTable,
   openPageTwoTable,
   openReport,
   resetTable,
   reviewProgress,
+  tableIdFromUrl,
 } from "./helpers";
 
 test("page navigation, the table overview and source stay in sync", async ({
@@ -17,30 +19,30 @@ test("page navigation, the table overview and source stay in sync", async ({
     page.getByRole("button", { name: "Previous page" }),
   ).toBeDisabled();
   await expect(
-    page.getByRole("heading", { name: "Tables on page 1" }),
+    page.getByRole("heading", { name: "Page 1", exact: true }),
   ).toBeVisible();
   await expect(page.getByTestId("source-image")).toBeVisible();
 
   await goToPage(page, 2);
   await expect(
-    page.getByRole("heading", { name: "Tables on page 2" }),
+    page.getByRole("heading", { name: "Page 2", exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Next page" })).toBeDisabled();
   await expect(
-    page.getByRole("tab", { name: "Table 1" }).first(),
+    page.getByRole("button", { name: /Review table/ }).first(),
   ).toBeVisible();
 
   await openFirstTable(page);
   await resetTable(page);
-  await expect(
-    page.getByRole("tab", { name: /^Table /, selected: true }),
-  ).toBeVisible();
+  await expect(page.getByLabel("Switch table")).toHaveValue(
+    tableIdFromUrl(page),
+  );
   await expect(reviewProgress(page)).toContainText("0/12");
 
-  await page.getByRole("tab", { name: "Page overview" }).click();
+  await page.getByRole("button", { name: "Page overview" }).click();
   await expect(page).toHaveURL(/\/pages\/2$/);
   await expect(
-    page.getByRole("heading", { name: "Tables on page 2" }),
+    page.getByRole("heading", { name: "Page 2", exact: true }),
   ).toBeVisible();
   await expect(page.getByTestId("source-image")).toBeVisible();
 });
@@ -54,7 +56,7 @@ test("the activity drawer lists extraction work and opens its table", async ({
   const activity = page.getByRole("dialog", { name: "Activity" });
   await expect(activity).toBeVisible();
   await expect(
-    activity.getByRole("heading", { name: "Extraction queue" }),
+    activity.getByRole("heading", { name: "By page" }),
   ).toBeVisible();
   await expect(
     activity.getByRole("heading", { name: "Extraction runs" }),
@@ -63,6 +65,7 @@ test("the activity drawer lists extraction work and opens its table", async ({
     /Synthetic test fixture|Conversion completed/,
   );
   await expect(activity).toContainText("Pages 2");
+  await expect(activity).toContainText(/\d+ saved tables?/);
 
   await activity
     .getByRole("button", { name: /^Open / })
@@ -77,8 +80,8 @@ test("extraction validates pages and reports its queued work", async ({
 }) => {
   await openReport(page, "report.pdf");
   await page
-    .locator(".docbar-actions")
-    .getByRole("button", { name: "Extract page", exact: true })
+    .locator(".pane-main")
+    .getByRole("button", { name: /^Extract page/ })
     .click();
   const dialog = page.getByRole("dialog", { name: "Extract tables" });
   await expect(dialog).toBeVisible();
@@ -95,7 +98,9 @@ test("extraction validates pages and reports its queued work", async ({
   );
   const activity = page.getByRole("dialog", { name: "Activity" });
   await expect(activity).toBeVisible();
-  await expect(activity.locator(".task-list")).toContainText("Pages 1");
+  await expect(activity.locator(".activity-group-head").first()).toContainText(
+    "Page 1",
+  );
   await page.keyboard.press("Escape");
   await expect(activity).toHaveCount(0);
 });
@@ -105,7 +110,10 @@ test("drawing a source region creates a blank manual table with honest geometry"
 }) => {
   await openReport(page, "report.pdf");
   await goToPage(page, 2);
-  await page.getByRole("button", { name: "Select region" }).click();
+  await page
+    .locator(".source-tools")
+    .getByRole("button", { name: "Select region" })
+    .click();
   await expect(page.getByRole("button", { name: "Drawing…" })).toBeVisible();
 
   const image = page.getByTestId("source-image");
@@ -142,7 +150,7 @@ test("a dirty edit blocks leaving until it is saved or discarded", async ({
   await openPageTwoTable(page);
   const editor = page.locator("textarea[data-cell-text-editor]");
   await editor.fill("1234.51");
-  await page.getByRole("tab", { name: "Page overview" }).click();
+  await page.getByRole("button", { name: "Page overview" }).click();
   await expect(page.locator(".toast")).toContainText(
     "Save or discard the open edit before leaving this table.",
   );
@@ -151,7 +159,7 @@ test("a dirty edit blocks leaving until it is saved or discarded", async ({
 
   await editor.press("Escape");
   await expect(editor).toHaveValue("1,234.50");
-  await page.getByRole("tab", { name: "Page overview" }).click();
+  await page.getByRole("button", { name: "Page overview" }).click();
   await expect(page).toHaveURL(/\/pages\/2$/);
 });
 
@@ -159,7 +167,7 @@ test("a removed table can be restored into a fresh review", async ({
   page,
 }) => {
   await openPageTwoTable(page);
-  await page.getByRole("tab", { name: "More" }).click();
+  await page.getByRole("tab", { name: "Details" }).click();
   await page.getByRole("button", { name: /Revision details/ }).click();
 
   await page.getByRole("button", { name: "Remove table" }).click();
@@ -177,7 +185,7 @@ test("a removed table can be restored into a fresh review", async ({
   await dialog.getByRole("button", { name: "Remove table" }).click();
   await expect(page).toHaveURL(/\/pages\/2$/);
   await expect(
-    page.getByRole("heading", { name: "Tables on page 2" }),
+    page.getByRole("heading", { name: "Page 2", exact: true }),
   ).toBeVisible();
 
   await page.getByText("Removed tables (1)").click();
@@ -203,4 +211,30 @@ test("the mobile workspace switches between source and table without overflow", 
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+
+  const overview = page.getByRole("button", { name: "Page overview" });
+  await expect(overview).toBeVisible();
+  await overview.click();
+  await expect(page.getByRole("heading", { name: "Page 2" })).toBeVisible();
+  await expect(page.getByRole("grid", { name: "Review table" })).toHaveCount(0);
+  await openFirstTable(page);
+  await expect(page.getByRole("grid", { name: "Review table" })).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+
+  await cell(page, 1, 1).click();
+  await page
+    .getByRole("button", { name: "Confirm value", exact: true })
+    .click();
+  await expect(reviewProgress(page)).toContainText("1/12");
+  const clear = page.getByRole("button", {
+    name: "Clear decision",
+    exact: true,
+  });
+  await expect(clear).toBeVisible();
+  await clear.click();
+  await expect(reviewProgress(page)).toContainText("0/12");
 });

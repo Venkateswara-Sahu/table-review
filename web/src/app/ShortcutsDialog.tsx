@@ -5,8 +5,9 @@ const shortcuts: Array<[string, string]> = [
   ["Arrow keys", "Move between cells"],
   ["Shift + arrow / click", "Select a range"],
   ["Enter or F2", "Edit the selected cell"],
-  ["Ctrl / ⌘ + Enter", "Save the cell text"],
+  ["Ctrl / ⌘ + Enter", "Confirm the value — saves the edit first"],
   ["Escape", "Discard the current edit"],
+  ["N", "Next unchecked cell"],
   ["Page Up / Page Down", "Move a screen through the source"],
   ["?", "Open this list"],
 ];
