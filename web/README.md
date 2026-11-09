@@ -37,6 +37,13 @@ Then from `web` run `npm run generate:types`. The committed generated file is
 not a separately maintained browser domain model. Use `npm run format:check`
 and `npm run build` for formatting and TypeScript verification.
 
+The workspace keeps one continuous source view. In page overview, scrolling
+selects the visible page and updates the route, page input and review pane. An
+open table keeps the source free for reference browsing, and changing page
+clears the previous table's source reference. A table opens on its first
+reviewable cell — recognized text with exact geometry first — so a blank corner
+stub is not mistaken for a failed extraction.
+
 Private requests use credentials and CSRF verification. Report/image responses
 are not cached; image object URLs and pending requests are cleared when the
 account changes. Source coordinates remain points on the original displayed,
