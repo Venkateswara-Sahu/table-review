@@ -7,6 +7,7 @@ import {
   openPageTwoTable,
   openReport,
   reviewProgress,
+  scrollSourceToPage,
   signIn,
   tableIdFromUrl,
 } from "./helpers";
@@ -44,6 +45,34 @@ test("page input and previous/next controls clamp to the report", async ({
   await expect(
     page.getByRole("button", { name: "Previous page" }),
   ).toBeDisabled();
+});
+
+test("scrolling the source preview selects the visible page in overview", async ({
+  page,
+}) => {
+  await openReport(page, "long-report.pdf");
+  const input = page.getByLabel("Page number");
+  await expect(input).toHaveValue("1");
+
+  await scrollSourceToPage(page, 4);
+  await expect(page.locator(".page-pill")).toContainText("Page 4");
+  await expect(page).toHaveURL(/\/pages\/4$/);
+  await expect(input).toHaveValue("4");
+});
+
+test("scrolling the source preview does not leave an open table", async ({
+  page,
+}) => {
+  await openPageTwoTable(page);
+  const input = page.getByLabel("Page number");
+  await expect(input).toHaveValue("2");
+  const tableUrl = page.url();
+
+  await scrollSourceToPage(page, 1);
+  await expect(page.locator(".page-pill")).toContainText("Page 1");
+  await page.waitForTimeout(500);
+  await expect(page).toHaveURL(tableUrl);
+  await expect(input).toHaveValue("2");
 });
 
 test("the table switcher preserves the selected table and review state", async ({

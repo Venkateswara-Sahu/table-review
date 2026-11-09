@@ -39,6 +39,7 @@ export function SourcePane({
   jump,
   selectRequest,
   onCell,
+  onVisiblePage,
   onRegion,
   selection,
   onExtractRegion,
@@ -54,6 +55,7 @@ export function SourcePane({
   jump: Jump;
   selectRequest: { sequence: number } | null;
   onCell: (id: string) => void;
+  onVisiblePage: (page: number) => void;
   onRegion: (box: PageBox | null) => void;
   selection: PageBox | null;
   onExtractRegion: () => void;
@@ -119,7 +121,9 @@ export function SourcePane({
         if (box.bottom <= line) low = middle + 1;
         else if (box.top > line) high = middle - 1;
         else {
-          setVisiblePage(Number(sheets[middle].dataset.sourcePage));
+          const pageNo = Number(sheets[middle].dataset.sourcePage);
+          setVisiblePage(pageNo);
+          if (pageNo !== visiblePage) onVisiblePage(pageNo);
           return;
         }
       }

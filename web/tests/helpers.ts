@@ -97,6 +97,19 @@ export async function openFirstTable(page: Page) {
   await expect(page.getByRole("grid", { name: "Review table" })).toBeVisible();
 }
 
+/** Scroll the continuous source preview so the requested page is in view. */
+export async function scrollSourceToPage(page: Page, pageNo: number) {
+  await page.locator(".source-scroll").evaluate((element, target) => {
+    const root = element as HTMLElement;
+    const sheet = root.querySelector<HTMLElement>(
+      `[data-source-page="${target}"]`,
+    );
+    if (!sheet) throw new Error(`Source page ${target} is missing`);
+    root.scrollTop +=
+      sheet.getBoundingClientRect().top - root.getBoundingClientRect().top - 8;
+  }, pageNo);
+}
+
 export function tableIdFromUrl(page: Page) {
   const parts = new URL(page.url()).pathname.split("/").filter(Boolean);
   return parts[parts.length - 1];

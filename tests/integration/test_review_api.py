@@ -62,11 +62,11 @@ def test_never_auto_approves_and_checks_not_run_is_a_warning(client, owned_table
     assert snapshot["unresolved_count"] == 3  # Not run, unavailable coverage, limited geometry.
     assert {i["kind"] for i in snapshot["issues"]} == {"coverage_unavailable", "limited_reference"}
     assert snapshot["check_versions"] == {
-        "engine": "1",
+        "engine": "2",
         "coverage": "not_run",
         "source_identity": "not_run",
-        "placement": "1",
-        "structural": "1",
+        "placement": "2",
+        "structural": "2",
     }
 
 

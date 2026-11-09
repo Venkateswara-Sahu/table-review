@@ -34,6 +34,7 @@ import { Dialog, DialogContent } from "../../ui/dialog";
 import { TableGrid } from "../table/TableGrid";
 import {
   cellAt,
+  firstReviewableCell,
   selectedCells,
   type Position,
   type Selection,
@@ -47,18 +48,6 @@ import { VerdictTray } from "./VerdictTray";
 import { tableShape } from "./cellMeta";
 
 type Tool = "cell" | "checks" | "more";
-
-function firstCell(view: TableView): Cell | undefined {
-  return view.revision.content.cells.reduce<Cell | undefined>(
-    (first, cell) =>
-      !first ||
-      cell.row < first.row ||
-      (cell.row === first.row && cell.col < first.col)
-        ? cell
-        : first,
-    undefined,
-  );
-}
 
 export function ReviewPane({
   view,
@@ -91,7 +80,7 @@ export function ReviewPane({
   const screen = useRef<HTMLDivElement>(null);
   const pending = useRef<{ signature: string; key: string } | null>(null);
   const [revision, setRevision] = useState(view.revision);
-  const initial = firstCell(view);
+  const initial = firstReviewableCell(view.revision.content);
   const [selection, setSelection] = useState<Selection>({
     anchor: { row: initial?.row ?? 0, col: initial?.col ?? 0 },
     focus: { row: initial?.row ?? 0, col: initial?.col ?? 0 },

@@ -41,6 +41,7 @@ import { ExtractDialog } from "../features/source/ExtractDialog";
 import { ManualTableDialog } from "../features/source/ManualTableDialog";
 import { PdfPreviews } from "../features/source/PdfPreviews";
 import { SourcePane } from "../features/source/SourcePane";
+import { firstReviewableCell } from "../features/table/selection";
 import { TablePanel } from "../features/table/TablePanel";
 import { ReviewPane } from "../features/review/ReviewPane";
 import { StudyIndicator } from "../features/study/StudyIndicator";
@@ -48,20 +49,6 @@ import { useStudy } from "../features/study/StudyRecorder";
 import { BootScreen } from "../ui/BootScreen";
 import { NotFoundScreen } from "./NotFound";
 import { queryClient } from "../app/query";
-
-function firstCell(view: TableView) {
-  return view.revision.content.cells.reduce<
-    TableView["revision"]["content"]["cells"][number] | undefined
-  >(
-    (first, cell) =>
-      !first ||
-      cell.row < first.row ||
-      (cell.row === first.row && cell.col < first.col)
-        ? cell
-        : first,
-    undefined,
-  );
-}
 
 export function WorkspaceScreen() {
   const params = useParams<{
@@ -137,15 +124,44 @@ export function WorkspaceScreen() {
   const [activityOpen, setActivityOpen] = useState(false);
   const [reviewDirty, setReviewDirty] = useState(false);
   const [pageInput, setPageInput] = useState(String(pageNo));
+  const [visibleSourcePage, setVisibleSourcePage] = useState(pageNo);
   const [mobilePane, setMobilePane] = useState<"source" | "table">(
     tableId ? "table" : "source",
   );
 
   useEffect(() => {
     setPageInput(String(pageNo));
+    setVisibleSourcePage(pageNo);
+    // A page change leaves the previous table's source reference behind.
+    // Keeping it would drag the preview back to the old page.
+    setReference(null);
     setJump((value) => ({ page: pageNo, sequence: value.sequence + 1 }));
     setRegion(null);
   }, [pageNo]);
+
+  // In page overview the source scroll position selects the page. While a
+  // table is open the preview stays free to inspect other pages or references.
+  useEffect(() => {
+    if (tableId || visibleSourcePage === pageNo) return;
+    const timer = window.setTimeout(() => {
+      const report = documentQuery.data;
+      if (!report) return;
+      const clamped = Math.max(
+        1,
+        Math.min(report.page_count, visibleSourcePage),
+      );
+      setPageInput(String(clamped));
+      navigate(`/reports/${documentId}/pages/${clamped}`);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [
+    tableId,
+    visibleSourcePage,
+    pageNo,
+    documentQuery.data,
+    documentId,
+    navigate,
+  ]);
 
   useEffect(() => {
     if (!reference) return;
@@ -160,7 +176,7 @@ export function WorkspaceScreen() {
     if (!view) return;
     setMobilePane("table");
     setReviewDirty(false);
-    const first = firstCell(view);
+    const first = firstReviewableCell(view.revision.content);
     if (first)
       setReference({
         reference: first.reference,
@@ -197,6 +213,14 @@ export function WorkspaceScreen() {
   const requestRegion = useCallback(() => {
     setSelectRequest((value) => ({ sequence: (value?.sequence ?? 0) + 1 }));
   }, []);
+
+  const onVisiblePage = useCallback(
+    (next: number) => {
+      if (tableId) return;
+      setVisibleSourcePage(next);
+    },
+    [tableId],
+  );
 
   const leaveReview = useCallback(() => {
     if (!reviewDirty) return true;
@@ -531,6 +555,7 @@ export function WorkspaceScreen() {
                 sequence: (value?.sequence ?? 0) + 1,
               }))
             }
+            onVisiblePage={onVisiblePage}
             onRegion={onRegion}
             selection={region}
             onExtractRegion={onExtractSelection}

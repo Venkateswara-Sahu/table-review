@@ -38,3 +38,23 @@ export function cellAt(
       cell.col + cell.col_span > position.col,
   );
 }
+
+/**
+ * Open a table on a cell a reviewer can act on. Extracted tables can carry a
+ * blank corner stub with only a table-level source reference; landing there
+ * looks like a failed extraction. Prefer recognized text with exact geometry,
+ * then any recognized text, and fall back to the first slot for blank grids.
+ */
+export function firstReviewableCell(content: TableContent): Cell | undefined {
+  const ordered = [...content.cells].sort(
+    (a, b) => a.row - b.row || a.col - b.col,
+  );
+  return (
+    ordered.find(
+      (cell) => cell.text.trim() && cell.reference.precision === "cell",
+    ) ??
+    ordered.find((cell) => cell.text.trim()) ??
+    ordered.find((cell) => cell.reference.precision === "cell") ??
+    ordered[0]
+  );
+}

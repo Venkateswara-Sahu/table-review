@@ -41,11 +41,15 @@ def normalize_legacy(state, revision):
 
 def review_warnings(revision, records):
     issues = []
+    header_rows = set(revision.content.get("header_rows", ()))
     for cell in revision.content["cells"]:
         record = records.get(cell["id"])
         if record and record["verdict"] == "unreadable":
             kind, reason = "unreadable_value", f"Source value is unreadable: {record['reason']}"
         elif not cell["text"].strip() and not record:
+            # Empty header stubs are structural corners, not missing data.
+            if cell["row"] in header_rows:
+                continue
             kind, reason = (
                 "unreviewed_blank",
                 "Empty extraction position: confirm the source is blank or record it as unreadable.",
