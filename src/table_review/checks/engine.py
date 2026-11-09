@@ -9,7 +9,7 @@ from table_review.checks.types import CheckContext, Issue
 from table_review.tables.subtotals import evaluate_subtotals
 from table_review.tables.types import TableContent
 
-CHECK_VERSION = "1"
+CHECK_VERSION = "2"
 
 
 def normalize(text):
@@ -89,7 +89,10 @@ def evaluate_checks(content: TableContent, context: CheckContext) -> tuple[Issue
     precise = []
     for cell in content.cells:
         if cell.reference.precision != "cell" or cell.reference.box is None:
-            coarse.append(cell)
+            # An empty structural position makes no placement claim. Blank
+            # data positions remain reviewable through unreviewed_blank.
+            if cell.text.strip():
+                coarse.append(cell)
             continue
         precise.append(cell)
         literals = Counter(normalize(cell.text).split(" "))

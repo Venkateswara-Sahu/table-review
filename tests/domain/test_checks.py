@@ -152,6 +152,17 @@ def test_coarse_geometry_is_limited_reference_not_placement_claim(clean):
     assert not any(i.kind in ("placement_ambiguity", "duplicate_source_token") for i in issues)
 
 
+def test_blank_cell_with_coarse_geometry_makes_no_placement_claim(clean):
+    from table_review.checks.engine import evaluate_checks
+
+    content, context = clean
+    blank = cell("a", 0, 0, "").model_copy(
+        update={"reference": SourceReference(page=2, precision="table", box=box(0, 0, 100, 100))}
+    )
+    content = content.model_copy(update={"cells": (blank, *content.cells[1:])})
+    assert not any(i.kind == "limited_reference" for i in evaluate_checks(content, context))
+
+
 def test_header_role_association_and_missing_slots_are_structural_issues(clean):
     from table_review.checks.engine import evaluate_checks
 

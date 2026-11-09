@@ -1,0 +1,53 @@
+:root {
+  --font-ui:
+    "Instrument Sans Variable", "Instrument Sans", "Segoe UI", system-ui,
+    sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
+
+  --paper: #f1f2ed;
+  --surface: #fffefa;
+  --surface-2: #f4f5f0;
+  --surface-3: #eceee8;
+  --surface-raised: #fbfbf7;
+  --surface-rail: #f7f8f3;
+  --desk: #ebede7;
+
+  --ink: #141816;
+  --ink-2: #35423b;
+  --ink-strong: #232b26;
+  --muted: #68736c;
+  --faint: #929b95;
+  --line: #d9ded7;
+  --line-strong: #bec6be;
+
+  --accent: #2447c9;
+  --accent-strong: #1a35a4;
+  --accent-soft: #e9edff;
+
+  --success: #1c6a4d;
+  --success-soft: #e7f2ec;
+  --warning: #925512;
+  --warning-soft: #fbf0de;
+  --danger: #a5362a;
+  --danger-soft: #fbeae7;
+
+  --highlight-fill: rgba(36, 71, 201, 0.12);
+
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius: 8px;
+  --radius-lg: 12px;
+
+  --shadow-page:
+    0 1px 2px rgba(20, 24, 22, 0.08), 0 14px 34px rgba(20, 24, 22, 0.14);
+  --shadow-pop: 0 16px 48px rgba(20, 24, 22, 0.18);
+  --shadow-soft: 0 1px 2px rgba(20, 24, 22, 0.05);
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur: 150ms;
+
+  --topbar-h: 56px;
+  --command-h: 52px;
+  --rail-w: 288px;
+  --review-head-h: 52px;
+}

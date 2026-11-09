@@ -111,7 +111,7 @@ def test_explicit_adoption_retains_corrections_and_original_and_uses_candidate_s
     )
     state = client.get(f"/api/v1/revisions/{saved['id']}/review").json()
     assert state["checked_cell_ids"] == [] and state["issue_decisions"] == {}
-    assert state["current_approval"] is None and state["check_versions"]["coverage"] == "1"
+    assert state["current_approval"] is None and state["check_versions"]["coverage"] == "2"
     assert saved["extraction_manifest"]["adoption"]["candidate_revision_id"] == str(
         candidate.original_revision_id
     )
@@ -170,7 +170,7 @@ def test_original_candidate_is_pinned_and_restore_recovers_its_own_source(client
     ).json()
     assert (
         client.get(f"/api/v1/revisions/{changed['id']}/review").json()["check_versions"]["coverage"]
-        == "1"
+        == "2"
     )
     restored = client.post(
         f"/api/v1/tables/{target.id}/restore",
@@ -198,7 +198,7 @@ def test_original_candidate_is_pinned_and_restore_recovers_its_own_source(client
     )
     assert (
         client.get(f"/api/v1/revisions/{again['id']}/review").json()["check_versions"]["coverage"]
-        == "1"
+        == "2"
     )
 
 

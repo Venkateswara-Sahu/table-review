@@ -1,6 +1,19 @@
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./styles.css";
-import "./workspace.css";
+import "@fontsource-variable/instrument-sans";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
+import App from "./app/App";
+import "./styles/tokens.css";
+import "./styles/base.css";
+import "./styles/app.css";
+import "./styles/library.css";
+import "./styles/workspace.css";
+import "./styles/review.css";
+import "./styles/auth.css";
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);

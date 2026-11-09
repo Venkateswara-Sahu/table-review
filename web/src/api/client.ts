@@ -1,4 +1,4 @@
-import { setActiveStudy } from "../features/review/StudyRecorder";
+import { setActiveStudy } from "../features/study/StudyRecorder";
 
 let csrfToken = "";
 let sessionGeneration = 0;
@@ -25,6 +25,14 @@ export function clearPrivateState() {
   sessionGeneration++;
   for (const controller of requests) controller.abort();
   requests.clear();
+}
+
+export function idempotencyKey() {
+  return crypto.randomUUID();
+}
+
+export function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError";
 }
 
 async function request(

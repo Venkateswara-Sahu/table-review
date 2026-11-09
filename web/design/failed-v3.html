@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Table Review — failure comp</title>
+    <link rel="stylesheet" href="workspace-v3.css" />
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol>
+      <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <path d="M14 2v6h6" />
+        <path d="M16 13H8" />
+        <path d="M16 17H8" />
+        <path d="M10 9H8" />
+      </symbol>
+      <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></symbol>
+      <symbol id="i-more" viewBox="0 0 24 24">
+        <circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" />
+        <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+        <circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" />
+      </symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+        <path d="M12 9v4" />
+        <path d="M12 17h.01" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24">
+        <path d="M3 12a9 9 0 0 1 15.5-6.3L21 8" />
+        <path d="M21 3v5h-5" />
+        <path d="M21 12a9 9 0 0 1-15.5 6.3L3 16" />
+        <path d="M3 21v-5h5" />
+      </symbol>
+      <symbol id="i-scan" viewBox="0 0 24 24">
+        <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+        <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+        <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+        <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+        <path d="M7 12h10" />
+      </symbol>
+      <symbol id="i-crop" viewBox="0 0 24 24">
+        <path d="M6 2v14a2 2 0 0 0 2 2h14" />
+        <path d="M18 22V8a2 2 0 0 0-2-2H2" />
+      </symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24">
+        <path d="M5 12h14" />
+        <path d="m12 5 7 7-7 7" />
+      </symbol>
+      <symbol id="i-zoom-in" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+        <path d="M11 8v6" />
+        <path d="M8 11h6" />
+      </symbol>
+      <symbol id="i-zoom-out" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+        <path d="M8 11h6" />
+      </symbol>
+      <symbol id="i-fit" viewBox="0 0 24 24">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+        <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+        <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+        <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+      </symbol>
+    </svg>
+
+    <div class="app">
+      <header class="command">
+        <div class="command-left">
+          <button class="icon-button back-button" aria-label="Back to reports">
+            <svg class="icon"><use href="#i-back" /></svg>
+          </button>
+          <span style="color: var(--muted)" aria-hidden="true">
+            <svg class="icon" style="width: 17px; height: 17px"><use href="#i-file" /></svg>
+          </span>
+          <div class="file-identity">
+            <span class="file-name">report.pdf</span>
+            <span class="status preparing"><span class="dot"></span><span class="status-text">In review</span></span>
+          </div>
+        </div>
+        <div class="command-center">
+          <div class="page-stepper" aria-label="Page navigation">
+            <button aria-label="Previous page">
+              <svg class="icon" style="width: 13px; height: 13px"><use href="#i-back" /></svg>
+            </button>
+            <span class="page-number"><b>2</b> / 2</span>
+            <button aria-label="Next page">
+              <svg class="icon" style="width: 13px; height: 13px"><use href="#i-right" /></svg>
+            </button>
+          </div>
+          <button class="icon-button" aria-label="All pages">
+            <svg class="icon"><use href="#i-grid" /></svg>
+          </button>
+        </div>
+        <div class="command-right">
+          <button class="icon-button" aria-label="Activity">
+            <svg class="icon"><use href="#i-activity" /></svg>
+            <span class="dot"></span>
+          </button>
+          <button class="icon-button" aria-label="More actions">
+            <svg class="icon"><use href="#i-more" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section class="source" aria-label="Source page">
+          <div class="page-sheet">
+            <img src="assets/page-2.png" alt="Source page 2" />
+          </div>
+          <div class="source-tools">
+            <button class="tool-button" aria-label="Zoom out">
+              <svg class="icon" style="width: 13px; height: 13px"><use href="#i-zoom-out" /></svg>
+            </button>
+            <span class="zoom-value">100%</span>
+            <button class="tool-button" aria-label="Zoom in">
+              <svg class="icon" style="width: 13px; height: 13px"><use href="#i-zoom-in" /></svg>
+            </button>
+            <button class="fit-button">Fit</button>
+            <span class="rule-v"></span>
+            <button class="tool-button" aria-label="Select region">
+              <svg class="icon" style="width: 13px; height: 13px"><use href="#i-scan" /></svg>
+            </button>
+          </div>
+          <div class="source-foot">
+            <span class="page-pill">Page <b>2</b></span>
+          </div>
+        </section>
+
+        <section class="pane" aria-label="Page overview">
+          <header class="pane-head">
+            <h1>Page 2</h1>
+            <span class="chip failed"><span class="dot"></span> Extraction failed</span>
+            <span class="spacer"></span>
+          </header>
+
+          <div class="pane-body">
+            <main class="pane-main pane-main-center">
+              <h2>Extraction stopped before it finished</h2>
+              <p class="lede">
+                It ran three times and was interrupted each time. Nothing new was
+                saved; your existing table is unchanged.
+              </p>
+
+              <div class="failure-actions">
+                <button class="button button-primary">
+                  <svg class="icon"><use href="#i-refresh" /></svg>
+                  Retry page
+                </button>
+                <button class="button">
+                  <svg class="icon"><use href="#i-crop" /></svg>
+                  Select region
+                </button>
+                <button class="link">Create manual table</button>
+              </div>
+
+              <p class="saved-note">
+                <svg class="icon" style="color: var(--success)"><use href="#i-check" /></svg>
+                1 saved table is unchanged.
+              </p>
+
+              <details class="attempts">
+                <summary class="attempt-head">
+                  <svg class="icon"><use href="#i-down" /></svg>
+                  3 earlier attempts, same cause
+                  <span class="attempt-count">3:02 – 3:04 PM</span>
+                </summary>
+                <div class="timeline">
+                  <div class="timeline-row">
+                    <span class="timeline-dot"></span>
+                    <div class="timeline-main">
+                      <strong>Extraction stopped</strong>
+                      <span>No new table saved</span>
+                    </div>
+                    <span class="timeline-time">3:04 PM</span>
+                  </div>
+                  <div class="timeline-row">
+                    <span class="timeline-dot"></span>
+                    <div class="timeline-main">
+                      <strong>Extraction stopped</strong>
+                      <span>No new table saved</span>
+                    </div>
+                    <span class="timeline-time">3:03 PM</span>
+                  </div>
+                  <div class="timeline-row">
+                    <span class="timeline-dot"></span>
+                    <div class="timeline-main">
+                      <strong>Extraction stopped</strong>
+                      <span>No new table saved</span>
+                    </div>
+                    <span class="timeline-time">3:02 PM</span>
+                  </div>
+                </div>
+              </details>
+
+              <div class="table-list">
+                <div class="table-list-title">
+                  <span>Saved on this page</span>
+                  <span>1 table</span>
+                </div>
+                <div class="table-row">
+                  <span class="table-glyph" aria-hidden="true">
+                    <i class="ok"></i><i class="ok"></i><i class="ok"></i>
+                    <i class="ok"></i><i class="ok"></i><i class="ok"></i>
+                    <i class="ok"></i><i></i><i></i>
+                    <i></i><i></i><i></i>
+                  </span>
+                  <div class="table-row-main">
+                    <strong>Table 1</strong>
+                    <span>4 rows, 3 columns, 12 cells, 7 of 12 reviewed</span>
+                  </div>
+                  <button class="review-link">Review table</button>
+                </div>
+              </div>
+            </main>
+
+            <aside class="pane-aside">
+              <div class="aside-title">Page details</div>
+              <div class="page-facts">
+                <div class="fact"><span>Text layer</span><b>Yes</b></div>
+                <div class="fact"><span>OCR</span><b>Not needed</b></div>
+                <div class="fact"><span>Size</span><b>8.5 × 11 in</b></div>
+                <div class="fact"><span>Saved tables</span><b>1</b></div>
+                <div class="fact"><span>Last attempt</span><b>3:04 PM</b></div>
+              </div>
+
+              <div class="run-detail">
+                <div class="aside-title">This run</div>
+                <div class="fact"><span>Cause</span><b>Extraction stopped</b></div>
+                <div class="fact"><span>Attempts</span><b>3</b></div>
+                <div class="fact"><span>Duration</span><b>42 s</b></div>
+                <div class="fact"><span>Run ID</span><b class="mono">2lb14eed</b></div>
+                <button class="evidence-link">
+                  Run evidence
+                  <svg class="icon" style="width: 10px; height: 10px"><use href="#i-arrow-right" /></svg>
+                </button>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </div>
+    </div>
+  </body>
+</html>

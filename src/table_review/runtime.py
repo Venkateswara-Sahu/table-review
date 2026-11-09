@@ -245,14 +245,33 @@ def main():
         print("Explicit initialization completed")
     else:
         import uvicorn
-        from fastapi.staticfiles import StaticFiles
+        from fastapi import HTTPException
+        from fastapi.responses import FileResponse
 
         from table_review.app import create_app
 
         app = create_app(settings)
         static = Path(os.environ.get("TABLE_REVIEW_WEB_ROOT", "/app/web/dist"))
         if static.is_dir():
-            app.mount("/", StaticFiles(directory=static, html=True), name="web")
+            root = static.resolve()
+            index = root / "index.html"
+
+            async def serve_web(full_path: str):
+                if full_path == "api" or full_path.startswith("api/"):
+                    raise HTTPException(status_code=404)
+                target = (root / full_path).resolve()
+                if target.is_file() and root in target.parents:
+                    return FileResponse(target)
+                # Client routes (for example /reports/<id>/pages/4) survive a
+                # refresh; the SPA router resolves them in the browser.
+                return FileResponse(index)
+
+            app.add_api_route(
+                "/{full_path:path}",
+                serve_web,
+                methods=["GET", "HEAD"],
+                include_in_schema=False,
+            )
         uvicorn.run(app, host="0.0.0.0", port=8000, access_log=False, log_level="warning")
 
 
