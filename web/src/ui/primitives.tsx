@@ -165,9 +165,11 @@ export function Field({
   className?: string;
 }) {
   return (
-    <label className={cx("field", className)} htmlFor={htmlFor}>
-      <span className="field-label">{label}</span>
-      {children}
+    <div className={cx("field", className)}>
+      <label className="field-control" htmlFor={htmlFor}>
+        <span className="field-label">{label}</span>
+        {children}
+      </label>
       {error ? (
         <span className="field-error" role="alert">
           {error}
@@ -175,7 +177,7 @@ export function Field({
       ) : hint ? (
         <span className="field-hint">{hint}</span>
       ) : null}
-    </label>
+    </div>
   );
 }
 

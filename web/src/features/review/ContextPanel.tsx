@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BookOpenText,
   Check,
@@ -42,6 +42,13 @@ export function ContextPanel({
   onSave: (operation: EditOperation) => void;
 }) {
   const [choices, setChoices] = useState<Partial<Record<Kind, string>>>({});
+
+  // A wording choice belongs to the cell whose proposals it came from. Reset
+  // it when the focused cell changes so another cell cannot inherit a stale
+  // (and possibly unavailable) proposal.
+  useEffect(() => {
+    setChoices({});
+  }, [context?.cell_id]);
 
   if (loading && !context)
     return (

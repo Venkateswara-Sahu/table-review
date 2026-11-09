@@ -16,7 +16,10 @@ function view(page: Page) {
 
 async function openMoreSection(page: Page, name: RegExp) {
   await page.getByRole("tab", { name: "Details", exact: true }).click();
-  await page.getByRole("button", { name }).click();
+  const section = page.getByRole("button", { name });
+  // A section stays mounted across tab switches; only toggle it when closed.
+  if ((await section.getAttribute("aria-expanded")) !== "true")
+    await section.click();
 }
 
 /** The synthetic report has no detected header row; mark row 1 and column 1. */

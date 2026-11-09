@@ -90,7 +90,9 @@ export function SubtotalsPanel({
     setTerms(group?.terms ?? []);
     setTolerance(group?.tolerance ?? "0");
     setConfirmed(false);
-    setDirty(!!group);
+    // Opening a saved relation is a read. Only an actual field change makes
+    // the setup dirty, so merely reviewing it cannot block navigation.
+    setDirty(false);
     setSetupOpen(!!group || !content.subtotal_groups.length);
   }
 

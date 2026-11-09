@@ -25,6 +25,11 @@ body {
   min-height: 100dvh;
 }
 
+/* Class display rules must not keep a natively hidden element visible. */
+[hidden] {
+  display: none !important;
+}
+
 h1,
 h2,
 h3,

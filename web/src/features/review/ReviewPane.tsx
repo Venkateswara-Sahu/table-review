@@ -938,39 +938,38 @@ export function ReviewPane({
               Loading review state…
             </p>
           )}
-          {tool === "more" && (
-            <MorePanel
-              view={view}
-              revision={revision}
-              review={review}
-              cell={cell}
-              selected={selected}
-              selection={selection}
-              busy={busy}
-              dirty={dirty}
-              subtotalDirty={subtotalDirty}
-              onSave={(operation) => void save(operation)}
-              onSource={(reference) =>
-                onSource(
-                  reference,
-                  cell ? `${cell.row + 1}:${cell.col + 1}` : undefined,
-                )
-              }
-              onSelect={(id) => {
-                const target = content.cells.find((item) => item.id === id);
-                if (target)
-                  selectPosition(
-                    { row: target.row, col: target.col },
-                    false,
-                    target,
-                  );
-              }}
-              onRestore={(id) => void restore(id)}
-              onRemove={() => void removeTable()}
-              onSubtotalDirty={setSubtotalDirty}
-              onPreview={(value) => setPreviewRevision(value)}
-            />
-          )}
+          <MorePanel
+            hidden={tool !== "more"}
+            view={view}
+            revision={revision}
+            review={review}
+            cell={cell}
+            selected={selected}
+            selection={selection}
+            busy={busy}
+            dirty={dirty}
+            subtotalDirty={subtotalDirty}
+            onSave={(operation) => void save(operation)}
+            onSource={(reference) =>
+              onSource(
+                reference,
+                cell ? `${cell.row + 1}:${cell.col + 1}` : undefined,
+              )
+            }
+            onSelect={(id) => {
+              const target = content.cells.find((item) => item.id === id);
+              if (target)
+                selectPosition(
+                  { row: target.row, col: target.col },
+                  false,
+                  target,
+                );
+            }}
+            onRestore={(id) => void restore(id)}
+            onRemove={() => void removeTable()}
+            onSubtotalDirty={setSubtotalDirty}
+            onPreview={(value) => setPreviewRevision(value)}
+          />
         </div>
       </aside>
 

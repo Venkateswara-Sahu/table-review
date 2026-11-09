@@ -64,7 +64,9 @@ export function HistoryPanel({
   const edits = useQuery({
     queryKey: ["history", tableId],
     queryFn: () => apiRequest<EditHistory>(`/api/v1/tables/${tableId}/history`),
-    staleTime: 10_000,
+    // History changes whenever an edit succeeds. Do not serve a cached list
+    // to a reviewer who reopens the panel after saving.
+    staleTime: 0,
   });
   const [previewing, setPreviewing] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState("");

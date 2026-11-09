@@ -12,6 +12,7 @@ import {
 import { apiRequest, errorMessage } from "../api/client";
 import {
   queryKeys,
+  tableSourcePage,
   useDocument,
   useOpenDocument,
   usePage,
@@ -207,11 +208,28 @@ export function WorkspaceScreen() {
   }, [reviewDirty, notify]);
 
   const openTable = useCallback(
-    (id: string) => {
+    (id: string, page = pageNo) => {
       if (!leaveReview()) return;
-      navigate(`/reports/${documentId}/pages/${pageNo}/tables/${id}`);
+      navigate(`/reports/${documentId}/pages/${page}/tables/${id}`);
     },
     [navigate, documentId, pageNo, leaveReview],
+  );
+
+  // Activity spans the whole report, so a run's table may live on another page.
+  // Resolve the table's own source page instead of inheriting the current one.
+  const openActivityTable = useCallback(
+    async (id: string) => {
+      if (!leaveReview()) return;
+      try {
+        const view = await apiRequest<TableView>(`/api/v1/tables/${id}`);
+        navigate(
+          `/reports/${documentId}/pages/${tableSourcePage(view)}/tables/${id}`,
+        );
+      } catch (error) {
+        notifyError(error);
+      }
+    },
+    [documentId, leaveReview, navigate, notifyError],
   );
 
   function changePage(nextPage: number) {
@@ -223,6 +241,9 @@ export function WorkspaceScreen() {
         Number.isFinite(nextPage) ? nextPage : 1,
       ),
     );
+    // A jump can clamp to the page already open, so no route change follows.
+    // Reflect the real page immediately instead of leaving the typed value.
+    setPageInput(String(clamped));
     navigate(`/reports/${documentId}/pages/${clamped}`);
   }
 
@@ -265,11 +286,15 @@ export function WorkspaceScreen() {
   }
 
   function onManualCreated(table: Table) {
+    const sourcePage = region?.page ?? pageNo;
     setRegion(null);
     void queryClient.invalidateQueries({
       queryKey: ["tables", documentId, pageNo],
     });
-    openTable(table.id);
+    void queryClient.invalidateQueries({
+      queryKey: ["tables", documentId, sourcePage],
+    });
+    openTable(table.id, sourcePage);
   }
 
   function onRevision() {
@@ -609,7 +634,7 @@ export function WorkspaceScreen() {
         }}
         onOpenTable={(id) => {
           setActivityOpen(false);
-          openTable(id);
+          void openActivityTable(id);
         }}
         onAdopted={(targetId) => {
           void queryClient.invalidateQueries({

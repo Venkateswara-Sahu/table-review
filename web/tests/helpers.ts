@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import path from "node:path";
-import type { Document, Table, TableView } from "../src/api/models";
+import type { Document, Table, TableView, Task } from "../src/api/models";
 
 export const fixturePath = (name = "report.pdf") =>
   path.resolve("../.cache/browser-fixtures", name);
@@ -100,6 +100,27 @@ export async function openFirstTable(page: Page) {
 export function tableIdFromUrl(page: Page) {
   const parts = new URL(page.url()).pathname.split("/").filter(Boolean);
   return parts[parts.length - 1];
+}
+
+export function documentIdFromUrl(page: Page) {
+  return new URL(page.url()).pathname.split("/").filter(Boolean)[1];
+}
+
+/** A task record for route-level work-state tests. */
+export function fixtureTask(overrides: Partial<Task> = {}): Task {
+  return {
+    id: crypto.randomUUID(),
+    document_id: "fixture-document",
+    kind: "extract",
+    input: { pages: [1] },
+    state: "succeeded",
+    attempt_count: 1,
+    cancellation_requested: false,
+    failure_code: null,
+    result: { conversion_outcome: "success" },
+    created_at: new Date().toISOString(),
+    ...overrides,
+  };
 }
 
 export function cell(page: Page, row: number, col: number) {

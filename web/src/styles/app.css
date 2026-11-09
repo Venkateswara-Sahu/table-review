@@ -384,7 +384,8 @@
   background-color: var(--surface);
 }
 
-.field {
+.field,
+.field-control {
   display: flex;
   flex-direction: column;
   gap: 5px;

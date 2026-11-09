@@ -45,6 +45,7 @@ export function MorePanel({
   onRemove,
   onSubtotalDirty,
   onPreview,
+  hidden,
 }: {
   view: TableView;
   revision: Revision;
@@ -62,6 +63,7 @@ export function MorePanel({
   onRemove: () => void;
   onSubtotalDirty: (value: boolean) => void;
   onPreview: (revision: Revision) => void;
+  hidden?: boolean;
 }) {
   const [open, setOpen] = useState<Section | null>(null);
   const context = useContext(
@@ -76,13 +78,14 @@ export function MorePanel({
   }
 
   return (
-    <div className="more-panel">
+    <div className="more-panel" hidden={hidden}>
       <Accordion
         icon={<Settings2 size={15} />}
         title="Table structure"
         description="Rows, columns, merged cells, headers and unit notes"
         open={open === "structure"}
         onToggle={() => toggle("structure")}
+        keepMounted
       >
         <StructurePanel
           content={revision.content}
@@ -219,6 +222,7 @@ function Accordion({
   open,
   onToggle,
   children,
+  keepMounted = false,
 }: {
   icon: React.ReactNode;
   title: string;
@@ -226,6 +230,7 @@ function Accordion({
   open: boolean;
   onToggle: () => void;
   children: React.ReactNode;
+  keepMounted?: boolean;
 }) {
   return (
     <section className={`more-accordion ${open ? "more-accordion-open" : ""}`}>
@@ -244,7 +249,13 @@ function Accordion({
         </span>
         <ChevronDown size={16} className="more-chevron" aria-hidden="true" />
       </button>
-      {open && <div className="more-accordion-body">{children}</div>}
+      {keepMounted ? (
+        <div className="more-accordion-body" hidden={!open}>
+          {children}
+        </div>
+      ) : (
+        open && <div className="more-accordion-body">{children}</div>
+      )}
     </section>
   );
 }
