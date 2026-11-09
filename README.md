@@ -15,7 +15,7 @@ Table Review extracts tables from digital or scanned PDF pages, places the extra
 
 - Upload a PDF (up to 50 MiB / 500 pages) and select one to five pages, or a region for OCR.
 - Extract native or image-based tables with Docling; build an explicit manual grid when detection misses a table.
-- Compare every cell with a highlighted, zoomable source page.
+- Compare every cell with a highlighted, zoomable source page; in page overview the visible page stays in sync with the route, page control and review desk.
 - Edit values, record explicit blanks and unreadable cells, and add source context: period, currency, scale and measure.
 - Declare subtotals, run consistency checks and keep an immutable review timeline.
 - Export XLSX or CSV with source references, review state and a revision checksum.
