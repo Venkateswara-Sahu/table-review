@@ -24,7 +24,14 @@ async function openMoreSection(page: Page, name: RegExp) {
 
 /** The synthetic report has no detected header row; mark row 1 and column 1. */
 async function setHeaderRoles(page: Page) {
+  const current = await view(page);
   await openMoreSection(page, /^Table structure/);
+  // The contract fixture already declares row 1 and column 1 as headers.
+  if (
+    current.revision.content.header_rows.includes(0) &&
+    current.revision.content.row_label_columns.includes(0)
+  )
+    return;
   await page.getByLabel("Header rows").fill("1");
   await page.getByLabel("Row label columns").fill("1");
   await page.getByRole("button", { name: "Save header roles" }).click();

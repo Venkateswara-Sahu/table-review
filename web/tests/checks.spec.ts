@@ -20,7 +20,7 @@ test("unreviewed blank cells stay open until the source decision is recorded", a
     page.getByRole("region", { name: "Source checks" }),
   ).toBeVisible();
   await expect(page.getByTestId("issue-progress")).toHaveText(
-    "8 unresolved issues",
+    "7 unresolved issues",
   );
   await expect(
     page.getByRole("article", { name: "Unreviewed blank" }),
@@ -62,47 +62,47 @@ test("a source check decision needs a reason and survives reload until reopened"
   await page.getByRole("tab", { name: /^Checks/ }).click();
 
   const issue = page.getByRole("article", {
-    name: "Limited source reference",
+    name: "Coverage unavailable",
     exact: true,
   });
   await expect(issue).toBeVisible();
   await issue.getByRole("button", { name: "Record a decision" }).click();
   await issue
-    .getByLabel("Decision reason for Limited source reference")
-    .fill("Compared the coarse region with the original page");
+    .getByLabel("Decision reason for Coverage unavailable")
+    .fill("Compared the bounded region with the original page");
   await issue.getByRole("button", { name: "Dismiss issue" }).click();
 
   await page.getByRole("button", { name: /^All / }).click();
   await expect(issue.getByText("Dismissed", { exact: true })).toBeVisible();
   await expect(issue).toContainText(
-    "Compared the coarse region with the original page",
+    "Compared the bounded region with the original page",
   );
   await expect(page.getByTestId("issue-progress")).toHaveText(
-    "7 unresolved issues",
+    "6 unresolved issues",
   );
 
   await page.reload();
   await page.getByRole("tab", { name: /^Checks/ }).click();
   await page.getByRole("button", { name: /^All / }).click();
   const retained = page.getByRole("article", {
-    name: "Limited source reference",
+    name: "Coverage unavailable",
     exact: true,
   });
   await expect(retained).toContainText("Dismissed");
   await expect(retained).toContainText(
-    "Compared the coarse region with the original page",
+    "Compared the bounded region with the original page",
   );
 
   await retained.getByRole("button", { name: "Change decision" }).click();
   await retained
-    .getByLabel("Decision reason for Limited source reference")
-    .fill("The coarse reference is expected for a manual grid");
+    .getByLabel("Decision reason for Coverage unavailable")
+    .fill("The source is unavailable for a local manual grid");
   await retained.getByRole("button", { name: "Record resolved" }).click();
   await expect(retained.getByText("Resolved", { exact: true })).toBeVisible();
 
   await retained.getByRole("button", { name: "Change decision" }).click();
   await retained
-    .getByLabel("Decision reason for Limited source reference")
+    .getByLabel("Decision reason for Coverage unavailable")
     .fill("Reopened to compare the region again");
   await retained.getByRole("button", { name: "Reopen" }).click();
   await expect(retained.getByText("Open", { exact: true })).toBeVisible();

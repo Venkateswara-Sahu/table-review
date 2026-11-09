@@ -149,6 +149,11 @@ test("mixed text and image guidance leads to an explicit OCR region request", as
   const requested = page.waitForRequest(
     (request) => request.method() === "POST" && /\/runs$/.test(request.url()),
   );
+  // The contract extractor only recognizes page 2's tokens; keep this test on
+  // the request contract so page 1 is not left in a failed extraction state.
+  await page.route("**/api/v1/documents/*/runs", (route) =>
+    route.fulfill({ json: task({ state: "queued", result: {} }) }),
+  );
   await dialog.getByRole("button", { name: "Start extraction" }).click();
   const payload = (await requested).postDataJSON() as {
     pages: number[];
