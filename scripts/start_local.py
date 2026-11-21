@@ -70,6 +70,7 @@ def build_runtime_env(
     backend: str,
     device: str,
     retention_days: str,
+    local_auto_login: bool = True,
     base_env: Mapping[str, str] | None = None,
 ) -> dict[str, str]:
     """Assemble the subprocess environment for local API, worker, and DB initialization."""
@@ -89,6 +90,7 @@ def build_runtime_env(
             "TABLE_REVIEW_PUBLIC_ORIGIN": origin,
             "TABLE_REVIEW_SECURE_COOKIES": "false",
             "TABLE_REVIEW_DEPLOYMENT_MODE": "local",
+            "TABLE_REVIEW_LOCAL_AUTO_LOGIN": "true" if local_auto_login else "false",
             "TABLE_REVIEW_RETENTION_DAYS": retention_days,
             "TABLE_REVIEW_EXTRACTION_BACKEND": backend,
             "TABLE_REVIEW_EXTRACTION_DEVICE": device,
@@ -232,6 +234,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Rebuild web/dist before launching the static UI",
     )
     parser.add_argument(
+        "--require-login",
+        action="store_true",
+        help="Require username/password sign-in instead of single-user local auto-login",
+    )
+    parser.add_argument(
         "--open",
         action="store_true",
         help="Open the workbench URL in the default browser once ready",
@@ -269,6 +276,7 @@ def main(argv: list[str] | None = None) -> int:
     backend = select_default_backend(models_root, args.backend)
     api_url = f"http://127.0.0.1:{args.port}"
     ui_url = "http://127.0.0.1:5173" if args.dev_ui else api_url
+    local_auto_login = not args.require_login
     runtime_env = build_runtime_env(
         root,
         database_url=database_url,
@@ -277,6 +285,7 @@ def main(argv: list[str] | None = None) -> int:
         backend=backend,
         device=args.device,
         retention_days=args.retention_days,
+        local_auto_login=local_auto_login,
     )
 
     init_step = subprocess.run(
@@ -304,16 +313,25 @@ def main(argv: list[str] | None = None) -> int:
                 subprocess.Popen([_npm_executable(), "run", "dev"], cwd=root / "web", env=vite_env)
             )
         _wait_for_api(api_url)
-        print()
-        print("  Table Review Workbench Ready")
-        print(f"  URL:        {ui_url}")
-        print(f"  Backend:    {backend} (device: {args.device})")
-        print(f"  Retention:  {'disabled (keep forever)' if args.retention_days.lower() in {'none', '0', 'off', 'forever'} else args.retention_days + ' days'}")
+        print(flush=True)
+        print("  Table Review Workbench Ready", flush=True)
+        print(f"  URL:        {ui_url}", flush=True)
+        print(f"  Backend:    {backend} (device: {args.device})", flush=True)
+        print(
+            f"  Retention:  {'disabled (keep forever)' if args.retention_days.lower() in {'none', '0', 'off', 'forever'} else args.retention_days + ' days'}",
+            flush=True,
+        )
+        print(
+            f"  Access:     {'local single-user (no login required; pass --require-login to enable sign-in)' if local_auto_login else 'sign-in required'}",
+            flush=True,
+        )
         if backend == "native_fast":
-            print("  Tip:        Run with --with-docling to enable OCR & scanned PDF extraction.")
-        print("  First run:  Open the URL above in your browser to create your local workspace account.")
-        print("  Press Ctrl+C to stop.")
-        print()
+            print(
+                "  Tip:        Run with --with-docling to enable OCR & scanned PDF extraction.",
+                flush=True,
+            )
+        print("  Press Ctrl+C to stop.", flush=True)
+        print(flush=True)
         if args.open:
             webbrowser.open(ui_url)
         while True:

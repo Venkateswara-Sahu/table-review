@@ -2521,6 +2521,11 @@
             "title": "Deployment Mode",
             "type": "string"
           },
+          "local_auto_login": {
+            "default": false,
+            "title": "Local Auto Login",
+            "type": "boolean"
+          },
           "max_selected_pages": {
             "title": "Max Selected Pages",
             "type": "integer"

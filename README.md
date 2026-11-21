@@ -75,7 +75,7 @@ uv sync --frozen --extra extraction --group dev
 .\scripts\start-local.ps1 --with-docling --open
 ```
 
-Open <http://127.0.0.1:8000> (if `--open` was omitted). On first run from loopback, the sign-in page shows a **Create your local workspace** form to create your account directly in the browser. Stop cleanly with `Ctrl+C`, and stop the background Postgres container (preserving all data volumes) with `--stop`.
+Open <http://127.0.0.1:8000> (or <http://localhost:8000> if `--open` was omitted). In fast local mode, Table Review opens **straight into your local workspace with no login screen** (`TABLE_REVIEW_LOCAL_AUTO_LOGIN=true` on loopback only; pass `--require-login` if you want username/password sign-in). Stop cleanly with `Ctrl+C`, and stop the background Postgres container (preserving all data volumes) with `--stop`.
 
 ### Option B: Hardened Docker Compose stack (offline network-isolated worker)
 

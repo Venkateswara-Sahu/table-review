@@ -104,11 +104,28 @@ def sign_in(payload: SignInInput, request: Request, response: Response):
 
 
 @router.get("/session", response_model=SessionView)
-def session_state(request: Request, actor: Annotated[Actor, Depends(require_actor)]):
+def session_state(request: Request, response: Response):
+    settings = request.app.state.settings
+    token = request.cookies.get("tr_session", "")
+    try:
+        actor = request.app.state.accounts.resolve_session(token)
+    except AuthenticationError:
+        if (
+            settings.deployment_mode == "local"
+            and settings.local_auto_login
+            and _is_loopback_request(request)
+        ):
+            grant = request.app.state.accounts.ensure_local_session()
+            _apply_session_cookies(response, grant, settings)
+            return {
+                "actor": grant.actor.model_dump(mode="json"),
+                "csrf_token": grant.csrf_token,
+            }
+        raise
     csrf = request.cookies.get("tr_csrf", "")
     if csrf:
         try:
-            request.app.state.accounts.validate_csrf(request.cookies.get("tr_session", ""), csrf)
+            request.app.state.accounts.validate_csrf(token, csrf)
         except AuthenticationError:
             csrf = ""
     return {"actor": actor.model_dump(mode="json"), "csrf_token": csrf}
@@ -127,6 +144,7 @@ def runtime_capabilities(
     )
     return {
         "deployment_mode": settings.deployment_mode,
+        "local_auto_login": settings.deployment_mode == "local" and settings.local_auto_login,
         "retention_days": settings.retention_days,
         "default_extraction_backend": settings.default_extraction_backend,
         "max_selected_pages": settings.max_selected_pages,

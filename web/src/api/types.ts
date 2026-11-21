@@ -1981,6 +1981,11 @@ export interface components {
        * @enum {string}
        */
       deployment_mode: "local" | "hosted";
+      /**
+       * Local Auto Login
+       * @default false
+       */
+      local_auto_login: boolean;
       /** Max Selected Pages */
       max_selected_pages: number;
       /** Retention Days */

@@ -26,6 +26,7 @@ Optional flags:
 - `--device auto|cpu|cuda|mps`: Selects compute device for ML extraction.
 - `--retention-days <N|none>`: Auto-expiry inactivity window (default `none`, keeping local documents forever).
 - `--dev-ui`: Launches the Vite dev server on `http://127.0.0.1:5173` with hot reload.
+- `--require-login`: Enables username/password sign-in instead of single-user local auto-login (`TABLE_REVIEW_LOCAL_AUTO_LOGIN=true` is enabled by default in `start_local.py` on loopback only, and strictly forbidden in `hosted` mode).
 - `--stop`: Stops the local PostgreSQL container while keeping all saved volumes.
 
 ## Hardened Docker Compose deployment

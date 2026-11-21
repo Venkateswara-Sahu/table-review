@@ -32,6 +32,7 @@
   --danger-soft-light: #fbeae7;
   --highlight-fill-light: rgba(36, 71, 201, 0.12);
   --code-background-light: #f3f4ef;
+  --code-foreground-light: #26302a;
   --scrollbar-thumb-light: #c1c8c0;
   --scrollbar-track-light: #ebede7;
 
@@ -61,6 +62,7 @@
   --danger-soft-dark: #391c1a;
   --highlight-fill-dark: rgba(111, 146, 255, 0.22);
   --code-background-dark: #1b221e;
+  --code-foreground-dark: #d7e0da;
   --scrollbar-thumb-dark: #46544c;
   --scrollbar-track-dark: #141916;
 
@@ -90,6 +92,7 @@
   --danger-soft: var(--danger-soft-light);
   --highlight-fill: var(--highlight-fill-light);
   --code-background: var(--code-background-light);
+  --code-foreground: var(--code-foreground-light);
   --scrollbar-thumb: var(--scrollbar-thumb-light);
   --scrollbar-track: var(--scrollbar-track-light);
 
@@ -150,6 +153,7 @@
     --danger-soft: var(--danger-soft-dark);
     --highlight-fill: var(--highlight-fill-dark);
     --code-background: var(--code-background-dark);
+    --code-foreground: var(--code-foreground-dark);
     --scrollbar-thumb: var(--scrollbar-thumb-dark);
     --scrollbar-track: var(--scrollbar-track-dark);
   }
@@ -211,6 +215,10 @@
     --code-background: light-dark(
       var(--code-background-light),
       var(--code-background-dark)
+    );
+    --code-foreground: light-dark(
+      var(--code-foreground-light),
+      var(--code-foreground-dark)
     );
     --scrollbar-thumb: light-dark(
       var(--scrollbar-thumb-light),

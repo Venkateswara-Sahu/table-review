@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from urllib.parse import urlsplit
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
@@ -57,6 +58,17 @@ def error_response(request, status, code, message, details=None):
     )
 
 
+def _allowed_origins(settings: Settings) -> frozenset[str]:
+    origins = {settings.public_origin}
+    if settings.deployment_mode == "local":
+        parsed = urlsplit(settings.public_origin)
+        if parsed.scheme == "http" and parsed.hostname in {"127.0.0.1", "localhost"}:
+            port_suffix = f":{parsed.port}" if parsed.port is not None else ""
+            origins.add(f"http://127.0.0.1{port_suffix}")
+            origins.add(f"http://localhost{port_suffix}")
+    return frozenset(origins)
+
+
 def create_app(settings: Settings) -> FastAPI:
     if settings.restore_pending_path.exists():
         raise JournalUnavailable("Restored service is awaiting verified reconciliation")
@@ -108,11 +120,13 @@ def create_app(settings: Settings) -> FastAPI:
         max_json_bytes=settings.max_json_bytes,
     )
 
+    allowed_origins = _allowed_origins(settings)
+
     @app.middleware("http")
     async def boundaries(request: Request, call_next):
         request.state.request_id = str(uuid4())
         if request.method not in ("GET", "HEAD", "OPTIONS"):
-            if request.headers.get("origin") != settings.public_origin:
+            if request.headers.get("origin") not in allowed_origins:
                 return error_response(request, 403, "origin_rejected", "Request origin not allowed")
             if not (request.method == "POST" and request.url.path in {"/api/v1/session", "/api/v1/setup"}):
                 try:

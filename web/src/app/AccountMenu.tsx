@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Monitor, Moon, Sun } from "lucide-react";
 import { apiRequest, clearPrivateState } from "../api/client";
+import { useCapabilities } from "../api/hooks";
 import { queryClient } from "./query";
 import { useSession } from "./session";
 import { useTheme, type ThemePreference } from "./theme";
@@ -10,10 +11,12 @@ import { Spinner } from "../ui/primitives";
 
 export function AccountMenu() {
   const { actor } = useSession();
+  const capabilities = useCapabilities(!!actor);
   const { preference, systemScheme, setPreference } = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const localAutoLogin = capabilities.data?.local_auto_login === true;
 
   if (!actor) return null;
 
@@ -48,7 +51,9 @@ export function AccountMenu() {
       <PopoverContent width={260} className="account-popover">
         <div className="account-card">
           <p className="account-card-name">{actor.username}</p>
-          <p className="account-card-meta">Private workspace</p>
+          <p className="account-card-meta">
+            {localAutoLogin ? "Local workbench" : "Private workspace"}
+          </p>
           <div className="hairline" />
           <div className="theme-control" role="group" aria-label="Appearance">
             <span className="theme-control-label">
@@ -98,15 +103,19 @@ export function AccountMenu() {
               ))}
             </div>
           </div>
-          <div className="hairline" />
-          <button
-            className="menu-item"
-            disabled={busy}
-            onClick={() => void signOut()}
-          >
-            {busy ? <Spinner size={14} /> : <LogOut size={15} />}
-            Sign out
-          </button>
+          {!localAutoLogin && (
+            <>
+              <div className="hairline" />
+              <button
+                className="menu-item"
+                disabled={busy}
+                onClick={() => void signOut()}
+              >
+                {busy ? <Spinner size={14} /> : <LogOut size={15} />}
+                Sign out
+              </button>
+            </>
+          )}
         </div>
       </PopoverContent>
     </Popover>

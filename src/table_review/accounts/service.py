@@ -108,6 +108,25 @@ class AccountService:
             session.flush()
             return self._issue_session(session, account, now)
 
+    def ensure_local_session(self, default_username: str = "local") -> SessionGrant:
+        """Open or create the single-user local workspace account and issue a session."""
+        now = datetime.now(UTC)
+        with self.session_factory.begin() as session:
+            if session.get_bind().dialect.name == "postgresql":
+                session.execute(text("SELECT pg_advisory_xact_lock(741852963)"))
+            account = session.scalar(
+                select(AccountRow)
+                .where(AccountRow.revoked_at.is_(None))
+                .order_by(AccountRow.created_at.asc())
+                .limit(1)
+            )
+            if account is None:
+                hashed = self.hasher.hash(secrets.token_urlsafe(32))
+                account = AccountRow(username=default_username, password_hash=hashed)
+                session.add(account)
+                session.flush()
+            return self._issue_session(session, account, now)
+
     def sign_in(self, username: str, password: str, client_key: str = "local") -> SessionGrant:
         normalized = username.strip().lower()
         throttle_key = secret_hash(normalized + "\0" + client_key)

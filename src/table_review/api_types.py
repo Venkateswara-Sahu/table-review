@@ -69,6 +69,7 @@ class AvailableBackendsView(APIModel):
 
 class RuntimeCapabilitiesView(APIModel):
     deployment_mode: Literal["local", "hosted"]
+    local_auto_login: bool = False
     retention_days: int | None
     default_extraction_backend: Literal["auto", "docling", "native_fast", "vlm"]
     max_selected_pages: int

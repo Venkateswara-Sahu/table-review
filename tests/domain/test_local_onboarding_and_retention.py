@@ -313,6 +313,7 @@ def test_local_setup_endpoints_flow_and_lock_after_first_account(tmp_path, monke
         assert caps.status_code == 200
         assert caps.json() == {
             "deployment_mode": "local",
+            "local_auto_login": False,
             "retention_days": None,
             "default_extraction_backend": "auto",
             "max_selected_pages": 20,
@@ -414,6 +415,63 @@ def test_start_local_helpers(tmp_path):
     assert built["TABLE_REVIEW_BIND_HOST"] == "127.0.0.1"
     assert built["TABLE_REVIEW_BIND_PORT"] == "8123"
     assert built["TABLE_REVIEW_DEPLOYMENT_MODE"] == "local"
+    assert built["TABLE_REVIEW_LOCAL_AUTO_LOGIN"] == "true"
     assert built["TABLE_REVIEW_RETENTION_DAYS"] == "none"
     assert built["TABLE_REVIEW_EXTRACTION_BACKEND"] == "native_fast"
     assert built["TABLE_REVIEW_VLM_MODEL"] == "qwen2.5vl:7b"
+
+
+def test_local_auto_login_and_loopback_origin_guards(tmp_path, monkeypatch):
+    with pytest.raises(ValidationError, match="local auto-login"):
+        Settings(
+            deployment_mode="hosted",
+            public_origin="https://reviews.example.com",
+            secure_cookies=True,
+            local_auto_login=True,
+        )
+
+    factory = _sqlite_auth_factory(tmp_path / "auto-login.sqlite3")
+    monkeypatch.setattr("table_review.app.create_session_factory", lambda *args, **kwargs: factory)
+    app = create_app(
+        Settings(
+            database_url="postgresql+psycopg://unused:unused@127.0.0.1/unused",
+            blob_root=tmp_path / "blobs",
+            model_path=tmp_path / "absent-models",
+            journal_path=tmp_path / "lifecycle" / "journal.sqlite3",
+            initialize_journal=True,
+            deployment_mode="local",
+            local_auto_login=True,
+            public_origin="http://127.0.0.1:8000",
+            secure_cookies=False,
+            retention_days=None,
+        )
+    )
+    with TestClient(app) as client:
+        # Proxied requests never get auto-logged in.
+        proxied = client.get("/api/v1/session", headers={"X-Forwarded-For": "203.0.113.10"})
+        assert proxied.status_code == 401
+
+        # Direct loopback opens straight into the local workspace with real session & CSRF cookies.
+        session = client.get("/api/v1/session")
+        assert session.status_code == 200
+        payload = session.json()
+        assert payload["actor"]["username"] == "local"
+        assert payload["csrf_token"]
+        assert "tr_session" in client.cookies
+        assert "tr_csrf" in client.cookies
+
+        caps = client.get("/api/v1/capabilities")
+        assert caps.status_code == 200
+        assert caps.json()["local_auto_login"] is True
+
+        # Local mode accepts both 127.0.0.1 and localhost on the same port, while rejecting foreign origins.
+        bad = client.delete(
+            "/api/v1/session",
+            headers={"Origin": "https://evil.example", "X-CSRF-Token": payload["csrf_token"]},
+        )
+        assert bad.status_code == 403
+        ok = client.delete(
+            "/api/v1/session",
+            headers={"Origin": "http://localhost:8000", "X-CSRF-Token": payload["csrf_token"]},
+        )
+        assert ok.status_code == 204

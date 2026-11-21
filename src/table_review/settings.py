@@ -44,6 +44,7 @@ class Settings(BaseModel):
     public_origin: str = "http://localhost:8000"
     secure_cookies: bool = True
     deployment_mode: Literal["local", "hosted"] = "local"
+    local_auto_login: bool = False
     max_render_pixels: int = 16_000_000
     journal_path: Path | None = None
     initialize_journal: bool = False
@@ -81,6 +82,8 @@ class Settings(BaseModel):
                 raise ValueError("Hosted mode requires an exact HTTPS origin without a path")
             if not self.secure_cookies:
                 raise ValueError("Hosted mode requires secure cookies")
+            if self.local_auto_login:
+                raise ValueError("Hosted mode cannot enable local auto-login")
         if self.retention_days is not None and self.retention_days < 1:
             raise ValueError("Retention days must be at least 1 or disabled (None)")
         if self.vlm_base_url is not None:
@@ -118,6 +121,9 @@ class Settings(BaseModel):
             public_origin=os.environ.get("TABLE_REVIEW_PUBLIC_ORIGIN", "http://localhost:8000"),
             secure_cookies=os.environ.get("TABLE_REVIEW_SECURE_COOKIES", "true").lower() != "false",
             deployment_mode=deployment_mode,
+            local_auto_login=(
+                os.environ.get("TABLE_REVIEW_LOCAL_AUTO_LOGIN", "false").lower() == "true"
+            ),
             retention_days=_parse_retention_days(
                 os.environ.get("TABLE_REVIEW_RETENTION_DAYS"), deployment_mode
             ),
