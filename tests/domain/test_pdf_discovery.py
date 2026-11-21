@@ -157,3 +157,13 @@ def test_pdf_child_handles_discovery_kinds():
         assert search["matches"][0]["page_no"] == 3
         candidates = pdf_child_process({"kind": "table_candidates", "source_path": str(report)})
         assert [c["page_no"] for c in candidates["candidates"]] == [2, 3]
+
+
+def test_pick_heading_skips_garbled_cid_text():
+    from table_review.documents.discovery import _pick_heading
+
+    assert _pick_heading(["I M % K J K L N O P", "QWRTY+XCVBN%$#@+"]) is None
+    assert (
+        _pick_heading(["I M % K J K L N O", "Consolidated Balance Sheets"])
+        == "Consolidated Balance Sheets"
+    )

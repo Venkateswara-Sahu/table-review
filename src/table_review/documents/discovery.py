@@ -286,6 +286,26 @@ def search_document(
     )
 
 
+def _is_readable_heading(clean: str) -> bool:
+    if "\ufffd" in clean:
+        return False
+    tokens = clean.split()
+    if not tokens:
+        return False
+    single_char = sum(1 for tok in tokens if len(tok) == 1)
+    if len(tokens) >= 4 and single_char / len(tokens) > 0.5:
+        return False
+    words = re.findall(r"[A-Za-z]{3,}", clean)
+    if not words:
+        return False
+    # Reject unmapped CID-font gibberish (e.g. "INIKNJJN+...") lacking normal vowels or packed with symbols.
+    readable_words = sum(1 for w in words if re.search(r"[AEIOUYaeiouy]", w))
+    if readable_words == 0:
+        return False
+    weird_symbols = sum(1 for c in clean if c in "+^~`|\\<>{}[]@#$%*=")
+    return weird_symbols <= max(2, len(clean) * 0.08)
+
+
 def _pick_heading(lines: list[str]) -> str | None:
     best_financial = None
     first_heading = None
@@ -297,6 +317,8 @@ def _pick_heading(lines: list[str]) -> str | None:
             continue
         letters = sum(c.isalpha() for c in clean)
         if letters < max(4, len(clean) * 0.45):
+            continue
+        if not _is_readable_heading(clean):
             continue
         if any(
             pat.search(clean)

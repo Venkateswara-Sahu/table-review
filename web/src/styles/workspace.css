@@ -209,12 +209,17 @@
 }
 
 .workspace-mobile-toggle button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   height: 100%;
   padding: 0 10px;
   border: 0;
   background: transparent;
   color: var(--muted);
   font-size: 11px;
+  white-space: nowrap;
 }
 
 .workspace-mobile-toggle button[aria-pressed="true"] {
@@ -715,7 +720,7 @@
   background: var(--surface);
   box-shadow: var(--shadow-page);
   border-radius: 1px;
-  outline: 1px solid rgba(20, 24, 22, 0.08);
+  outline: 1px solid var(--line);
 }
 
 .source-canvas {
@@ -889,6 +894,18 @@
   display: flex;
   flex-direction: column;
   overflow: auto;
+  background: var(--surface);
+}
+
+.table-panel-loading {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 24px;
   background: var(--surface);
 }
 

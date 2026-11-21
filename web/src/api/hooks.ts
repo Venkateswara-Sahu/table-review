@@ -96,6 +96,17 @@ export function usePage(documentId?: string, pageNo?: number) {
       ),
     enabled: !!documentId && !!pageNo && pageNo > 0,
     staleTime: 30_000,
+    placeholderData: (previousData, previousQuery) => {
+      const prevKey = previousQuery?.queryKey;
+      if (
+        Array.isArray(prevKey) &&
+        prevKey[0] === "page" &&
+        prevKey[1] === (documentId ?? "")
+      ) {
+        return previousData;
+      }
+      return undefined;
+    },
   });
 }
 

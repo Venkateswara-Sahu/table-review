@@ -37,7 +37,7 @@
   display: flex;
   flex-direction: column;
   background: var(--surface);
-  border: 1px solid rgba(20, 24, 22, 0.08);
+  border: 1px solid var(--line);
   border-radius: 3px;
   box-shadow: var(--shadow-page);
   overflow: hidden;
@@ -103,6 +103,7 @@
 }
 
 .table-switch select {
+  -webkit-appearance: none;
   appearance: none;
   max-width: 170px;
   padding: 2px 15px 2px 0;
@@ -114,6 +115,10 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   cursor: pointer;
+}
+
+.table-switch select::picker-icon {
+  display: none;
 }
 
 .table-switch select:disabled {
@@ -2526,14 +2531,15 @@
   }
 
   .verdict-body {
-    display: grid;
-    grid-template-columns: auto auto auto minmax(0, 1fr);
-    gap: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
     padding: 0 10px calc(8px + env(safe-area-inset-bottom, 0px));
   }
 
   .verdict-input {
-    grid-column: 1 / -1;
+    flex: 1 0 100%;
     width: 100%;
     min-width: 0;
     height: 36px;
@@ -2545,8 +2551,15 @@
   }
 
   .verdict-next {
-    justify-self: end;
     margin-left: 0;
+  }
+
+  .verdict-next-exception {
+    margin-left: auto;
+  }
+
+  .verdict-body > .verdict-next:first-of-type {
+    margin-left: auto;
   }
 
   .verdict-foot {

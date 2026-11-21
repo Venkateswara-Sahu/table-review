@@ -32,6 +32,7 @@ import {
 } from "../api/hooks";
 import {
   type PageBox,
+  type PageInfo,
   type SourceReference,
   type Table,
   type TableView,
@@ -147,15 +148,23 @@ export function WorkspaceScreen() {
   const [mobilePane, setMobilePane] = useState<"source" | "table">(
     tableId ? "table" : "source",
   );
+  const scrollSyncedPageRef = useRef<number | null>(null);
+  const defaultPageRef = useRef<{ documentId: string; page: PageInfo } | null>(
+    null,
+  );
 
   useEffect(() => {
+    const fromScroll = scrollSyncedPageRef.current === pageNo;
+    scrollSyncedPageRef.current = null;
     setPageInput(String(pageNo));
     setVisibleSourcePage(pageNo);
-    // A page change leaves the previous table's source reference behind.
-    // Keeping it would drag the preview back to the old page.
-    setReference(null);
-    setJump((value) => ({ page: pageNo, sequence: value.sequence + 1 }));
-    setRegion(null);
+    if (!fromScroll) {
+      // A page change leaves the previous table's source reference behind.
+      // Keeping it would drag the preview back to the old page.
+      setReference(null);
+      setJump((value) => ({ page: pageNo, sequence: value.sequence + 1 }));
+      setRegion(null);
+    }
   }, [pageNo]);
 
   // In page overview the source scroll position selects the page. While a
@@ -169,8 +178,10 @@ export function WorkspaceScreen() {
         1,
         Math.min(report.page_count, visibleSourcePage),
       );
+      if (clamped === pageNo) return;
+      scrollSyncedPageRef.current = clamped;
       setPageInput(String(clamped));
-      navigate(`/reports/${documentId}/pages/${clamped}`);
+      navigate(`/reports/${documentId}/pages/${clamped}`, { replace: true });
     }, 300);
     return () => window.clearTimeout(timer);
   }, [
@@ -284,9 +295,14 @@ export function WorkspaceScreen() {
         Number.isFinite(nextPage) ? nextPage : 1,
       ),
     );
+    scrollSyncedPageRef.current = null;
     // A jump can clamp to the page already open, so no route change follows.
     // Reflect the real page immediately instead of leaving the typed value.
     setPageInput(String(clamped));
+    if (clamped === pageNo && !tableId) {
+      setJump((value) => ({ page: clamped, sequence: value.sequence + 1 }));
+      return;
+    }
     navigate(`/reports/${documentId}/pages/${clamped}`);
   }
 
@@ -359,13 +375,25 @@ export function WorkspaceScreen() {
     );
   }
 
-  if (documentQuery.isPending || pageQuery.isPending) return <BootScreen />;
-  if (!documentQuery.data || !pageQuery.data) return <NotFoundScreen />;
-  if (pageNo < 1 || pageNo > documentQuery.data.page_count)
+  if (documentQuery.isPending) return <BootScreen />;
+  if (!documentQuery.data) return <NotFoundScreen />;
+  if (
+    !Number.isInteger(pageNo) ||
+    pageNo < 1 ||
+    pageNo > documentQuery.data.page_count
+  )
     return <NotFoundScreen />;
+  if (!pageQuery.data) {
+    if (pageQuery.isError) return <NotFoundScreen />;
+    return <BootScreen />;
+  }
 
   const report = documentQuery.data;
   const page = pageQuery.data;
+  if (defaultPageRef.current?.documentId !== documentId) {
+    defaultPageRef.current = { documentId, page };
+  }
+  const fallbackPage = defaultPageRef.current.page;
   const pageTasks = [...(tasksQuery.data?.items ?? [])]
     .filter((task) => {
       const pages = Array.isArray(task.input.pages)
@@ -380,32 +408,6 @@ export function WorkspaceScreen() {
     );
   const latestTask = pageTasks[0];
   const selectedTableIndex = tables.findIndex((item) => item.id === tableId);
-
-  if (tableId && viewQuery.isError) {
-    return (
-      <main className="page page-narrow">
-        <EmptyState
-          title="This table is not available"
-          icon={<Grid2X2 size={26} />}
-          actions={
-            <Link
-              to={`/reports/${documentId}/pages/${pageNo}`}
-              className="button button-secondary button-md"
-            >
-              Back to page {pageNo}
-            </Link>
-          }
-        >
-          <p className="muted">
-            It may have been removed, or the link may be incomplete.{" "}
-            {viewQuery.error.message}
-          </p>
-        </EmptyState>
-      </main>
-    );
-  }
-
-  if (tableId && viewQuery.isPending) return <BootScreen />;
 
   return (
     <main className={`workspace mobile-${mobilePane}`}>
@@ -585,6 +587,7 @@ export function WorkspaceScreen() {
             documentId={documentId}
             previews={previews}
             page={page}
+            fallbackPage={fallbackPage}
             pageCount={report.page_count}
             reference={reference?.reference ?? null}
             referenceLabel={reference?.label}
@@ -660,7 +663,32 @@ export function WorkspaceScreen() {
         />
 
         <div className="table-column">
-          {tableId && view ? (
+          {tableId && viewQuery.isError ? (
+            <div className="table-panel-loading">
+              <EmptyState
+                title="This table is not available"
+                icon={<Grid2X2 size={26} />}
+                actions={
+                  <Link
+                    to={`/reports/${documentId}/pages/${pageNo}`}
+                    className="button button-secondary button-md"
+                  >
+                    Back to page {pageNo}
+                  </Link>
+                }
+              >
+                <p className="muted">
+                  It may have been removed, or the link may be incomplete.{" "}
+                  {viewQuery.error.message}
+                </p>
+              </EmptyState>
+            </div>
+          ) : tableId && viewQuery.isPending ? (
+            <div className="table-panel-loading" role="status">
+              <Spinner size={18} />
+              <span className="small muted">Loading table…</span>
+            </div>
+          ) : tableId && view ? (
             <ReviewPane
               key={view.table.id}
               view={view}

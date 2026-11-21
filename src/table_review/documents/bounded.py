@@ -9,7 +9,7 @@ from table_review.documents.discovery import (
     TableCandidatesResult,
 )
 from table_review.documents.errors import DocumentError
-from table_review.documents.preview_host import PreviewHost
+from table_review.documents.preview_host import LocalPreviewHost, PreviewHost
 from table_review.documents.types import PageInfo, PdfInfo, RenderedPage
 from table_review.jobs.runner import ProcessingFailure, run_child
 from table_review.jobs.types import ProcessingLimits
@@ -23,7 +23,11 @@ class PdfOperations:
         self.settings, self.scratch = settings, scratch
         self.timeout_seconds = settings.pdf_timeout_seconds
         self.slot = Semaphore(1)
-        self.host = PreviewHost(settings, scratch) if sys.platform == "linux" else None
+        self.host = (
+            PreviewHost(settings, scratch)
+            if sys.platform == "linux"
+            else LocalPreviewHost(settings, scratch)
+        )
 
     def warmup(self):
         if self.host is not None:

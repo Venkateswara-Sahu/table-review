@@ -61,6 +61,18 @@ export class PdfPreviews {
     };
   }
 
+  promote(number: number) {
+    const existing = this.pending.get(number);
+    if (!existing) return;
+    for (const [signal] of existing.readers) {
+      if (!signal.aborted) existing.readers.set(signal, true);
+    }
+  }
+
+  isPending(number: number) {
+    return this.pending.has(number);
+  }
+
   subscribe(listener: (number: number) => void) {
     this.listeners.add(listener);
     return () => {

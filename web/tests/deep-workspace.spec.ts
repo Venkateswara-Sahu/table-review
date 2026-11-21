@@ -60,6 +60,84 @@ test("scrolling the source preview selects the visible page in overview", async 
   await expect(input).toHaveValue("4");
 });
 
+test("scrolling across pages never reloads the workspace, snaps scroll back, or drops viewer state", async ({
+  page,
+}) => {
+  await openReport(page, "long-report.pdf");
+  await expect(page.getByTestId("source-image")).toBeVisible();
+
+  // Delay page metadata reads to reproduce real-world latency during scroll sync.
+  await page.route(
+    /\/api\/v1\/documents\/[^/]+\/pages\/\d+$/,
+    async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await route.continue();
+    },
+  );
+
+  // Customize viewer state: zoom in and open the navigator drawer.
+  await page.getByRole("button", { name: "Zoom in", exact: true }).click();
+  const zoomBefore = await page.locator(".zoom-value").textContent();
+  await page
+    .getByRole("button", { name: "Document outline", exact: true })
+    .click();
+  const navDrawer = page.locator('aside[aria-label="Document navigator"]');
+  await expect(navDrawer).toBeVisible();
+
+  // Record DOM identity, history depth, and watch for any BootScreen unmount flash.
+  const initialHistoryLen = await page.evaluate(() => {
+    const el = document.querySelector(".source-scroll");
+    (window as unknown as Record<string, unknown>).__scrollEl = el;
+    (window as unknown as Record<string, unknown>).__bootFlashes = 0;
+    const observer = new MutationObserver(() => {
+      if (document.querySelector(".boot-screen")) {
+        (window as unknown as Record<string, number>).__bootFlashes++;
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    (window as unknown as Record<string, unknown>).__bootObserver = observer;
+    return window.history.length;
+  });
+
+  // Scroll to halfway down page 4 (not the top edge) and wait past the 300ms route sync.
+  const targetScrollTop = await page
+    .locator(".source-scroll")
+    .evaluate((el) => {
+      const root = el as HTMLElement;
+      const sheet = root.querySelector<HTMLElement>('[data-source-page="4"]');
+      if (!sheet) throw new Error("Page 4 missing");
+      root.scrollTop +=
+        sheet.getBoundingClientRect().top -
+        root.getBoundingClientRect().top +
+        180;
+      return root.scrollTop;
+    });
+
+  await expect(page.locator(".page-pill")).toContainText("Page 4");
+  await expect(page).toHaveURL(/\/pages\/4$/);
+  await expect(page.getByLabel("Page number")).toHaveValue("4");
+  await page.waitForTimeout(450);
+
+  const check = await page.evaluate(() => {
+    const rec = window as unknown as Record<string, unknown>;
+    (rec.__bootObserver as MutationObserver | undefined)?.disconnect();
+    const el = document.querySelector<HTMLElement>(".source-scroll");
+    return {
+      sameNode: el === rec.__scrollEl,
+      bootFlashes: rec.__bootFlashes as number,
+      scrollTop: el?.scrollTop ?? -1,
+      historyLen: window.history.length,
+    };
+  });
+
+  expect(check.sameNode).toBe(true);
+  expect(check.bootFlashes).toBe(0);
+  expect(Math.abs(check.scrollTop - targetScrollTop)).toBeLessThan(25);
+  expect(check.historyLen).toBe(initialHistoryLen);
+  await expect(page.locator(".zoom-value")).toHaveText(zoomBefore!);
+  await expect(navDrawer).toBeVisible();
+});
+
 test("scrolling the source preview does not leave an open table", async ({
   page,
 }) => {

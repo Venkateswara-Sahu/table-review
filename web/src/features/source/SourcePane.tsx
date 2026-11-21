@@ -49,6 +49,7 @@ export function SourcePane({
   documentId,
   previews,
   page,
+  fallbackPage,
   pageCount,
   reference,
   referenceLabel,
@@ -67,6 +68,7 @@ export function SourcePane({
   documentId: string;
   previews: PdfPreviews;
   page: PageInfo;
+  fallbackPage?: PageInfo;
   pageCount: number;
   reference: SourceReference | null;
   referenceLabel?: string;
@@ -86,6 +88,8 @@ export function SourcePane({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollFrame = useRef<number | null>(null);
   const [visiblePage, setVisiblePage] = useState(jump.page);
+  const visiblePageRef = useRef(visiblePage);
+  visiblePageRef.current = visiblePage;
   const [size, setSize] = useState({ width: 600, height: 600 });
   const [sizing, setSizing] = useState("width");
   const [zoom, setZoom] = useState(1);
@@ -111,7 +115,9 @@ export function SourcePane({
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setSearchQuery(searchInput.trim());
+      const trimmed = searchInput.trim();
+      setSearchQuery(trimmed);
+      if (!trimmed) setActiveMatch(null);
     }, 260);
     return () => window.clearTimeout(timer);
   }, [searchInput]);
@@ -190,20 +196,39 @@ export function SourcePane({
       const root = reader.current;
       if (!root || !root.clientHeight) return;
       const sheets = root.querySelectorAll<HTMLElement>("[data-source-page]");
+      if (!sheets.length) return;
       const line = root.getBoundingClientRect().top + root.clientHeight * 0.38;
       let low = 0,
         high = sheets.length - 1;
+      let found: HTMLElement | null = null;
       while (low <= high) {
         const middle = Math.floor((low + high) / 2);
         const box = sheets[middle].getBoundingClientRect();
         if (box.bottom <= line) low = middle + 1;
         else if (box.top > line) high = middle - 1;
         else {
-          const pageNo = Number(sheets[middle].dataset.sourcePage);
-          setVisiblePage(pageNo);
-          if (pageNo !== visiblePage) onVisiblePage(pageNo);
-          return;
+          found = sheets[middle];
+          break;
         }
+      }
+      if (!found) {
+        if (high < 0) found = sheets[0];
+        else if (low >= sheets.length) found = sheets[sheets.length - 1];
+        else {
+          const prevDist = Math.abs(
+            line - sheets[high].getBoundingClientRect().bottom,
+          );
+          const nextDist = Math.abs(
+            sheets[low].getBoundingClientRect().top - line,
+          );
+          found = prevDist <= nextDist ? sheets[high] : sheets[low];
+        }
+      }
+      const pageNo = Number(found.dataset.sourcePage);
+      if (pageNo !== visiblePageRef.current) {
+        visiblePageRef.current = pageNo;
+        setVisiblePage(pageNo);
+        onVisiblePage(pageNo);
       }
     });
   }
@@ -220,21 +245,24 @@ export function SourcePane({
     if (!element) return;
     const observer = new ResizeObserver(() => {
       if (!element.clientWidth || !element.clientHeight) return;
+      const currentPage = visiblePageRef.current;
       const frame = element.querySelector<HTMLElement>(
-        `[data-source-page="${visiblePage}"]`,
+        `[data-source-page="${currentPage}"]`,
       );
       if (frame) {
         const box = frame.getBoundingClientRect();
-        resizeAnchor.current = {
-          page: visiblePage,
-          ratio: Math.max(
-            0,
-            Math.min(
-              1,
-              (element.getBoundingClientRect().top - box.top) / box.height,
+        if (box.height > 0) {
+          resizeAnchor.current = {
+            page: currentPage,
+            ratio: Math.max(
+              0,
+              Math.min(
+                1,
+                (element.getBoundingClientRect().top - box.top) / box.height,
+              ),
             ),
-          ),
-        };
+          };
+        }
       }
       setSize((value) =>
         value.width === element.clientWidth &&
@@ -245,7 +273,7 @@ export function SourcePane({
     });
     observer.observe(element);
     return () => observer.disconnect();
-  }, [visiblePage]);
+  }, []);
 
   useLayoutEffect(() => {
     const element = reader.current,
@@ -278,6 +306,22 @@ export function SourcePane({
     });
     return () => cancelAnimationFrame(frame);
   }, [reference]);
+
+  useEffect(() => {
+    if (!activeMatch) return;
+    const frame = requestAnimationFrame(() => {
+      const element = reader.current;
+      const target = element?.querySelector<HTMLElement>(
+        ".source-search-highlight",
+      );
+      if (!element || !target) return;
+      const source = element.getBoundingClientRect(),
+        box = target.getBoundingClientRect();
+      if (box.top < source.top + 48 || box.bottom > source.bottom - 48)
+        element.scrollTop += box.top - source.top - 110;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [activeMatch]);
 
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
@@ -692,7 +736,7 @@ export function SourcePane({
               documentId={documentId}
               previews={previews}
               number={number}
-              fallback={page}
+              fallback={fallbackPage ?? page}
               reader={reader}
               scaleFor={scaleFor}
               reference={reference}
@@ -786,11 +830,20 @@ function PdfSheet({
   const [url, setUrl] = useState(""),
     [error, setError] = useState(""),
     [retry, setRetry] = useState(0);
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const nearRef = useRef(near);
+  nearRef.current = near;
+  const urlRef = useRef(url);
+  urlRef.current = url;
 
   useEffect(
     () =>
       previews.subscribe((evicted) => {
-        if (evicted === number) setUrl("");
+        if (evicted === number) {
+          setUrl("");
+          if (nearRef.current) setRetry((value) => value + 1);
+        }
       }),
     [previews, number],
   );
@@ -806,13 +859,29 @@ function PdfSheet({
   }, [reader]);
 
   useEffect(() => {
-    if (!near) return;
+    if (!active) return;
+    previews.promote(number);
+    const release = previews.retain(number);
+    if (nearRef.current && !urlRef.current && !previews.isPending(number)) {
+      setRetry((value) => value + 1);
+    }
+    return release;
+  }, [active, previews, number]);
+
+  useEffect(() => {
+    if (!near) {
+      setUrl("");
+      return;
+    }
     const controller = new AbortController();
-    const release = active ? previews.retain(number) : () => {};
     setError("");
     async function load() {
       try {
-        const image = await previews.preview(number, active, controller.signal);
+        const image = await previews.preview(
+          number,
+          activeRef.current,
+          controller.signal,
+        );
         if (!controller.signal.aborted) {
           setInfo(image.metadata);
           setUrl(image.url);
@@ -828,10 +897,8 @@ function PdfSheet({
     void load();
     return () => {
       controller.abort();
-      release();
-      setUrl("");
     };
-  }, [near, previews, number, retry, active]);
+  }, [near, previews, number, retry]);
 
   const metadata = info ?? { ...fallback, page_no: number };
   const scale = scaleFor(metadata),
