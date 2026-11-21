@@ -162,24 +162,13 @@ test("a declared subtotal matches, then needs confirmation after its total chang
   await expect(page.locator(".review-dirty-chip")).toContainText(
     "confirmed against source",
   );
-  await openMoreSection(page, /^Declared subtotals/);
-  await expect(results).toContainText("Unavailable");
-  await expect(results).toContainText("Confirm current source context");
-  await expect(results).not.toContainText("Within tolerance");
-
-  await openMoreSection(page, /^Source context/);
-  await cell(page, 3, 1).click();
-  for (const label of ["reporting period", "currency", "scale wording"]) {
-    await page
-      .getByRole("button", {
-        name: `Confirm ${label}`,
-        exact: true,
-      })
-      .click();
-    await expectSaved(page);
-  }
+  // Editing a cell's text preserves its confirmed source context (smart invalidation),
+  // so the declared subtotal immediately computes the discrepancy and asks to confirm again.
   await openMoreSection(page, /^Declared subtotals/);
   await expect(results).toContainText("Confirm again");
+  await expect(results).toContainText(
+    "Participating values or source context changed",
+  );
   await expect(results).not.toContainText("Within tolerance");
 
   await page.getByRole("button", { name: "Review relation" }).click();
