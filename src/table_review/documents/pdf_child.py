@@ -60,6 +60,23 @@ def process(payload):
         destination = Path(payload["target"])
         Path(rendered["image_path"]).replace(destination)
         return {**rendered, "image_path": str(destination)}
+    if payload["kind"] == "outline":
+        from table_review.documents.discovery import extract_outline
+
+        return extract_outline(path).model_dump(mode="json")
+    if payload["kind"] == "search":
+        from table_review.documents.discovery import search_document
+
+        return search_document(
+            path,
+            payload["query"],
+            limit=payload.get("limit", 100),
+            case_sensitive=payload.get("case_sensitive", False),
+        ).model_dump(mode="json")
+    if payload["kind"] == "table_candidates":
+        from table_review.documents.discovery import scan_table_candidates
+
+        return scan_table_candidates(path).model_dump(mode="json")
     raise ValueError("Unsupported PDF operation")
 
 

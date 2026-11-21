@@ -26,10 +26,12 @@ test("keyboard movement, range selection and Escape work in the grid", async ({
   await expect(footnote).toContainText("2 selected");
 
   await page.keyboard.press("Enter");
-  await expect(editor(page)).toBeFocused();
-  await expect(editor(page)).toHaveValue("1,234.50");
-  await editor(page).fill("discard this");
+  const inlineEditor = page.locator("input[data-inline-editor]");
+  await expect(inlineEditor).toBeFocused();
+  await expect(inlineEditor).toHaveValue("1,234.50");
+  await inlineEditor.fill("discard this");
   await page.keyboard.press("Escape");
+  await expect(inlineEditor).toHaveCount(0);
   await expect(editor(page)).toHaveValue("1,234.50");
   await expect(page.locator(".review-dirty-chip")).toHaveCount(0);
 
@@ -64,22 +66,14 @@ test("a saved interpretation change creates a new revision and reopens review ev
   const interpretation = page.getByLabel("Interpretation");
   const current = await interpretation.inputValue();
   const next = current === "uncertain" ? "text" : "uncertain";
-  await interpretation.selectOption(next);
-  await editor(page).fill("1,234.50 ");
   await expect(
-    page.getByRole("button", { name: "Save type", exact: true }),
-  ).toBeDisabled();
-  await expect(page.locator(".rail-hint")).toContainText("Save or discard");
-  await page.keyboard.press("Escape");
-  await expect(editor(page)).toHaveValue("1,234.50");
-  await expect(
-    page.getByRole("button", { name: "Save type", exact: true }),
+    page.getByRole("button", { name: "Save cell", exact: true }),
   ).toBeDisabled();
   await interpretation.selectOption(next);
   await expect(
-    page.getByRole("button", { name: "Save type", exact: true }),
+    page.getByRole("button", { name: "Save cell", exact: true }),
   ).toBeEnabled();
-  await page.getByRole("button", { name: "Save type", exact: true }).click();
+  await page.getByRole("button", { name: "Save cell", exact: true }).click();
   await expectSaved(page);
   await expect(page.locator(".review-alerts")).toContainText(
     "This edit changed the review evidence",

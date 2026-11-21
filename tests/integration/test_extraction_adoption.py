@@ -5,6 +5,7 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import update
 
+from table_review.checks.engine import CHECK_VERSION
 from table_review.jobs.models import TaskRow
 from table_review.tables.types import TableContent
 from tests.integration.test_jobs import extracted_outcome
@@ -111,7 +112,9 @@ def test_explicit_adoption_retains_corrections_and_original_and_uses_candidate_s
     )
     state = client.get(f"/api/v1/revisions/{saved['id']}/review").json()
     assert state["checked_cell_ids"] == [] and state["issue_decisions"] == {}
-    assert state["current_approval"] is None and state["check_versions"]["coverage"] == "2"
+    assert (
+        state["current_approval"] is None and state["check_versions"]["coverage"] == CHECK_VERSION
+    )
     assert saved["extraction_manifest"]["adoption"]["candidate_revision_id"] == str(
         candidate.original_revision_id
     )
@@ -170,7 +173,7 @@ def test_original_candidate_is_pinned_and_restore_recovers_its_own_source(client
     ).json()
     assert (
         client.get(f"/api/v1/revisions/{changed['id']}/review").json()["check_versions"]["coverage"]
-        == "2"
+        == CHECK_VERSION
     )
     restored = client.post(
         f"/api/v1/tables/{target.id}/restore",
@@ -198,7 +201,7 @@ def test_original_candidate_is_pinned_and_restore_recovers_its_own_source(client
     )
     assert (
         client.get(f"/api/v1/revisions/{again['id']}/review").json()["check_versions"]["coverage"]
-        == "2"
+        == CHECK_VERSION
     )
 
 

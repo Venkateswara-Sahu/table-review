@@ -319,19 +319,20 @@ class DeletionService:
                         self._request(
                             session, Actor(id=doc.owner_id), doc.id, now, entry.event.reason
                         )
-        with self.repository.session_factory.begin() as session:
-            candidates = session.scalars(
-                select(DocumentRow)
-                .where(
-                    DocumentRow.deleted_at.is_(None),
-                    DocumentRow.last_foreground_at
-                    <= now - timedelta(days=self.settings.retention_days),
-                )
-                .with_for_update(skip_locked=True)
-            ).all()
-            for doc in candidates:
-                self._request(session, Actor(id=doc.owner_id), doc.id, now, "retention")
-                expired += 1
+        if self.settings.retention_days is not None:
+            with self.repository.session_factory.begin() as session:
+                candidates = session.scalars(
+                    select(DocumentRow)
+                    .where(
+                        DocumentRow.deleted_at.is_(None),
+                        DocumentRow.last_foreground_at
+                        <= now - timedelta(days=self.settings.retention_days),
+                    )
+                    .with_for_update(skip_locked=True)
+                ).all()
+                for doc in candidates:
+                    self._request(session, Actor(id=doc.owner_id), doc.id, now, "retention")
+                    expired += 1
         with self.repository.session_factory() as session:
             identities = session.scalars(
                 select(DocumentRow.id).where(

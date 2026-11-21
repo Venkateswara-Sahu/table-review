@@ -174,7 +174,12 @@ test("a failed extraction offers retry and keeps every earlier attempt", async (
     "Extraction queued for page 1.",
   );
   await expect(page.getByRole("dialog", { name: "Activity" })).toBeVisible();
-  expect(requested).toEqual({ pages: [1], region: null });
+  expect(requested).toEqual({
+    pages: [1],
+    region: null,
+    backend: "auto",
+    mode: "accurate",
+  });
 });
 
 test("a queued extraction disables a duplicate run and explains the wait", async ({

@@ -6,10 +6,11 @@ from itertools import pairwise
 from uuid import NAMESPACE_URL, uuid5
 
 from table_review.checks.types import CheckContext, Issue
+from table_review.tables.auto_subtotals import detect_subtotals
 from table_review.tables.subtotals import evaluate_subtotals
 from table_review.tables.types import TableContent
 
-CHECK_VERSION = "2"
+CHECK_VERSION = "3"
 
 
 def normalize(text):
@@ -274,6 +275,22 @@ def evaluate_checks(content: TableContent, context: CheckContext) -> tuple[Issue
             result.reason,
             cells[result.group.total_cell_id].reference
             if result.group.total_cell_id in cells
+            else content.source_reference,
+        )
+    for detected in detect_subtotals(content, unreadable_ids=context.unreadable_cell_ids):
+        if detected.state != "difference":
+            continue
+        ids = {detected.total_cell_id, *detected.term_cell_ids} & cells.keys()
+        add(
+            "detected_subtotal_difference",
+            ids,
+            detected.model_dump(mode="json"),
+            (
+                f"Auto-detected sum for '{detected.label}' is {detected.input_sum}, "
+                f"differing from reported {detected.reported_total} by {detected.difference}."
+            ),
+            cells[detected.total_cell_id].reference
+            if detected.total_cell_id in cells
             else content.source_reference,
         )
     return tuple(issues)

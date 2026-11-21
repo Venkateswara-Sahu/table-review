@@ -37,10 +37,12 @@ def render_page(path: Path, page_no: int, scale: float) -> RenderedPage:
 
 
 @_serialized_pdfium
-def source_tokens(path: Path, page_no: int):
+def source_tokens(path: Path, page_no: int, *, source_hash: str | None = None):
     from table_review.extraction.types import SourceToken
 
-    source_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+    if source_hash is None:
+        with path.open("rb") as stream:
+            source_hash = hashlib.file_digest(stream, "sha256").hexdigest()
     tokens = []
     with pdfium.PdfDocument(path) as document, closing(_page(document, page_no)) as page:
         width, height = page.get_size()
@@ -90,17 +92,9 @@ def source_tokens(path: Path, page_no: int):
                 if not chars:
                     start = i
                 l, b, r, t = textpage.get_charbox(i)
-                l, r, b, t = l - crop_l, r - crop_l, b - crop_b, t - crop_b
-                if rotation == 0:
-                    mapped = (l, unrotated_h - t, r, unrotated_h - b)
-                elif rotation == 90:
-                    mapped = (b, l, t, r)
-                elif rotation == 180:
-                    mapped = (unrotated_w - r, b, unrotated_w - l, t)
-                elif rotation == 270:
-                    mapped = (unrotated_h - t, unrotated_w - r, unrotated_h - b, unrotated_w - l)
-                else:
-                    raise ValueError("Unsupported PDF rotation")
+                mapped = pdf_native.map_charbox(
+                    l, b, r, t, crop_l, crop_b, unrotated_w, unrotated_h, rotation
+                )
                 chars.append(character)
                 boxes.append(mapped)
             flush()

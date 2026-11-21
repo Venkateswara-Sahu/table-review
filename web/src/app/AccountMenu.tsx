@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, Monitor, Moon, Sun } from "lucide-react";
 import { apiRequest, clearPrivateState } from "../api/client";
 import { queryClient } from "./query";
 import { useSession } from "./session";
+import { useTheme, type ThemePreference } from "./theme";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Spinner } from "../ui/primitives";
 
 export function AccountMenu() {
   const { actor } = useSession();
+  const { preference, systemScheme, setPreference } = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -43,10 +45,59 @@ export function AccountMenu() {
           <span className="account-name">{actor.username}</span>
         </button>
       </PopoverTrigger>
-      <PopoverContent width={248} className="account-popover">
+      <PopoverContent width={260} className="account-popover">
         <div className="account-card">
           <p className="account-card-name">{actor.username}</p>
           <p className="account-card-meta">Private workspace</p>
+          <div className="hairline" />
+          <div className="theme-control" role="group" aria-label="Appearance">
+            <span className="theme-control-label">
+              Appearance
+              {preference === "system" && (
+                <span className="muted"> (System · {systemScheme})</span>
+              )}
+            </span>
+            <div className="theme-segmented">
+              {(
+                [
+                  {
+                    value: "system" as ThemePreference,
+                    label: "System",
+                    title: `System (currently ${systemScheme})`,
+                    icon: <Monitor size={13} aria-hidden="true" />,
+                  },
+                  {
+                    value: "light" as ThemePreference,
+                    label: "Light",
+                    title: "Light theme",
+                    icon: <Sun size={13} aria-hidden="true" />,
+                  },
+                  {
+                    value: "dark" as ThemePreference,
+                    label: "Dark",
+                    title: "Dark theme",
+                    icon: <Moon size={13} aria-hidden="true" />,
+                  },
+                ] as const
+              ).map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={
+                    preference === option.value
+                      ? "theme-option is-active"
+                      : "theme-option"
+                  }
+                  aria-pressed={preference === option.value}
+                  title={option.title}
+                  onClick={() => setPreference(option.value)}
+                >
+                  {option.icon}
+                  <span>{option.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="hairline" />
           <button
             className="menu-item"

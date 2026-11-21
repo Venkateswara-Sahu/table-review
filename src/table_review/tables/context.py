@@ -4,13 +4,22 @@ import hashlib
 import json
 import re
 
-from table_review.tables.context_types import CellContext, ContextProposal, ContextSource
+from table_review.tables.context_types import (
+    CellContext,
+    ContextBinding,
+    ContextProposal,
+    ContextSource,
+)
 
 _YEAR = re.compile(r"\b(?:18|19|20|21)\d{2}\b")
 _CURRENCY = re.compile(
-    r"\b(?:USD|EUR|GBP|INR|CAD|AUD|JPY|U\.S\.\s*dollars?)\b|\bUS\$|[$€£₹¥]", re.IGNORECASE
+    r"\b(?:USD|EUR|GBP|INR|CAD|AUD|JPY|CHF|CNY|HKD|SGD|U\.S\.\s*dollars?)\b|\bUS\$|Rs\.?|[$€£₹¥]",
+    re.IGNORECASE,
 )
-_SCALE = re.compile(r"\b(?:thousands?|millions?|billions?)\b", re.IGNORECASE)
+_SCALE = re.compile(
+    r"\b(?:thousands?|millions?|billions?|crores?|lakhs?|mn|bn)\b|[$€£₹]\s*[KMB]\b",
+    re.IGNORECASE,
+)
 _MEASURE = re.compile(r"%|\b(?:percent(?:age)?|amount|per[ -]share)\b", re.IGNORECASE)
 
 
@@ -150,22 +159,66 @@ class ContextIndex:
             warnings.append("Context has many alternatives; only the first 32 proposals are shown.")
             proposals = proposals[:32]
         valid = {item.id: item for item in proposals}
-        confirmed = tuple(
-            binding
-            for binding in self.bindings.get(cell_id, [])
-            if binding.id in valid
-            and binding.confirmed_by
-            and binding.confirmed_at
-            and binding.value == valid[binding.id].value
-            and binding.kind == valid[binding.id].kind
-            and binding.source_ids == valid[binding.id].source_ids
-        )
+        confirmed_list = []
+        for binding in self.bindings.get(cell_id, []):
+            if not (binding.confirmed_by and binding.confirmed_at):
+                continue
+            if binding.origin == "manual":
+                if binding.value.strip():
+                    confirmed_list.append(binding)
+                continue
+            if (
+                binding.id in valid
+                and binding.value == valid[binding.id].value
+                and binding.kind == valid[binding.id].kind
+                and binding.source_ids == valid[binding.id].source_ids
+            ):
+                confirmed_list.append(binding)
+        if self.content.table_context is not None:
+            tc = self.content.table_context
+            entries = tuple(
+                (kind, val.strip())
+                for kind, val in (
+                    ("period", tc.period),
+                    ("currency", tc.currency),
+                    ("scale", tc.scale),
+                    ("measure", tc.measure),
+                )
+                if val and val.strip()
+            )
+            if entries:
+                tc_text = "; ".join(f"{kind}: {val}" for kind, val in entries)
+                tc_source = ContextSource(
+                    id="table_context",
+                    text=tc_text[:800],
+                    raw_text=tc_text[:800],
+                    references=(self.content.source_reference or self.cells[cell_id].reference,),
+                    origin="manual",
+                )
+                sources = (*sources, tc_source)
+                confirmed_kinds = {item.kind for item in confirmed_list}
+                for kind, val in entries:
+                    if kind in confirmed_kinds:
+                        continue
+                    digest = hashlib.sha256(
+                        json.dumps(["table_context", kind, val], sort_keys=True).encode()
+                    ).hexdigest()
+                    confirmed_list.append(
+                        ContextBinding(
+                            id=digest,
+                            kind=kind,
+                            value=val,
+                            source_ids=("table_context",),
+                            cell_id=cell_id,
+                            origin="table_context",
+                        )
+                    )
         return CellContext(
             cell_id=cell_id,
             column_headers=column_headers,
             row_headers=row_headers,
             sources=sources,
             proposals=proposals,
-            confirmed=confirmed,
+            confirmed=tuple(confirmed_list),
             warnings=tuple(dict.fromkeys(warnings)),
         )

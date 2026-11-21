@@ -11,7 +11,7 @@ import type {
   EditOperation,
   SourceReference,
 } from "../../api/models";
-import { Badge, Button, InlineNote, Select } from "../../ui/primitives";
+import { Badge, Button, InlineNote, Input, Select } from "../../ui/primitives";
 
 type Kind = "period" | "currency" | "scale" | "measure";
 
@@ -42,12 +42,16 @@ export function ContextPanel({
   onSave: (operation: EditOperation) => void;
 }) {
   const [choices, setChoices] = useState<Partial<Record<Kind, string>>>({});
+  const [manualValues, setManualValues] = useState<
+    Partial<Record<Kind, string>>
+  >({});
 
   // A wording choice belongs to the cell whose proposals it came from. Reset
   // it when the focused cell changes so another cell cannot inherit a stale
   // (and possibly unavailable) proposal.
   useEffect(() => {
     setChoices({});
+    setManualValues({});
   }, [context?.cell_id]);
 
   if (loading && !context)
@@ -230,10 +234,65 @@ export function ContextPanel({
                 </>
               ) : (
                 <p className="small muted">
-                  No source-backed {title.toLowerCase()} proposal. Check the
-                  document; this field remains unconfirmed.
+                  No source-backed {title.toLowerCase()} proposal extracted.
                 </p>
               )}
+              <div className="context-manual-row">
+                <Input
+                  aria-label={`Manual ${title.toLowerCase()}`}
+                  placeholder={`Set ${title.toLowerCase()} manually…`}
+                  value={manualValues[kind] ?? ""}
+                  disabled={disabled}
+                  maxLength={120}
+                  onChange={(event) =>
+                    setManualValues((value) => ({
+                      ...value,
+                      [kind]: event.target.value,
+                    }))
+                  }
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      if (
+                        event.nativeEvent.isComposing ||
+                        event.keyCode === 229
+                      )
+                        return;
+                      const val = (manualValues[kind] ?? "").trim();
+                      if (!val || !selectedIds.length || disabled) return;
+                      onSave({
+                        kind: "set_context_manual",
+                        cell_ids: selectedIds,
+                        context_kind: kind,
+                        value: val,
+                      });
+                      setManualValues((prev) => ({ ...prev, [kind]: "" }));
+                    }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={
+                    disabled ||
+                    !(manualValues[kind] ?? "").trim() ||
+                    !selectedIds.length
+                  }
+                  onClick={() => {
+                    const val = (manualValues[kind] ?? "").trim();
+                    if (!val) return;
+                    onSave({
+                      kind: "set_context_manual",
+                      cell_ids: selectedIds,
+                      context_kind: kind,
+                      value: val,
+                    });
+                    setManualValues((prev) => ({ ...prev, [kind]: "" }));
+                  }}
+                >
+                  Set
+                </Button>
+              </div>
               {confirmed ? (
                 <p className="context-confirmed small">
                   <Sparkles size={12} aria-hidden="true" />

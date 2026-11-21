@@ -54,7 +54,6 @@ def test_signed_decimal_sum_and_absolute_tolerance_are_explicit():
         ("—", "uncertain"),
         ("12%", "percent"),
         ("1.2", "uncertain"),
-        ("$12", "en_us_number"),
     ],
 )
 def test_unsupported_inputs_never_become_zero(value, interpretation):
@@ -72,22 +71,54 @@ def test_unsupported_inputs_never_become_zero(value, interpretation):
         definition(content)
 
 
-def test_context_must_be_current_confirmed_and_compatible():
-    with pytest.raises(ValueError, match="context"):
-        definition(subtotal_table(confirmed=False))
+def test_currency_prefixed_values_and_unconfirmed_same_scope_subtotals_work():
+    from table_review.tables.subtotals import evaluate_subtotals
+
+    # Currency-prefixed amounts like "$10.10" parse cleanly as numeric and sum accurately.
+    prefixed = subtotal_table(confirmed=False, units="$ millions").model_copy(
+        update={
+            "cells": tuple(
+                c.model_copy(update={"text": "$10.10"})
+                if c.id == "r1c1"
+                else c.model_copy(update={"text": "$8.05"})
+                if c.id == "r3c1"
+                else c
+                for c in subtotal_table(confirmed=False, units="$ millions").cells
+            )
+        }
+    )
+    group = definition(prefixed)
+    result = evaluate_subtotals(prefixed.model_copy(update={"subtotal_groups": (group,)}))[0]
+    assert result.state == "match"
+    assert result.scope["currency"] == "$"
+    assert result.scope["period"] == "2025"
+
+
+def test_conflicting_scopes_and_currency_symbols_are_rejected():
     content = subtotal_table()
-    bad = content.model_copy(
+    bad_period = content.model_copy(
         update={
             "context_bindings": tuple(
-                b.model_copy(update={"value": "2024"})
+                b.model_copy(update={"value": "2024", "origin": "manual"})
                 if b.cell_id == "r2c1" and b.kind == "period"
                 else b
                 for b in content.context_bindings
             )
         }
     )
-    with pytest.raises(ValueError, match="context"):
-        definition(bad)
+    with pytest.raises(ValueError, match="differs"):
+        definition(bad_period)
+
+    bad_symbol = content.model_copy(
+        update={
+            "cells": tuple(
+                c.model_copy(update={"text": "€10.10"}) if c.id == "r1c1" else c
+                for c in content.cells
+            )
+        }
+    )
+    with pytest.raises(ValueError, match="currency"):
+        definition(bad_symbol)
 
 
 def test_participating_edits_require_confirmation_and_unrelated_edits_do_not():
@@ -142,9 +173,7 @@ def test_subtracting_a_negative_amount_is_not_silently_treated_as_addition():
     assert result.state == "match" and result.input_sum == "12.15"
 
 
-def test_ambiguous_currency_symbol_and_per_share_headers_are_rejected():
-    with pytest.raises(ValueError, match="currency"):
-        definition(subtotal_table(units="$ millions"))
+def test_per_share_headers_are_rejected():
     content = subtotal_table()
     content = content.model_copy(
         update={

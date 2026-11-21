@@ -38,6 +38,11 @@ def model_hashes(root: str):
     return verified_model_hashes(root)
 
 
+def _sha256_file(path: Path) -> str:
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
 def _vector_page(reader, page, region, destination):
     """Clip in vector space after making rotation explicit; map back with translation."""
     source = reader.pages[page.page_no - 1]
@@ -62,19 +67,63 @@ def _vector_page(reader, page, region, destination):
     return width, height, region.left if region else 0, region.top if region else 0
 
 
+def _resolve_device(config_device: str):
+    from docling.datamodel.accelerator_options import AcceleratorDevice
+
+    if config_device == "cpu":
+        return "cpu", AcceleratorDevice.CPU
+    if config_device == "cuda":
+        return "cuda", AcceleratorDevice.CUDA
+    if config_device == "mps":
+        return "mps", AcceleratorDevice.MPS
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            return "cuda", AcceleratorDevice.CUDA
+        mps = getattr(torch.backends, "mps", None)
+        if mps is not None and mps.is_available():
+            return "mps", AcceleratorDevice.MPS
+    except Exception:  # noqa: BLE001, S110 - safe fallback to CPU when torch GPU query fails
+        pass
+    return "cpu", AcceleratorDevice.CPU
+
+
 class DoclingExtractor:
-    def __init__(self):
+    name = "docling"
+
+    def __init__(self, *, warm_model_cache: bool = False):
         self._converters = {}
         self._options = {}
         self._mark_readers = {}
+        self._resolved_devices = {}
+        self._warm_model_cache = warm_model_cache
+        self._cached_model_state = None
+
+    def _verified_hashes(self, artifacts_path: Path):
+        resolved = artifacts_path.resolve()
+        if not self._warm_model_cache:
+            return model_hashes(str(resolved))
+        from table_review.runtime import _model_paths, _model_signature
+
+        sig = _model_signature(_model_paths(resolved))
+        if self._cached_model_state is not None:
+            cached_root, cached_sig, cached_hashes = self._cached_model_state
+            if cached_root == str(resolved) and cached_sig == sig:
+                return cached_hashes
+        self._converters.clear()
+        self._options.clear()
+        self._mark_readers.clear()
+        self._resolved_devices.clear()
+        hashes = model_hashes(str(resolved))
+        sig_after = _model_signature(_model_paths(resolved))
+        self._cached_model_state = (str(resolved), sig_after, hashes)
+        return hashes
 
     def _converter(self, config, use_ocr=False):
         key = config.model_dump_json() + f":ocr={use_ocr}"
         if key not in self._converters:
-            from docling.datamodel.accelerator_options import (
-                AcceleratorDevice,
-                AcceleratorOptions,
-            )
+            from docling.datamodel.accelerator_options import AcceleratorOptions
             from docling.datamodel.base_models import InputFormat
             from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode
             from docling.datamodel.settings import settings as docling_settings
@@ -82,6 +131,8 @@ class DoclingExtractor:
 
             from table_review.extraction.visible_backend import VisiblePdfBackend
 
+            resolved_device, accelerator_device = _resolve_device(config.device)
+            self._resolved_devices[key] = resolved_device
             options = PdfPipelineOptions(
                 artifacts_path=config.artifacts_path.resolve(),
                 do_ocr=use_ocr,
@@ -92,12 +143,14 @@ class DoclingExtractor:
                 enable_remote_services=False,
                 allow_external_plugins=False,
                 accelerator_options=AcceleratorOptions(
-                    device=AcceleratorDevice.CPU, num_threads=config.num_threads
+                    device=accelerator_device, num_threads=config.num_threads
                 ),
             )
             if use_ocr:
                 options.ocr_options = ocr_options(config)
-            options.table_structure_options.mode = TableFormerMode.ACCURATE
+            options.table_structure_options.mode = (
+                TableFormerMode.FAST if config.mode == "fast" else TableFormerMode.ACCURATE
+            )
             options.table_structure_options.do_cell_matching = config.cell_matching
             self._options[key] = options.model_dump(mode="json")
             docling_settings.debug.profile_pipeline_timings = True
@@ -124,12 +177,8 @@ class DoclingExtractor:
             raise ValueError("Encrypted PDFs are unsupported")
         if max(request.pages) > info.page_count:
             raise ValueError("Selected page is outside this PDF")
-        hashes = timing.call(
-            "model_identity", model_hashes, str(request.config.artifacts_path.resolve())
-        )
-        source_hash = timing.call(
-            "source_identity", lambda: hashlib.sha256(request.source_path.read_bytes()).hexdigest()
-        )
+        hashes = timing.call("model_identity", self._verified_hashes, request.config.artifacts_path)
+        source_hash = timing.call("source_identity", _sha256_file, request.source_path)
         pages = timing.call(
             "page_metadata",
             lambda: tuple(page_info(request.source_path, page) for page in request.pages),
@@ -153,13 +202,18 @@ class DoclingExtractor:
         thread.start()
         warnings, tables, transforms, outcomes, ocr_pages = [], [], [], [], []
         used_options = {}
+        device_used = "cpu" if request.config.device == "auto" else request.config.device
         try:
             reader = timing.call("pdf_reader", PdfReader, request.source_path)
             for page in pages:
                 page_started = time.monotonic()
                 use_ocr = page.requires_ocr and request.config.ocr_mode == "auto"
                 tokens = timing.call(
-                    "source_tokens", source_tokens, request.source_path, page.page_no
+                    "source_tokens",
+                    source_tokens,
+                    request.source_path,
+                    page.page_no,
+                    source_hash=source_hash,
                 )
                 pdf_page = reader.pages[page.page_no - 1]
                 ordinary = pdf_page.rotation == 0 and list(pdf_page.cropbox) == list(
@@ -224,6 +278,8 @@ class DoclingExtractor:
                 outcome["ocr"] = use_ocr
                 option_key = request.config.model_dump_json() + f":ocr={use_ocr}"
                 used_options["ocr" if use_ocr else "digital"] = self._options.get(option_key)
+                if option_key in self._resolved_devices:
+                    device_used = self._resolved_devices[option_key]
                 if use_ocr:
                     ocr_pages.append(page.page_no)
                     warnings.append(
@@ -491,8 +547,9 @@ class DoclingExtractor:
             page_info=pages,
             warnings=tuple(warnings),
             manifest={
+                "backend": "docling",
                 "source_sha256": source_hash,
-                "device": "cpu",
+                "device": device_used,
                 "config": request.config.model_dump(mode="json"),
                 "model_artifact_hashes": hashes,
                 **timing.call("runtime_identity", runtime_manifest),

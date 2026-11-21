@@ -1,18 +1,28 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Activity,
   ChevronLeft,
   ChevronRight,
+  FileSpreadsheet,
   FileText,
   Grid2X2,
   Keyboard,
+  Layers,
   Sparkles,
 } from "lucide-react";
-import { apiRequest, errorMessage } from "../api/client";
+import { apiRequest } from "../api/client";
 import {
   queryKeys,
   tableSourcePage,
+  useAllTables,
   useDocument,
   useOpenDocument,
   usePage,
@@ -30,8 +40,8 @@ import { useNotices } from "../app/notices";
 import { AccountMenu } from "../app/AccountMenu";
 import { useShortcuts } from "../app/shortcuts";
 import {
-  EmptyState,
   IconButton,
+  EmptyState,
   InlineNote,
   Input,
   Spinner,
@@ -40,12 +50,12 @@ import { ActivityDrawer } from "../features/source/ActivityDrawer";
 import { ExtractDialog } from "../features/source/ExtractDialog";
 import { ManualTableDialog } from "../features/source/ManualTableDialog";
 import { PdfPreviews } from "../features/source/PdfPreviews";
+import { ReportExportDialog } from "../features/source/ReportExportDialog";
 import { SourcePane } from "../features/source/SourcePane";
+import { StitchTablesDialog } from "../features/source/StitchTablesDialog";
 import { firstReviewableCell } from "../features/table/selection";
 import { TablePanel } from "../features/table/TablePanel";
 import { ReviewPane } from "../features/review/ReviewPane";
-import { StudyIndicator } from "../features/study/StudyIndicator";
-import { useStudy } from "../features/study/StudyRecorder";
 import { BootScreen } from "../ui/BootScreen";
 import { NotFoundScreen } from "./NotFound";
 import { queryClient } from "../app/query";
@@ -66,15 +76,16 @@ export function WorkspaceScreen() {
   const pageQuery = usePage(documentId, pageNo);
   const tasksQuery = useTasks(documentId);
   const tablesQuery = useTables(documentId, pageNo, false, false);
+  const allTablesQuery = useAllTables(documentId, true);
   const removedQuery = useTables(documentId, pageNo, true);
   const viewQuery = useTableView(tableId);
   const openDocument = useOpenDocument();
   const view = tableId ? viewQuery.data : undefined;
-  const study = useStudy();
   const processing = (tasksQuery.data?.items ?? []).some(
     (task) => task.state === "queued" || task.state === "running",
   );
   const tables = tablesQuery.data?.items ?? [];
+  const allTablesCount = allTablesQuery.data?.items.length ?? tables.length;
 
   const opened = useRef<string | null>(null);
   useEffect(() => {
@@ -88,22 +99,25 @@ export function WorkspaceScreen() {
   const previews = useMemo(() => new PdfPreviews(documentId), [documentId]);
   useEffect(() => () => previews.dispose(), [previews]);
 
-  // A trial pins the assigned original extraction. The recorder rejects a
-  // mismatched checksum or a jump to another table.
-  useEffect(() => {
-    if (!study || !view) return;
+  const deskRef = useRef<HTMLDivElement>(null);
+  const draggingSplit = useRef(false);
+  const [sourceRatio, setSourceRatio] = useState(() => {
     try {
-      study.observe(view.revision);
-    } catch (error) {
-      notifyError(error);
+      const saved = Number(window.localStorage.getItem("tr.splitRatio"));
+      return Number.isFinite(saved) && saved >= 0.22 && saved <= 0.68
+        ? saved
+        : 0.42;
+    } catch {
+      return 0.42;
     }
-  }, [study, view?.revision.id, view, notifyError]);
-
-  // The full-task clock is monotonic; only processing time is separated out.
+  });
   useEffect(() => {
-    study?.processing(processing);
-    return () => study?.processing(false);
-  }, [study, processing]);
+    try {
+      window.localStorage.setItem("tr.splitRatio", String(sourceRatio));
+    } catch {
+      /* Ignore restricted storage environments. */
+    }
+  }, [sourceRatio]);
 
   const [reference, setReference] = useState<{
     reference: SourceReference;
@@ -119,9 +133,14 @@ export function WorkspaceScreen() {
   } | null>(null);
   const [jump, setJump] = useState({ page: pageNo, sequence: 0 });
   const [extractOpen, setExtractOpen] = useState(false);
+  const [extractPageOverride, setExtractPageOverride] = useState<number | null>(
+    null,
+  );
   const [extractRegion, setExtractRegion] = useState<PageBox | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [reportExportOpen, setReportExportOpen] = useState(false);
+  const [stitchOpen, setStitchOpen] = useState(false);
   const [reviewDirty, setReviewDirty] = useState(false);
   const [pageInput, setPageInput] = useState(String(pageNo));
   const [visibleSourcePage, setVisibleSourcePage] = useState(pageNo);
@@ -296,11 +315,13 @@ export function WorkspaceScreen() {
 
   function onExtractPage() {
     setExtractRegion(null);
+    setExtractPageOverride(null);
     setExtractOpen(true);
   }
 
   function onExtractSelection() {
     if (!region) return;
+    setExtractPageOverride(null);
     setExtractRegion(region);
     setExtractOpen(true);
   }
@@ -428,7 +449,6 @@ export function WorkspaceScreen() {
               </span>
             </span>
           </div>
-          {study && <StudyIndicator />}
         </div>
 
         <div className="command-center">
@@ -506,6 +526,20 @@ export function WorkspaceScreen() {
               <span>Table</span>
             </button>
           </div>
+          <IconButton
+            label="Stitch multi-page tables"
+            disabled={allTablesCount < 2}
+            onClick={() => setStitchOpen(true)}
+          >
+            <Layers size={15} />
+          </IconButton>
+          <IconButton
+            label="Export combined Excel workbook"
+            disabled={allTablesCount < 1}
+            onClick={() => setReportExportOpen(true)}
+          >
+            <FileSpreadsheet size={15} />
+          </IconButton>
           <IconButton label="Activity" onClick={() => setActivityOpen(true)}>
             {processing ? <Spinner size={14} /> : <Activity size={16} />}
           </IconButton>
@@ -537,7 +571,15 @@ export function WorkspaceScreen() {
         </div>
       )}
 
-      <div className="workspace-desk">
+      <div
+        ref={deskRef}
+        className="workspace-desk"
+        style={
+          {
+            "--source-col": `${Math.round(sourceRatio * 1000) / 10}%`,
+          } as CSSProperties
+        }
+      >
         <div className="source-column">
           <SourcePane
             documentId={documentId}
@@ -560,14 +602,69 @@ export function WorkspaceScreen() {
             selection={region}
             onExtractRegion={onExtractSelection}
             onManualRegion={onManualSelection}
+            onJumpPage={(target) => {
+              if (!tableId) {
+                changePage(target);
+              } else {
+                setJump((value) => ({
+                  page: target,
+                  sequence: value.sequence + 1,
+                }));
+              }
+            }}
+            onQuickExtractPage={(target) => {
+              setExtractRegion(null);
+              setExtractPageOverride(target);
+              setExtractOpen(true);
+            }}
           />
         </div>
+
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize source and table panes"
+          aria-valuenow={Math.round(sourceRatio * 100)}
+          aria-valuemin={22}
+          aria-valuemax={68}
+          tabIndex={0}
+          className="workspace-divider"
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            draggingSplit.current = true;
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={(event) => {
+            if (!draggingSplit.current || !deskRef.current) return;
+            const rect = deskRef.current.getBoundingClientRect();
+            if (rect.width <= 0) return;
+            const raw = (event.clientX - rect.left) / rect.width;
+            setSourceRatio(Math.max(0.22, Math.min(0.68, raw)));
+          }}
+          onPointerUp={() => {
+            draggingSplit.current = false;
+          }}
+          onPointerCancel={() => {
+            draggingSplit.current = false;
+          }}
+          onDoubleClick={() => setSourceRatio(0.42)}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowLeft") {
+              event.preventDefault();
+              setSourceRatio((r) => Math.max(0.22, r - 0.02));
+            } else if (event.key === "ArrowRight") {
+              event.preventDefault();
+              setSourceRatio((r) => Math.min(0.68, r + 0.02));
+            }
+          }}
+        />
 
         <div className="table-column">
           {tableId && view ? (
             <ReviewPane
               key={view.table.id}
               view={view}
+              previews={previews}
               tableLabel={
                 selectedTableIndex >= 0
                   ? `Table ${selectedTableIndex + 1}`
@@ -590,12 +687,12 @@ export function WorkspaceScreen() {
                 void queryClient.invalidateQueries({
                   queryKey: ["tables", documentId, pageNo],
                 });
+                void queryClient.invalidateQueries({
+                  queryKey: queryKeys.allTables(documentId),
+                });
                 navigate(`/reports/${documentId}/pages/${pageNo}`);
               }}
-              checksEnabled={
-                !study || study.config.condition === "review_with_checks"
-              }
-              study={!!study}
+              checksEnabled
             />
           ) : (
             <TablePanel
@@ -622,9 +719,12 @@ export function WorkspaceScreen() {
 
       <ExtractDialog
         open={extractOpen}
-        onOpenChange={setExtractOpen}
+        onOpenChange={(open) => {
+          setExtractOpen(open);
+          if (!open) setExtractPageOverride(null);
+        }}
         documentId={documentId}
-        pageNo={pageNo}
+        pageNo={extractPageOverride ?? pageNo}
         pageCount={report.page_count}
         region={extractRegion}
         onStarted={() => {
@@ -633,6 +733,22 @@ export function WorkspaceScreen() {
           void queryClient.invalidateQueries({
             queryKey: queryKeys.tasks(documentId),
           });
+        }}
+      />
+
+      <ReportExportDialog
+        open={reportExportOpen}
+        onOpenChange={setReportExportOpen}
+        documentId={documentId}
+        filename={report.filename}
+      />
+
+      <StitchTablesDialog
+        open={stitchOpen}
+        onOpenChange={setStitchOpen}
+        documentId={documentId}
+        onStitched={(created, targetPage) => {
+          openTable(created.id, targetPage);
         }}
       />
 

@@ -22,6 +22,8 @@ export function VerdictTray({
   onConfirm,
   onVerdict,
   onNextUnchecked,
+  onNextException,
+  hasExceptions = false,
   busy,
   dirty,
 }: {
@@ -35,6 +37,8 @@ export function VerdictTray({
   onConfirm: () => void;
   onVerdict: (verdict: CellVerdict, reason?: string) => void;
   onNextUnchecked: () => void;
+  onNextException?: () => void;
+  hasExceptions?: boolean;
   busy: boolean;
   dirty: boolean;
 }) {
@@ -153,6 +157,18 @@ export function VerdictTray({
         >
           Unreadable
         </Button>
+        {hasExceptions && onNextException && (
+          <button
+            type="button"
+            className="verdict-next verdict-next-exception"
+            disabled={busy}
+            aria-label="Next exception cell"
+            onClick={onNextException}
+          >
+            Next issue
+            <kbd>E</kbd>
+          </button>
+        )}
         <button
           type="button"
           className="verdict-next"

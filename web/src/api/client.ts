@@ -1,5 +1,3 @@
-import { setActiveStudy } from "../features/study/StudyRecorder";
-
 let csrfToken = "";
 let sessionGeneration = 0;
 const requests = new Set<AbortController>();
@@ -20,7 +18,6 @@ export function setCsrf(token: string) {
 }
 
 export function clearPrivateState() {
-  setActiveStudy(null);
   csrfToken = "";
   sessionGeneration++;
   for (const controller of requests) controller.abort();
@@ -99,7 +96,10 @@ async function request(
           continue;
         if (
           response.status === 401 &&
-          !(path === "/api/v1/session" && options.method === "POST")
+          !(
+            (options.method ?? "GET").toUpperCase() === "POST" &&
+            (path === "/api/v1/session" || path === "/api/v1/setup")
+          )
         ) {
           clearPrivateState();
           window.dispatchEvent(new Event("session-lost"));
@@ -136,6 +136,18 @@ export async function apiBlob(
   if (generation !== sessionGeneration)
     throw new DOMException("Session changed", "AbortError");
   return blob;
+}
+
+export async function apiText(
+  path: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  const generation = sessionGeneration;
+  const response = await request(path, { signal });
+  const text = await response.text();
+  if (generation !== sessionGeneration)
+    throw new DOMException("Session changed", "AbortError");
+  return text;
 }
 
 export function errorMessage(error: unknown) {

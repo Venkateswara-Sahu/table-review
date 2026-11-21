@@ -6,6 +6,18 @@ from urllib.parse import urlsplit
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
+def _parse_retention_days(raw: str | None, deployment_mode: str) -> int | None:
+    cleaned = (raw or "").strip().lower()
+    if not cleaned:
+        return None if deployment_mode == "local" else 30
+    if cleaned in {"0", "none", "off", "false", "forever", "unlimited", "disabled"}:
+        return None
+    try:
+        return int(cleaned)
+    except ValueError as error:
+        raise ValueError("TABLE_REVIEW_RETENTION_DAYS must be a positive integer or 'none'") from error
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(frozen=True)
     max_pdf_bytes: int = 50 * 1024 * 1024
@@ -14,7 +26,7 @@ class Settings(BaseModel):
     pdf_memory_bytes: int = 512 * 1024 * 1024
     pdf_wait_seconds: float = 2
     max_pdf_pages: int = 500
-    max_selected_pages: int = 5
+    max_selected_pages: int = 20
     max_rows: int = 500
     max_columns: int = 60
     max_grid_slots: int = 10_000
@@ -23,7 +35,7 @@ class Settings(BaseModel):
     task_timeout_seconds: int = 600
     lease_seconds: int = 60
     heartbeat_seconds: int = 15
-    retention_days: int = 30
+    retention_days: int | None = 30
     worker_memory_bytes: int = 6 * 1024**3
     model_path: Path = Path("models")
     database_url: str = Field(default="", repr=False)
@@ -39,6 +51,13 @@ class Settings(BaseModel):
     backup_root: Path = Path("data/backups")
     max_backup_bytes: int = 256 * 1024**2
     worker_pulse_path: Path | None = None
+    default_extraction_backend: Literal["auto", "docling", "native_fast", "vlm"] = "auto"
+    extraction_device: Literal["auto", "cpu", "cuda", "mps"] = "auto"
+    vlm_base_url: str | None = None
+    vlm_api_key: str | None = Field(default=None, repr=False)
+    vlm_model: str | None = None
+    vlm_timeout_seconds: float = 120.0
+    allow_vlm_in_hosted: bool = False
 
     @model_validator(mode="after")
     def hosted_boundary(self):
@@ -62,10 +81,25 @@ class Settings(BaseModel):
                 raise ValueError("Hosted mode requires an exact HTTPS origin without a path")
             if not self.secure_cookies:
                 raise ValueError("Hosted mode requires secure cookies")
+        if self.retention_days is not None and self.retention_days < 1:
+            raise ValueError("Retention days must be at least 1 or disabled (None)")
+        if self.vlm_base_url is not None:
+            try:
+                vlm_url = urlsplit(self.vlm_base_url)
+                valid_vlm = (
+                    vlm_url.scheme in ("http", "https")
+                    and bool(vlm_url.hostname)
+                    and not any(c.isspace() for c in self.vlm_base_url)
+                )
+            except ValueError:
+                valid_vlm = False
+            if not valid_vlm:
+                raise ValueError("VLM base URL must use http or https with a valid hostname")
         return self
 
     @classmethod
     def from_env(cls):
+        deployment_mode = os.environ.get("TABLE_REVIEW_DEPLOYMENT_MODE", "local")
         return cls(
             database_url=os.environ["TABLE_REVIEW_DATABASE_URL"],
             database_schema=os.environ.get("TABLE_REVIEW_DATABASE_SCHEMA"),
@@ -83,7 +117,19 @@ class Settings(BaseModel):
             else None,
             public_origin=os.environ.get("TABLE_REVIEW_PUBLIC_ORIGIN", "http://localhost:8000"),
             secure_cookies=os.environ.get("TABLE_REVIEW_SECURE_COOKIES", "true").lower() != "false",
-            deployment_mode=os.environ.get("TABLE_REVIEW_DEPLOYMENT_MODE", "local"),
+            deployment_mode=deployment_mode,
+            retention_days=_parse_retention_days(
+                os.environ.get("TABLE_REVIEW_RETENTION_DAYS"), deployment_mode
+            ),
+            default_extraction_backend=os.environ.get("TABLE_REVIEW_EXTRACTION_BACKEND", "auto"),
+            extraction_device=os.environ.get("TABLE_REVIEW_EXTRACTION_DEVICE", "auto"),
+            vlm_base_url=os.environ.get("TABLE_REVIEW_VLM_BASE_URL") or None,
+            vlm_api_key=os.environ.get("TABLE_REVIEW_VLM_API_KEY") or None,
+            vlm_model=os.environ.get("TABLE_REVIEW_VLM_MODEL") or None,
+            vlm_timeout_seconds=float(os.environ.get("TABLE_REVIEW_VLM_TIMEOUT_SECONDS", "120.0")),
+            allow_vlm_in_hosted=(
+                os.environ.get("TABLE_REVIEW_ALLOW_VLM_IN_HOSTED", "false").lower() == "true"
+            ),
         )
 
     @property

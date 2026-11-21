@@ -12,6 +12,7 @@ from table_review.accounts.service import (
     AccountService,
     AuthenticationError,
     InvalidAccount,
+    SetupUnavailable,
     SignInThrottled,
 )
 from table_review.api_types import ErrorEnvelope, ReadinessView
@@ -113,7 +114,7 @@ def create_app(settings: Settings) -> FastAPI:
         if request.method not in ("GET", "HEAD", "OPTIONS"):
             if request.headers.get("origin") != settings.public_origin:
                 return error_response(request, 403, "origin_rejected", "Request origin not allowed")
-            if request.url.path != "/api/v1/session" or request.method != "POST":
+            if not (request.method == "POST" and request.url.path in {"/api/v1/session", "/api/v1/setup"}):
                 try:
                     await run_in_threadpool(
                         app.state.accounts.validate_csrf,
@@ -156,6 +157,10 @@ def create_app(settings: Settings) -> FastAPI:
             if request.method == "POST" and request.url.path == "/api/v1/session"
             else "Sign in required",
         )
+
+    @app.exception_handler(SetupUnavailable)
+    async def setup_unavailable(request, error):
+        return error_response(request, 403, "setup_unavailable", str(error))
 
     @app.exception_handler(NotFound)
     async def not_found(request, error):

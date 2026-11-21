@@ -7,20 +7,37 @@ import {
   type PointerEvent,
   type RefObject,
 } from "react";
-import { Minus, Plus, ScanLine, X } from "lucide-react";
+import {
+  ListTree,
+  Minus,
+  Plus,
+  ScanLine,
+  Search,
+  Sparkles,
+  Table2,
+  X,
+} from "lucide-react";
 import { errorMessage } from "../../api/client";
+import {
+  useDocumentOutline,
+  useDocumentSearch,
+  useTableCandidates,
+} from "../../api/hooks";
 import type {
   Cell,
+  OutlineItem,
   PageBox,
   PageInfo,
+  SearchMatch,
   SourceReference,
 } from "../../api/models";
 import { cellAddress } from "../table/address";
 import { sourceBoxToPixels } from "./coordinates";
 import type { PdfPreviews } from "./PdfPreviews";
-import { Button, IconButton, Select } from "../../ui/primitives";
+import { Button, IconButton, Input, Select } from "../../ui/primitives";
 
 type Jump = { page: number; sequence: number };
+type NavTab = "outline" | "search" | "candidates" | null;
 type Draw = (
   event: PointerEvent<HTMLDivElement>,
   info: PageInfo,
@@ -44,6 +61,8 @@ export function SourcePane({
   selection,
   onExtractRegion,
   onManualRegion,
+  onJumpPage,
+  onQuickExtractPage,
 }: {
   documentId: string;
   previews: PdfPreviews;
@@ -60,8 +79,11 @@ export function SourcePane({
   selection: PageBox | null;
   onExtractRegion: () => void;
   onManualRegion: () => void;
+  onJumpPage?: (page: number) => void;
+  onQuickExtractPage?: (page: number) => void;
 }) {
   const reader = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollFrame = useRef<number | null>(null);
   const [visiblePage, setVisiblePage] = useState(jump.page);
   const [size, setSize] = useState({ width: 600, height: 600 });
@@ -69,8 +91,64 @@ export function SourcePane({
   const [zoom, setZoom] = useState(1);
   const [selecting, setSelecting] = useState(false);
   const [preview, setPreview] = useState<PageBox | null>(null);
+  const [navTab, setNavTab] = useState<NavTab>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeMatch, setActiveMatch] = useState<SearchMatch | null>(null);
   const anchor = useRef<{ x: number; y: number; page: PageInfo } | null>(null);
   const resizeAnchor = useRef<{ page: number; ratio: number } | null>(null);
+
+  const outlineQuery = useDocumentOutline(documentId, navTab === "outline");
+  const searchQueryRes = useDocumentSearch(
+    documentId,
+    searchQuery,
+    navTab === "search",
+  );
+  const candidatesQuery = useTableCandidates(
+    documentId,
+    navTab === "candidates",
+  );
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+    }, 260);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        setNavTab("search");
+        requestAnimationFrame(() => {
+          searchInputRef.current?.focus();
+          searchInputRef.current?.select();
+        });
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  function navigateToPage(targetPage: number) {
+    const clamped = Math.max(1, Math.min(pageCount, targetPage));
+    if (onJumpPage) {
+      onJumpPage(clamped);
+    }
+    if (reader.current) {
+      const frame = reader.current.querySelector<HTMLElement>(
+        `[data-source-page="${clamped}"]`,
+      );
+      if (frame) {
+        reader.current.scrollTop +=
+          frame.getBoundingClientRect().top -
+          reader.current.getBoundingClientRect().top -
+          8;
+      }
+    }
+    setVisiblePage(clamped);
+  }
 
   useEffect(
     () => () => {
@@ -267,6 +345,38 @@ export function SourcePane({
     <section className="source-pane" aria-label="Report source">
       <div className="source-tools">
         <IconButton
+          label="Document outline"
+          aria-pressed={navTab === "outline"}
+          className={navTab === "outline" ? "is-active" : undefined}
+          onClick={() =>
+            setNavTab((cur) => (cur === "outline" ? null : "outline"))
+          }
+        >
+          <ListTree size={14} />
+        </IconButton>
+        <IconButton
+          label="Find text in PDF (Ctrl+F)"
+          aria-pressed={navTab === "search"}
+          className={navTab === "search" ? "is-active" : undefined}
+          onClick={() => {
+            setNavTab((cur) => (cur === "search" ? null : "search"));
+            requestAnimationFrame(() => searchInputRef.current?.focus());
+          }}
+        >
+          <Search size={14} />
+        </IconButton>
+        <IconButton
+          label="Find likely tables"
+          aria-pressed={navTab === "candidates"}
+          className={navTab === "candidates" ? "is-active" : undefined}
+          onClick={() =>
+            setNavTab((cur) => (cur === "candidates" ? null : "candidates"))
+          }
+        >
+          <Table2 size={14} />
+        </IconButton>
+        <span className="rule-v" aria-hidden="true" />
+        <IconButton
           label="Zoom out"
           disabled={currentScale <= 0.25}
           onClick={() => {
@@ -356,6 +466,217 @@ export function SourcePane({
         </div>
       )}
 
+      {navTab !== null && (
+        <aside className="source-nav-drawer" aria-label="Document navigator">
+          <header className="source-nav-head">
+            <div className="source-nav-tabs" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={navTab === "outline"}
+                className={navTab === "outline" ? "active" : undefined}
+                onClick={() => setNavTab("outline")}
+              >
+                Contents
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={navTab === "search"}
+                className={navTab === "search" ? "active" : undefined}
+                onClick={() => setNavTab("search")}
+              >
+                Find
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={navTab === "candidates"}
+                className={navTab === "candidates" ? "active" : undefined}
+                onClick={() => setNavTab("candidates")}
+              >
+                Tables
+              </button>
+            </div>
+            <IconButton
+              label="Close navigator"
+              size="sm"
+              onClick={() => setNavTab(null)}
+            >
+              <X size={13} />
+            </IconButton>
+          </header>
+
+          <div className="source-nav-body">
+            {navTab === "outline" && (
+              <div className="source-nav-section">
+                {outlineQuery.isPending ? (
+                  <p className="small muted">Loading contents…</p>
+                ) : outlineQuery.isError ? (
+                  <p className="small error">{outlineQuery.error.message}</p>
+                ) : !(outlineQuery.data?.items.length ?? 0) ? (
+                  <p className="small muted">
+                    This PDF has no embedded outline bookmarks. Try Find or
+                    Tables to jump directly.
+                  </p>
+                ) : (
+                  <ul className="outline-list">
+                    {outlineQuery.data!.items.map((item, idx) => (
+                      <OutlineNode
+                        key={`${idx}-${item.title}`}
+                        item={item}
+                        onJump={navigateToPage}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {navTab === "search" && (
+              <div className="source-nav-section">
+                <div className="source-search-bar">
+                  <Input
+                    ref={searchInputRef}
+                    data-pdf-search-input
+                    aria-label="Search report text"
+                    placeholder="Find revenue, EPS, balance sheet…"
+                    value={searchInput}
+                    onChange={(event) => setSearchInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        if (
+                          event.nativeEvent.isComposing ||
+                          event.keyCode === 229
+                        )
+                          return;
+                        setSearchQuery(searchInput.trim());
+                      } else if (event.key === "Escape") {
+                        setNavTab(null);
+                      }
+                    }}
+                  />
+                </div>
+                {!searchQuery ? (
+                  <p className="tiny muted">
+                    Type text to search all {pageCount} pages.
+                  </p>
+                ) : searchQueryRes.isPending ? (
+                  <p className="small muted">Searching PDF…</p>
+                ) : searchQueryRes.isError ? (
+                  <p className="small error">{searchQueryRes.error.message}</p>
+                ) : !searchQueryRes.data?.matches.length ? (
+                  <p className="small muted">No matches for “{searchQuery}”.</p>
+                ) : (
+                  <>
+                    <p className="tiny muted">
+                      {searchQueryRes.data.total_matches} match
+                      {searchQueryRes.data.total_matches === 1 ? "" : "es"}
+                      {searchQueryRes.data.truncated
+                        ? " (showing first 80)"
+                        : ""}
+                    </p>
+                    <ul className="search-match-list">
+                      {searchQueryRes.data.matches.map((match, idx) => {
+                        const isSelected = activeMatch === match;
+                        const before = match.snippet.slice(
+                          0,
+                          match.match_start,
+                        );
+                        const hit = match.snippet.slice(
+                          match.match_start,
+                          match.match_end,
+                        );
+                        const after = match.snippet.slice(match.match_end);
+                        return (
+                          <li key={`${match.page_no}-${idx}`}>
+                            <button
+                              type="button"
+                              className={`search-match-item ${
+                                isSelected ? "is-selected" : ""
+                              }`}
+                              onClick={() => {
+                                setActiveMatch(match);
+                                navigateToPage(match.page_no);
+                              }}
+                            >
+                              <span className="mono tiny search-match-page">
+                                p.{match.page_no}
+                              </span>
+                              <span className="search-match-snippet">
+                                {before}
+                                <mark>{hit}</mark>
+                                {after}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </>
+                )}
+              </div>
+            )}
+
+            {navTab === "candidates" && (
+              <div className="source-nav-section">
+                {candidatesQuery.isPending ? (
+                  <p className="small muted">Scanning pages for tables…</p>
+                ) : candidatesQuery.isError ? (
+                  <p className="small error">{candidatesQuery.error.message}</p>
+                ) : !(candidatesQuery.data?.candidates.length ?? 0) ? (
+                  <p className="small muted">
+                    No born-digital financial tables auto-detected. Scanned
+                    pages still support region or OCR extraction.
+                  </p>
+                ) : (
+                  <ul className="candidate-list">
+                    {candidatesQuery.data!.candidates.map((cand) => (
+                      <li key={cand.page_no} className="candidate-card">
+                        <button
+                          type="button"
+                          className="candidate-main"
+                          onClick={() => navigateToPage(cand.page_no)}
+                        >
+                          <div className="row spread">
+                            <span className="mono tiny">p.{cand.page_no}</span>
+                            <span className="candidate-score tiny">
+                              <Sparkles size={10} aria-hidden="true" />
+                              {Math.round(cand.score * 100)}%
+                            </span>
+                          </div>
+                          <strong className="candidate-heading">
+                            {cand.heading ||
+                              `Financial data page ${cand.page_no}`}
+                          </strong>
+                          <span className="tiny muted">
+                            {cand.numeric_lines} numeric rows ·{" "}
+                            {cand.signals
+                              .slice(0, 3)
+                              .map((s) => s.replaceAll("_", " "))
+                              .join(", ")}
+                          </span>
+                        </button>
+                        {onQuickExtractPage && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => onQuickExtractPage(cand.page_no)}
+                          >
+                            Extract
+                          </Button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        </aside>
+      )}
+
       <div
         ref={reader}
         className="source-scroll"
@@ -384,6 +705,9 @@ export function SourcePane({
               onDraw={draw}
               onCancel={cancel}
               active={number === visiblePage}
+              searchBoxes={
+                activeMatch?.page_no === number ? activeMatch.boxes : []
+              }
             />
           ),
         )}
@@ -436,6 +760,7 @@ function PdfSheet({
   onDraw,
   onCancel,
   active,
+  searchBoxes = [],
 }: {
   documentId: string;
   previews: PdfPreviews;
@@ -451,6 +776,7 @@ function PdfSheet({
   region: PageBox | null;
   drawing: boolean;
   active: boolean;
+  searchBoxes?: PageBox[];
   onCancel: () => void;
   onDraw: Draw;
 }) {
@@ -594,6 +920,13 @@ function PdfSheet({
               style={selected}
             />
           )}
+          {searchBoxes.map((box, index) => (
+            <div
+              key={index}
+              className="source-search-highlight"
+              style={sourceBoxToPixels(box, { width, height })}
+            />
+          ))}
           {area && (
             <div
               data-testid={drawing ? "region-preview" : "region-selection"}
@@ -604,5 +937,41 @@ function PdfSheet({
         </div>
       </div>
     </div>
+  );
+}
+
+function OutlineNode({
+  item,
+  onJump,
+}: {
+  item: OutlineItem;
+  onJump: (page: number) => void;
+}) {
+  return (
+    <li className="outline-node">
+      <button
+        type="button"
+        className="outline-item"
+        disabled={item.page_no == null}
+        style={{ paddingLeft: `${8 + Math.min(item.depth, 5) * 12}px` }}
+        onClick={() => item.page_no != null && onJump(item.page_no)}
+      >
+        <span className="outline-title">{item.title}</span>
+        {item.page_no != null && (
+          <span className="mono tiny muted">p.{item.page_no}</span>
+        )}
+      </button>
+      {item.children && item.children.length > 0 && (
+        <ul className="outline-list">
+          {item.children.map((child, idx) => (
+            <OutlineNode
+              key={`${idx}-${child.title}`}
+              item={child}
+              onJump={onJump}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
   );
 }

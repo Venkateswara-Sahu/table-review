@@ -11,11 +11,54 @@ from table_review.tables.subtotal_types import SubtotalGroup, SubtotalResult
 
 POLICY = "declared_sum_v1"
 
+_CURRENCY_FAMILY = {
+    "$": "dollar",
+    "US$": "dollar",
+    "USD": "dollar",
+    "CA$": "dollar",
+    "CAD": "dollar",
+    "A$": "dollar",
+    "AUD": "dollar",
+    "HK$": "dollar",
+    "HKD": "dollar",
+    "S$": "dollar",
+    "SGD": "dollar",
+    "NZ$": "dollar",
+    "€": "euro",
+    "EUR": "euro",
+    "£": "pound",
+    "GBP": "pound",
+    "₹": "rupee",
+    "INR": "rupee",
+    "Rs": "rupee",
+    "Rs.": "rupee",
+    "¥": "yen",
+    "JPY": "yen",
+    "CNY": "yen",
+    "CHF": "franc",
+}
+
+
+def _currency_family(text: str | None) -> str | None:
+    if not text:
+        return None
+    stripped = text.strip()
+    if stripped in _CURRENCY_FAMILY:
+        return _CURRENCY_FAMILY[stripped]
+    upper = stripped.upper()
+    for token, family in _CURRENCY_FAMILY.items():
+        if token.upper() == upper or re.search(rf"\b{re.escape(token)}\b", stripped, re.IGNORECASE):
+            return family
+    return None
+
 
 def _evidence(content, group, index, unreadable_ids=()):
     cells = {cell.id: cell for cell in content.cells}
     participants = [term.cell_id for term in group.terms] + [group.total_cell_id]
-    scope = None
+    participant_cols = {cells[cid].col for cid in participants if cid in cells}
+    same_column = len(participant_cols) == 1
+    agreed_scope: dict[str, str] = {}
+    cell_symbols: set[str] = set()
     records = []
     size = 0
     for identity in participants:
@@ -39,20 +82,6 @@ def _evidence(content, group, index, unreadable_ids=()):
                 f"Cell {identity} is not a supported explicit numeric amount; blanks, percentages and uncertain values are not zero"
             )
         context = index.cell(identity)
-        bindings = {item.kind: item for item in context.confirmed}
-        if not {"period", "currency", "scale"} <= bindings.keys():
-            raise ValueError(
-                f"Confirm current source context (period, currency and scale) for cell {identity}"
-            )
-        current = {kind: bindings[kind].value for kind in ("period", "currency", "scale")}
-        if not re.search(
-            r"\b(?:USD|EUR|GBP|INR|CAD|AUD|JPY|U\.S\.\s*dollars?)\b|US\$",
-            current["currency"],
-            re.IGNORECASE,
-        ):
-            raise ValueError(
-                "Subtotal currency context needs an explicit currency code; a symbol alone is ambiguous"
-            )
         if any(
             re.search(r"%|\b(?:percent(?:age)?|per[ -]share)\b", source.text, re.IGNORECASE)
             for source in (*context.column_headers, *context.row_headers)
@@ -60,16 +89,42 @@ def _evidence(content, group, index, unreadable_ids=()):
             raise ValueError(
                 "Percentage and per-share header context is outside additive currency-amount checks"
             )
-        if scope is not None and scope != current:
-            raise ValueError(
-                "Subtotal context differs between cells; periods, currencies and scales must match exactly"
+        bindings = {item.kind: item for item in context.confirmed}
+        effective: dict[str, str] = {}
+        for kind in ("period", "currency", "scale"):
+            if kind in bindings:
+                effective[kind] = bindings[kind].value
+        if "period" not in effective and same_column and context.column_headers:
+            header_text = " / ".join(
+                source.text.strip() for source in context.column_headers if source.text.strip()
             )
-        scope = current
+            if header_text:
+                effective["period"] = header_text
+        if parsed.currency_symbol:
+            cell_symbols.add(parsed.currency_symbol)
+            if "currency" in effective:
+                bound_family = _currency_family(effective["currency"])
+                cell_family = _currency_family(parsed.currency_symbol)
+                if bound_family and cell_family and bound_family != cell_family:
+                    raise ValueError(
+                        "Subtotal context differs between cells; currency symbols must match declared currency"
+                    )
+        for kind, value in effective.items():
+            if kind in agreed_scope and agreed_scope[kind] != value:
+                raise ValueError(
+                    "Subtotal context differs between cells; periods, currencies and scales must match exactly"
+                )
+            agreed_scope[kind] = value
         records.append(
             {
                 "cell": cell.model_dump(mode="json"),
                 "number": format(number, "f"),
-                "context": {kind: bindings[kind].model_dump(mode="json") for kind in current},
+                "context": {
+                    kind: bindings[kind].model_dump(mode="json")
+                    for kind in ("period", "currency", "scale")
+                    if kind in bindings
+                },
+                "effective_scope": effective,
                 "sources": [source.model_dump(mode="json") for source in context.sources],
                 "column_headers": [
                     source.model_dump(mode="json") for source in context.column_headers
@@ -82,9 +137,13 @@ def _evidence(content, group, index, unreadable_ids=()):
             raise ValueError(
                 "Subtotal source evidence exceeds its 128 KiB budget; use fewer inputs or simpler header context"
             )
+    if len(cell_symbols) > 1:
+        raise ValueError("Subtotal context differs between cells; currency symbols must match")
+    if "currency" not in agreed_scope and len(cell_symbols) == 1:
+        agreed_scope["currency"] = next(iter(cell_symbols))
     evidence = {
         "policy": POLICY,
-        "scope": scope,
+        "scope": agreed_scope,
         "cells": records,
         "shape": [content.rows, content.columns],
         "headers": content.header_rows,
@@ -96,7 +155,7 @@ def _evidence(content, group, index, unreadable_ids=()):
     digest = hashlib.sha256(
         json.dumps(evidence, sort_keys=True, ensure_ascii=True).encode()
     ).hexdigest()
-    return digest, scope, records
+    return digest, agreed_scope, records
 
 
 def confirm_group(content, group: SubtotalGroup):

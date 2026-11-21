@@ -8,6 +8,7 @@ import secrets
 import shutil
 import socket
 import subprocess
+import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -61,6 +62,11 @@ def main():
     parser.add_argument("--acceptance", action="store_true")
     parser.add_argument("--fresh-acceptance", action="store_true")
     parser.add_argument("--stop", action="store_true")
+    parser.add_argument(
+        "--preload",
+        action="store_true",
+        help="Download and verify offline Docling and RapidOCR models if not already cached",
+    )
     storage = parser.add_mutually_exclusive_group()
     storage.add_argument("--model-volume", help="Existing checksum-verified offline model volume")
     storage.add_argument(
@@ -69,6 +75,8 @@ def main():
     args = parser.parse_args()
     if args.stop and (args.model_volume or args.bind_models):
         parser.error("Stopping does not change model storage")
+    if args.preload and args.stop:
+        parser.error("Stopping does not preload models")
     if args.fresh_acceptance:
         if args.stop:
             parser.error("Fresh initialization and stopping are separate actions")
@@ -170,6 +178,9 @@ def main():
             raise SystemExit("Preloaded OCR mark model differs from recorded identity")
     # Deployment is not a preload action: never bless changed bundled OCR files
     # by replacing their frozen manifest during a storage change or rollback.
+    if args.preload and not (root / "models/runtime-manifest.lock").is_file():
+        command([sys.executable, "scripts/preload_models.py"], timeout=1800)
+        command([sys.executable, "scripts/preload_ocr_models.py"], timeout=600)
     verify_source_models(root / "models")
     command(compose + ["build", "api", "worker"], timeout=900)
     if state.get("model_volume"):
@@ -293,7 +304,11 @@ def main():
     else:
         recorded.pop("model_volume", None)
     project_file.write_text(json.dumps(recorded), encoding="utf-8")
-    print("Private local application ready at " + state["url"])
+    print(
+        "Private local application ready at "
+        + state["url"]
+        + " (open in your browser to create your local account on first run)"
+    )
 
 
 if __name__ == "__main__":

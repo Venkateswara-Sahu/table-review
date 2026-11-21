@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Query, Request
@@ -9,13 +9,16 @@ from table_review.accounts.types import Actor
 from table_review.api_types import RunList, RunView, TaskList, TaskView
 from table_review.documents.service import DocumentError
 from table_review.documents.types import ImmutableModel, PageBox
+from table_review.extraction.types import ExtractionBackend
 
 router = APIRouter(prefix="/api/v1")
 
 
 class RunInput(ImmutableModel):
-    pages: tuple[int, ...] = Field(min_length=1, max_length=5)
+    pages: tuple[int, ...] = Field(min_length=1, max_length=20)
     region: PageBox | None = None
+    backend: ExtractionBackend = "auto"
+    mode: Literal["accurate", "fast"] = "accurate"
 
     @model_validator(mode="after")
     def selected(self):

@@ -78,3 +78,53 @@ def test_accounting_negative_zero_retains_sign():
     from table_review.tables.numbers import interpret_value
 
     assert interpret_value("(0.00)", "value", "en_us_number").decimal_value.as_tuple().sign == 1
+    assert interpret_value("($0.00)", "value", "en_us_number").decimal_value.as_tuple().sign == 1
+
+
+@pytest.mark.parametrize(
+    "text,mode,value,currency",
+    [
+        ("$1,234.50", "en_us_number", "1234.50", "$"),
+        ("$ 1,234.50", "en_us_number", "1234.50", "$"),
+        ("($1,234.50)", "en_us_number", "-1234.50", "$"),
+        ("$(1,234.50)", "en_us_number", "-1234.50", "$"),
+        ("-$1,234", "en_us_number", "-1234", "$"),
+        ("$-1,234", "en_us_number", "-1234", "$"),
+        ("1,234.00 USD", "en_us_number", "1234.00", "USD"),
+        ("€ 1.234,50", "eu_number", "1234.50", "€"),
+        ("1 234,50 €", "eu_number", "1234.50", "€"),
+        ("(1.234,50)", "eu_number", "-1234.50", None),
+        ("₹ 1,23,456.78", "indian_number", "123456.78", "₹"),
+        ("Rs. 12,34,567", "indian_number", "1234567", "₹"),
+        ("—", "dash_zero", "0", None),
+        ("-", "dash_zero", "0", None),
+        ("12,5%", "percent", "0.125", None),
+    ],
+)
+def test_currency_and_locale_numbers(text, mode, value, currency):
+    from table_review.tables.numbers import interpret_value
+
+    result = interpret_value(text, "data", mode)
+    expected_kind = "percent" if mode == "percent" else "number"
+    assert result.kind == expected_kind
+    assert result.decimal_value == Decimal(value)
+    assert result.currency_symbol == currency
+
+
+@pytest.mark.parametrize(
+    "text,mode",
+    [
+        ("$€100", "en_us_number"),
+        ("$100 USD", "en_us_number"),
+        ("($-100)", "en_us_number"),
+        ("123,456", "indian_number"),
+        ("12.34", "eu_number"),
+        ("$25%", "percent"),
+    ],
+)
+def test_conflicting_currency_or_locale_mismatches_stay_literal(text, mode):
+    from table_review.tables.numbers import interpret_value
+
+    result = interpret_value(text, "data", mode)
+    assert result.kind == "text"
+    assert result.decimal_value is None

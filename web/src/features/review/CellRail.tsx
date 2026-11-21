@@ -7,7 +7,9 @@ import type {
   TableContent,
 } from "../../api/models";
 import { Button, Select } from "../../ui/primitives";
+import type { PdfPreviews } from "../source/PdfPreviews";
 import { cellAddress } from "../table/address";
+import { CellLoupe } from "./CellLoupe";
 import { cellName, verdictLabel } from "./cellMeta";
 import type { EditDraft } from "./draft";
 
@@ -15,21 +17,21 @@ export function CellRail({
   cell,
   content,
   review,
+  previews,
   draft,
   onDraft,
-  onSave,
+  onSaveCell,
   busy,
-  dirty,
   onSource,
 }: {
   cell?: Cell;
   content: TableContent;
   review?: ReviewState;
+  previews: PdfPreviews;
   draft: EditDraft;
   onDraft: (value: EditDraft) => void;
-  onSave: (operation: import("../../api/models").EditOperation) => void;
+  onSaveCell: () => void;
   busy: boolean;
-  dirty: boolean;
   onSource: (reference: SourceReference) => void;
 }) {
   const id = useId();
@@ -46,7 +48,8 @@ export function CellRail({
   const references = cell.source_references.length
     ? cell.source_references
     : [cell.reference];
-  const textDirty = draft.text !== cell.text;
+  const cellDirty =
+    draft.text !== cell.text || draft.interpretation !== cell.interpretation;
 
   return (
     <div className="cell-rail">
@@ -59,6 +62,10 @@ export function CellRail({
           </span>
         </div>
       </header>
+
+      <section className="rail-section">
+        <CellLoupe previews={previews} cell={cell} />
+      </section>
 
       <section className="rail-section">
         <div className="rail-label">Original literal</div>
@@ -82,30 +89,20 @@ export function CellRail({
         >
           <option value="text">Text — preserve literal</option>
           <option value="en_us_number">English US number</option>
+          <option value="eu_number">European number (1.234,50)</option>
+          <option value="indian_number">Indian number (1,23,456)</option>
           <option value="percent">Percent — explicit % only</option>
+          <option value="dash_zero">Dash as zero (— / -)</option>
           <option value="uncertain">Uncertain</option>
         </Select>
         <Button
           size="sm"
           className="rail-inline-button"
-          disabled={
-            busy || textDirty || draft.interpretation === cell.interpretation
-          }
-          onClick={() =>
-            onSave({
-              kind: "set_interpretation",
-              cell_id: cell.id,
-              interpretation: draft.interpretation,
-            })
-          }
+          disabled={busy || !cellDirty}
+          onClick={onSaveCell}
         >
-          Save type
+          Save cell
         </Button>
-        {textDirty && (
-          <p className="rail-hint">
-            Save or discard the value edit in the tray before changing type.
-          </p>
-        )}
       </section>
 
       <section className="rail-section">

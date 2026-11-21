@@ -1,5 +1,6 @@
 import hashlib
 import math
+import os
 from collections import OrderedDict
 from pathlib import Path
 from threading import Lock
@@ -11,6 +12,11 @@ from sqlalchemy.dialects.postgresql import insert
 
 from table_review.accounts.types import Actor
 from table_review.documents.bounded import PdfOperations
+from table_review.documents.discovery import (
+    DocumentOutline,
+    DocumentSearchResult,
+    TableCandidatesResult,
+)
 from table_review.documents.errors import DocumentError
 from table_review.documents.types import PageBox, PdfInfo, RenderedPage
 from table_review.settings import Settings
@@ -29,6 +35,10 @@ class DocumentService:
         self.pdf = PdfOperations(settings, self.staging)
         self._page_info = OrderedDict()
         self._page_info_lock = Lock()
+        self._verified_sources = OrderedDict()
+        self._verified_sources_lock = Lock()
+        self._discovery_cache: OrderedDict = OrderedDict()
+        self._discovery_lock = Lock()
 
     def upload(
         self, actor: Actor, stream: BinaryIO, filename: str, idempotency_key: str
@@ -78,14 +88,35 @@ class DocumentService:
     def _inspect(self, path: Path) -> PdfInfo:
         return self.pdf.inspect(path)
 
-    def source_path(self, actor: Actor, document_id: UUID) -> Path:
+    def source_path(self, actor: Actor, document_id: UUID, *, verify_fresh: bool = False) -> Path:
         document = self.repository.get_document(actor.id, document_id)
         try:
             with self.blobs.open(actor.id, document.blob_key) as source:
+                st = os.fstat(source.fileno())
+                sig = (
+                    str(Path(source.name)),
+                    st.st_size,
+                    st.st_mtime_ns,
+                    st.st_ctime_ns,
+                    st.st_ino,
+                )
+                key = (actor.id, document_id, document.source_sha256)
+                if not verify_fresh:
+                    with self._verified_sources_lock:
+                        if self._verified_sources.get(key) == sig:
+                            self._verified_sources.move_to_end(key)
+                            return Path(source.name)
                 if hashlib.file_digest(source, "sha256").hexdigest() != document.source_sha256:
+                    with self._verified_sources_lock:
+                        self._verified_sources.pop(key, None)
                     raise DocumentError(
                         "source_changed", "Stored source no longer matches the saved report", 503
                     )
+                with self._verified_sources_lock:
+                    self._verified_sources[key] = sig
+                    self._verified_sources.move_to_end(key)
+                    while len(self._verified_sources) > 128:
+                        self._verified_sources.popitem(last=False)
                 return Path(source.name)
         except FileNotFoundError as error:
             raise DocumentError(
@@ -197,3 +228,40 @@ class DocumentService:
 
     def foreground_open(self, actor: Actor, document_id: UUID) -> DocumentRecord:
         return self.repository.foreground_open(actor.id, document_id)
+
+    def _cached_discovery(self, actor: Actor, document_id: UUID, kind: str, loader):
+        document = self.repository.get_document(actor.id, document_id)
+        source = self.source_path(actor, document_id)
+        key = (actor.id, document_id, document.source_sha256, kind)
+        with self._discovery_lock:
+            if key in self._discovery_cache:
+                self._discovery_cache.move_to_end(key)
+                return self._discovery_cache[key]
+        value = loader(source)
+        with self._discovery_lock:
+            self._discovery_cache[key] = value
+            self._discovery_cache.move_to_end(key)
+            while len(self._discovery_cache) > 128:
+                self._discovery_cache.popitem(last=False)
+        return value
+
+    def outline(self, actor: Actor, document_id: UUID) -> DocumentOutline:
+        return self._cached_discovery(actor, document_id, "outline", self.pdf.outline)
+
+    def table_candidates(self, actor: Actor, document_id: UUID) -> TableCandidatesResult:
+        return self._cached_discovery(
+            actor, document_id, "table_candidates", self.pdf.table_candidates
+        )
+
+    def search(
+        self,
+        actor: Actor,
+        document_id: UUID,
+        query: str,
+        *,
+        limit: int = 50,
+        case_sensitive: bool = False,
+    ) -> DocumentSearchResult:
+        self.repository.get_document(actor.id, document_id)
+        source = self.source_path(actor, document_id)
+        return self.pdf.search(source, query, limit=limit, case_sensitive=case_sensitive)

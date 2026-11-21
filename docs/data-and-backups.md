@@ -17,7 +17,9 @@ Losing the backup key loses recovery access. Keep the key and the **current** jo
 
 ## Retention
 
-Opening a report, editing, adding a manual table or requesting an export extends its 30-day foreground retention. Expiry becomes effective at the next worker maintenance sweep. The active-file cleanup target is 24 hours, but it requires a healthy worker and writable storage; it is not a guarantee through an outage. Encrypted backups expire seven days after creation.
+In `local` mode (`TABLE_REVIEW_DEPLOYMENT_MODE=local`), automatic document expiration is **disabled by default** (`TABLE_REVIEW_RETENTION_DAYS=none`), so your financial reports and review revisions stay available indefinitely until you delete them explicitly.
+
+In `hosted` mode (or when `TABLE_REVIEW_RETENTION_DAYS` is set to a positive integer such as `30`), opening a report, editing, adding a manual table, or requesting an export extends its foreground retention window, and expiry becomes effective at the next worker maintenance sweep. The active-file cleanup target for deleted documents is 24 hours when the worker is healthy and storage is writable. Encrypted backups expire seven days after creation.
 
 ## Create a backup
 

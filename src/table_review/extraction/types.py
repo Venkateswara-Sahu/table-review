@@ -6,22 +6,19 @@ from pydantic import Field, model_validator
 from table_review.documents.types import ImmutableModel, PageBox, PageInfo, SourceReference
 from table_review.tables.types import TableContent
 
+ExtractionBackend = Literal["auto", "docling", "native_fast", "vlm"]
+
 
 class ExtractorConfig(ImmutableModel):
-    device: str = "cpu"
-    num_threads: int = Field(default=4, ge=1, le=8)
-    mode: str = "accurate"
+    backend: ExtractionBackend = "auto"
+    device: Literal["auto", "cpu", "cuda", "mps"] = "auto"
+    num_threads: int = Field(default=4, ge=1, le=16)
+    mode: Literal["accurate", "fast"] = "accurate"
     cell_matching: bool = True
     ocr_mode: Literal["auto", "never"] = "auto"
     table_recovery: bool = True
     mark_recovery: bool = True
     artifacts_path: Path = Path("models")
-
-    @model_validator(mode="after")
-    def supported(self):
-        if self.device != "cpu" or self.mode != "accurate":
-            raise ValueError("This release supports accurate CPU extraction")
-        return self
 
 
 class ExtractionRequest(ImmutableModel):
@@ -32,8 +29,8 @@ class ExtractionRequest(ImmutableModel):
 
     @model_validator(mode="after")
     def selected(self):
-        if not 1 <= len(self.pages) <= 5 or min(self.pages) < 1:
-            raise ValueError("Select 1 to 5 original page numbers")
+        if not 1 <= len(self.pages) <= 20 or min(self.pages) < 1:
+            raise ValueError("Select 1 to 20 original page numbers")
         if len(set(self.pages)) != len(self.pages):
             raise ValueError("Duplicate pages are not allowed")
         if self.region and self.pages != (self.region.page,):

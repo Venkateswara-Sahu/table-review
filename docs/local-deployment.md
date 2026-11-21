@@ -1,66 +1,91 @@
 # Local deployment
 
-Table Review runs as a local Docker Compose stack: PostgreSQL, a FastAPI API, a static web build and an isolated Docling worker. The worker has no network beyond loopback and a 6 GiB memory limit.
+Table Review supports two local run modes:
+
+1. **Fast Local Workbench (`scripts/start_local.py`)**: Starts local PostgreSQL (via Docker Compose or an existing `TABLE_REVIEW_DATABASE_URL`), runs Alembic migrations, spawns the warm persistent extraction worker, and serves the React UI on `http://127.0.0.1:8000`. Works immediately with the zero-ML `native_fast` digital PDF extractor, or with Docling OCR (`--with-docling`).
+2. **Hardened Docker Compose Stack (`scripts/deploy_local.py`)**: Runs PostgreSQL, the FastAPI API + static web build, and an isolated worker container (`network_mode: none`, read-only root, dropped capabilities, 6 GiB memory cap).
 
 ## Prerequisites
 
 - Python 3.12 and [uv](https://docs.astral.sh/uv/)
-- Docker Engine or Docker Desktop with at least 8 GiB available RAM
-- About 10 GB free disk for images and model weights
-- Node 24 only if you are changing the frontend
+- Docker Engine or Docker Desktop (with at least 8 GiB available RAM if running the full Docling container stack)
+- Node 24+ (only required when building the frontend in Fast Local mode or developing UI changes)
 
-## First run
+## Quick start: Fast local workbench
+
+```powershell
+uv sync --frozen --group dev
+cd web && npm ci && cd ..
+.\scripts\start-local.ps1 --open   # or ./scripts/start-local.sh --open on macOS/Linux
+```
+
+Optional flags:
+
+- `--with-docling`: Downloads and verifies offline Docling & RapidOCR model weights into `models/` before starting (also install `--extra extraction` first via `uv sync --frozen --extra extraction --group dev`).
+- `--backend auto|native_fast|docling|vlm`: Selects the default extraction backend. Defaults to `auto` when verified models exist in `models/`, or `native_fast` otherwise.
+- `--device auto|cpu|cuda|mps`: Selects compute device for ML extraction.
+- `--retention-days <N|none>`: Auto-expiry inactivity window (default `none`, keeping local documents forever).
+- `--dev-ui`: Launches the Vite dev server on `http://127.0.0.1:5173` with hot reload.
+- `--stop`: Stops the local PostgreSQL container while keeping all saved volumes.
+
+## Hardened Docker Compose deployment
 
 Run from the repository root:
 
 ```powershell
 uv sync --frozen --extra extraction --group dev
-uv run --frozen --extra extraction python scripts/preload_models.py
-uv run --frozen --extra extraction python scripts/preload_ocr_models.py
-uv run --frozen python scripts/deploy_local.py
+uv run --frozen python scripts/deploy_local.py --preload
 ```
 
-The preload commands download public model weights at pinned revisions and verify their hashes. They need network access once; runtime extraction uses local files only.
+Passing `--preload` downloads and verifies the pinned Docling and RapidOCR model weights (if not already cached) before building images, initializing PostgreSQL, creating the lifecycle journal and backup key, and waiting for readiness. The generated database password is written to ignored `.cache/local.env`; keep that file private.
 
-The deploy command builds the images, initializes PostgreSQL, the lifecycle journal and the encryption key, and waits for the components to become ready. The generated database password is written to ignored `.cache/local.env`. Keep that file private.
+## First-run onboarding and account management
 
-Open <http://127.0.0.1:8000>. Create the first account from the host:
+Open `http://127.0.0.1:8000` in your browser directly from this machine (`deployment_mode == "local"`, loopback address, no proxy forwarding headers). When no accounts exist yet, the sign-in screen prompts you to **Create your local workspace** (`POST /api/v1/setup`) and signs you in automatically.
+
+Once the first account is created, browser-based setup locks permanently. In `hosted` mode, browser onboarding is always disabled. To create additional accounts, reset a password, or revoke access from the host:
 
 ```powershell
-docker compose --env-file .cache/local.env -p table-review-local -f infra/compose.yaml exec api python -m table_review.accounts.admin create your-username
-```
+# Docker Compose deployment:
+docker compose --env-file .cache/local.env -p table-review-local -f infra/compose.yaml exec api python -m table_review.accounts.admin create <username>
 
-Use `reset` or `revoke` for an existing account. The application has no public signup route.
+# Local Python environment (with DATABASE_URL and JOURNAL_PATH set):
+python -m table_review.accounts.admin reset <username>
+python -m table_review.accounts.admin revoke <username>
+```
 
 ## Configuration
 
-Copy `.env.example` to `.env` for local overrides. The deployment reads `.cache/local.env`; do not commit either file.
+Copy `.env.example` to `.env` for overrides. Automated launches read `.cache/local.env` or `.cache/dev.env`; do not commit any of these files.
 
 | Variable | Purpose |
 |---|---|
-| `POSTGRES_PASSWORD` | Database password generated by the deployment |
-| `TABLE_REVIEW_MODELS` | Absolute path to the preloaded models directory |
+| `POSTGRES_PASSWORD` | Database password generated by deployment |
+| `TABLE_REVIEW_MODELS` | Absolute path to preloaded Docling/RapidOCR models directory |
 | `TABLE_REVIEW_PORT` | Loopback port; default `8000` |
-| `TABLE_REVIEW_PUBLIC_ORIGIN` | Public origin used by the API; default `http://127.0.0.1:8000` |
-| `TABLE_REVIEW_SECURE_COOKIES` | Set to `true` only behind HTTPS |
+| `TABLE_REVIEW_PUBLIC_ORIGIN` | Exact CSRF origin; default `http://127.0.0.1:8000` |
+| `TABLE_REVIEW_SECURE_COOKIES` | Set to `true` only behind HTTPS (`true` mandatory in `hosted` mode) |
+| `TABLE_REVIEW_DEPLOYMENT_MODE` | `local` (default) or `hosted` |
+| `TABLE_REVIEW_RETENTION_DAYS` | Inactivity expiration in days (`none`/`0` = disabled, default in `local`; `30` default in `hosted`) |
+| `TABLE_REVIEW_EXTRACTION_BACKEND` | Default engine (`auto`, `native_fast`, `docling`, `vlm`) |
+| `TABLE_REVIEW_EXTRACTION_DEVICE` | Compute target (`auto`, `cpu`, `cuda`, `mps`) |
+| `TABLE_REVIEW_VLM_BASE_URL` / `TABLE_REVIEW_VLM_MODEL` | Optional OpenAI-compatible VLM endpoint (disabled by default in `hosted` mode unless `TABLE_REVIEW_ALLOW_VLM_IN_HOSTED=true`) |
 
-Hosted operation requires HTTPS and secure cookies. The local loopback deployment intentionally permits insecure cookies.
+## Stop and restart Docker Compose stack
 
-## Stop and restart
-
-Stop the services while keeping all saved work:
+Stop services while preserving all saved volumes:
 
 ```powershell
 uv run --frozen python scripts/deploy_local.py --stop
 ```
 
-Start them again with the same deployment:
+Restart with the same saved data:
 
 ```powershell
 uv run --frozen python scripts/deploy_local.py
 ```
 
-Do not use `docker compose down -v` on a deployment that contains saved work. It deletes the volumes that hold reports, revisions, reviews, the journal and the backup key.
+Do not run `docker compose down -v` on a deployment containing saved work — it deletes volumes holding reports, revisions, reviews, the journal, and the backup key.
 
 ## Logs and readiness
 
@@ -68,19 +93,12 @@ Do not use `docker compose down -v` on a deployment that contains saved work. It
 docker compose --env-file .cache/local.env -p table-review-local -f infra/compose.yaml logs -f api worker
 ```
 
-`GET /api/v1/health/ready` returns `200` when the database, journal, worker pulse and model files are available; otherwise it returns `503` with component flags. Model availability is a file/hash check, not a model load or accuracy guarantee.
+`GET /api/v1/health/ready` returns `200` when the database, journal, worker pulse, and model files are verified; otherwise it returns `503` with component flags. Note that in fast local mode without Docling weights, `native_fast` extraction and PDF discovery still operate even before ML models are preloaded.
 
 ## Data and backups
 
-Reports, revisions, reviews, exports, the lifecycle journal and backup key live in named Docker volumes. Read [data-and-backups.md](data-and-backups.md) before deleting volumes, moving the deployment or restoring a snapshot.
-
-## Troubleshooting
-
-- **Port already in use:** stop the other process or change `TABLE_REVIEW_PORT` before deploying.
-- **Readiness stays `503`:** check the API and worker logs, then confirm the model preload finished and Docker has enough memory.
-- **Extraction is slow on Windows:** the model bind mount is expensive under Docker Desktop. Use the optional verified model volume described by `scripts/deploy_local.py --model-volume`.
-- **Browser shows a stale build:** rebuild with `docker compose ... build web` or rerun the deploy command.
+Reports, revisions, reviews, exports, the lifecycle journal, and the backup key live in named Docker volumes (or `.cache/local-data` in fast local mode). Read [data-and-backups.md](data-and-backups.md) before deleting volumes or restoring a snapshot.
 
 ## Security
 
-Keep the deployment on loopback or a private network. A public deployment needs HTTPS, secure cookies, a reverse proxy and independent backups. The worker runs with a read-only root, dropped capabilities, no network and a hard memory limit; do not weaken those settings.
+Keep local deployments bound to loopback or behind a trusted private proxy. A public deployment MUST use `TABLE_REVIEW_DEPLOYMENT_MODE=hosted`, an exact `https://` `TABLE_REVIEW_PUBLIC_ORIGIN`, `TABLE_REVIEW_SECURE_COOKIES=true`, a reverse proxy, and independent backups.

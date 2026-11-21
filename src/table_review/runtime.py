@@ -272,7 +272,9 @@ def main():
                 methods=["GET", "HEAD"],
                 include_in_schema=False,
             )
-        uvicorn.run(app, host="0.0.0.0", port=8000, access_log=False, log_level="warning")
+        host = os.environ.get("TABLE_REVIEW_BIND_HOST", "0.0.0.0")
+        port = int(os.environ.get("TABLE_REVIEW_BIND_PORT", "8000"))
+        uvicorn.run(app, host=host, port=port, access_log=False, log_level="warning")
 
 
 if __name__ == "__main__":

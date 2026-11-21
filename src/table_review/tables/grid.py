@@ -1,3 +1,5 @@
+import hashlib
+import json
 from typing import Annotated, Literal
 from uuid import UUID, uuid4, uuid5
 
@@ -6,7 +8,7 @@ from pydantic import Field, TypeAdapter
 from table_review.documents.types import ImmutableModel, PageBox, SourceReference
 from table_review.settings import Settings
 from table_review.tables.context import ContextIndex
-from table_review.tables.context_types import ContextBinding, ContextKind
+from table_review.tables.context_types import ContextBinding, ContextKind, TableContext
 from table_review.tables.subtotal_types import SubtotalGroup, SubtotalTerm
 from table_review.tables.subtotals import confirm_group
 from table_review.tables.types import CellContent, TableContent, ValueInterpretation
@@ -16,6 +18,26 @@ class SetText(ImmutableModel):
     kind: Literal["set_text"]
     cell_id: str
     text: str
+
+
+class SetCell(ImmutableModel):
+    kind: Literal["set_cell"]
+    cell_id: str
+    text: str | None = None
+    interpretation: ValueInterpretation | None = None
+
+
+class SetTitle(ImmutableModel):
+    kind: Literal["set_title"]
+    title: str | None = Field(default=None, max_length=200)
+
+
+class SetTableContext(ImmutableModel):
+    kind: Literal["set_table_context"]
+    currency: str | None = Field(default=None, max_length=32)
+    scale: str | None = Field(default=None, max_length=64)
+    period: str | None = Field(default=None, max_length=120)
+    measure: str | None = Field(default=None, max_length=120)
 
 
 class AxisEdit(ImmutableModel):
@@ -59,6 +81,13 @@ class ConfirmContext(ImmutableModel):
     candidate_id: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
+class SetContextManual(ImmutableModel):
+    kind: Literal["set_context_manual"]
+    cell_ids: tuple[str, ...] = Field(min_length=1, max_length=10000)
+    context_kind: ContextKind
+    value: str = Field(min_length=1, max_length=200)
+
+
 class ReopenContext(ImmutableModel):
     kind: Literal["reopen_context"]
     cell_ids: tuple[str, ...] = Field(min_length=1, max_length=10000)
@@ -82,6 +111,9 @@ class RemoveSubtotal(ImmutableModel):
 
 EditOperation = Annotated[
     SetText
+    | SetCell
+    | SetTitle
+    | SetTableContext
     | AxisEdit
     | Merge
     | Split
@@ -89,6 +121,7 @@ EditOperation = Annotated[
     | SetNotes
     | SetInterpretation
     | ConfirmContext
+    | SetContextManual
     | ReopenContext
     | ConfirmSubtotal
     | RemoveSubtotal,
@@ -190,6 +223,44 @@ def _merged_reference(cells):
     return SourceReference(page=first.page, precision="page", origin="user")
 
 
+def _affected_by_structure_change(
+    old_content: TableContent, new_content: TableContent
+) -> tuple[str, ...]:
+    old_index = ContextIndex(old_content)
+    new_index = ContextIndex(new_content)
+    before = {cell.id: cell for cell in old_content.cells}
+    after = {cell.id: cell for cell in new_content.cells}
+    affected = set(before.keys() ^ after.keys())
+    for cell_id in before.keys() & after.keys():
+        old_cell, new_cell = before[cell_id], after[cell_id]
+        if (
+            old_cell.text,
+            old_cell.raw_text,
+            old_cell.role,
+            old_cell.row_span,
+            old_cell.col_span,
+            old_cell.interpretation,
+        ) != (
+            new_cell.text,
+            new_cell.raw_text,
+            new_cell.role,
+            new_cell.row_span,
+            new_cell.col_span,
+            new_cell.interpretation,
+        ):
+            affected.add(cell_id)
+            continue
+        old_headers, old_labels = old_index.paths(cell_id)
+        new_headers, new_labels = new_index.paths(cell_id)
+        if tuple((c.id, c.text) for c in old_headers) != tuple(
+            (c.id, c.text) for c in new_headers
+        ) or tuple((c.id, c.text) for c in old_labels) != tuple(
+            (c.id, c.text) for c in new_labels
+        ):
+            affected.add(cell_id)
+    return tuple(sorted(affected))
+
+
 def apply_edit(
     content: TableContent, operation: EditOperation, *, cell_namespace: UUID | None = None
 ) -> EditResult:
@@ -212,7 +283,7 @@ def apply_edit(
         elif len(groups) == len(content.subtotal_groups):
             raise ValueError("Unknown subtotal definition")
         updates = {"subtotal_groups": tuple(groups)}
-    elif isinstance(operation, (ConfirmContext, ReopenContext)):
+    elif isinstance(operation, (ConfirmContext, SetContextManual, ReopenContext)):
         ids = set(operation.cell_ids)
         if len(ids) != len(operation.cell_ids) or not ids <= {cell.id for cell in cells}:
             raise ValueError("Select unique existing cells for context review")
@@ -232,6 +303,25 @@ def apply_edit(
                     raise ValueError("This source context does not apply to every selected cell")
                 additions.append(ContextBinding(**candidate.model_dump(), cell_id=cell_id))
             context_kind = additions[0].kind
+        elif isinstance(operation, SetContextManual):
+            value = operation.value.strip()
+            if not value:
+                raise ValueError("Context value cannot be blank")
+            context_kind = operation.context_kind
+            for cell_id in operation.cell_ids:
+                digest = hashlib.sha256(
+                    json.dumps(["manual", context_kind, value], sort_keys=True).encode()
+                ).hexdigest()
+                additions.append(
+                    ContextBinding(
+                        id=digest,
+                        kind=context_kind,
+                        value=value,
+                        source_ids=("manual",),
+                        cell_id=cell_id,
+                        origin="manual",
+                    )
+                )
         else:
             context_kind = operation.context_kind
         updates["context_bindings"] = tuple(
@@ -239,7 +329,7 @@ def apply_edit(
             for item in content.context_bindings
             if item.cell_id not in ids or item.kind != context_kind
         ) + tuple(additions)
-    elif isinstance(operation, (SetText, SetInterpretation, Split)):
+    elif isinstance(operation, (SetText, SetInterpretation, SetCell, Split)):
         matches = [c for c in cells if c.id == operation.cell_id]
         if not matches:
             raise ValueError("Unknown cell ID")
@@ -254,6 +344,18 @@ def apply_edit(
                 c.model_copy(update={"interpretation": operation.interpretation})
                 if c.id == target.id
                 else c
+                for c in cells
+            ]
+        elif isinstance(operation, SetCell):
+            if operation.text is None and operation.interpretation is None:
+                raise ValueError("Specify text or interpretation to update")
+            patch = {}
+            if operation.text is not None:
+                patch["text"] = operation.text
+            if operation.interpretation is not None:
+                patch["interpretation"] = operation.interpretation
+            cells = [
+                c.model_copy(update=patch) if c.id == target.id else c
                 for c in cells
             ]
         else:
@@ -380,24 +482,50 @@ def apply_edit(
         ]
     elif isinstance(operation, SetNotes):
         updates = {"unit_notes": operation.unit_notes}
+    elif isinstance(operation, SetTitle):
+        cleaned = operation.title.strip() if operation.title else None
+        updates = {"title": cleaned or None}
+    elif isinstance(operation, SetTableContext):
+        tc = TableContext(
+            currency=operation.currency.strip() if operation.currency and operation.currency.strip() else None,
+            scale=operation.scale.strip() if operation.scale and operation.scale.strip() else None,
+            period=operation.period.strip() if operation.period and operation.period.strip() else None,
+            measure=operation.measure.strip() if operation.measure and operation.measure.strip() else None,
+        )
+        if not any((tc.currency, tc.scale, tc.period, tc.measure)):
+            tc = None
+        updates = {"table_context": tc}
     else:
         raise TypeError("Unknown edit operation")
     cells.sort(key=lambda c: (c.row, c.col, c.id))
     result = content.model_copy(update={**updates, "cells": tuple(cells)})
-    if structural or isinstance(operation, SetNotes):
+    if structural:
         result = result.model_copy(update={"context_bindings": ()})
     validate_grid(result)
     before, after = {c.id: c for c in content.cells}, {c.id: c for c in result.cells}
-    affected = tuple(
-        sorted(id for id in before.keys() | after.keys() if before.get(id) != after.get(id))
-    )
-    if isinstance(operation, (ConfirmContext, ReopenContext)):
+    if isinstance(operation, (ConfirmContext, SetContextManual, ReopenContext)):
         affected = tuple(sorted(operation.cell_ids))
-    elif structural or isinstance(operation, SetNotes):
-        result = result.model_copy(update={"context_bindings": ()})
-        affected = tuple(sorted(before.keys() | after.keys()))
+    elif isinstance(operation, (SetTitle, SetNotes, SetTableContext, ConfirmSubtotal, RemoveSubtotal)):
+        affected = ()
+    elif structural:
+        affected = _affected_by_structure_change(content, result)
+        after_ids = set(after)
+        affected_set = set(affected)
+        result = result.model_copy(
+            update={
+                "context_bindings": tuple(
+                    item
+                    for item in content.context_bindings
+                    if item.cell_id in after_ids and item.cell_id not in affected_set
+                )
+            }
+        )
+        validate_grid(result)
     else:
-        affected = tuple(sorted(ContextIndex(content).dependent_cells(set(affected))))
+        changed_ids = {
+            id for id in before.keys() | after.keys() if before.get(id) != after.get(id)
+        }
+        affected = tuple(sorted(ContextIndex(content).dependent_cells(changed_ids)))
         result = result.model_copy(
             update={
                 "context_bindings": tuple(

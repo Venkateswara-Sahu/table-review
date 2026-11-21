@@ -9,6 +9,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import {
+  useCapabilities,
   useDeleteDocument,
   useDocuments,
   useOpenDocument,
@@ -35,7 +36,9 @@ import {
 } from "../ui/format";
 
 export function LibraryScreen() {
+  const capabilities = useCapabilities();
   const documents = useDocuments();
+  const retentionDays = capabilities.data?.retention_days;
   const upload = useUploadDocument();
   const open = useOpenDocument();
   const remove = useDeleteDocument();
@@ -125,7 +128,9 @@ export function LibraryScreen() {
           <span className="num">{items.length}</span>{" "}
           {items.length === 1 ? "report" : "reports"}
           <span className="library-meta-sep" />
-          30-day retention
+          {retentionDays === null
+            ? "Saved locally · no auto-expiry"
+            : `${retentionDays ?? 30}-day retention`}
         </div>
       </div>
 
@@ -270,8 +275,17 @@ export function LibraryScreen() {
                     <span className="num">{item.page_count}</span> pages
                     <span className="dot-sep" />
                     {formatBytes(item.byte_count)}
-                    <span className="dot-sep" />
-                    <span>{retentionLabel(item.last_foreground_at)}</span>
+                    {retentionDays !== null && (
+                      <>
+                        <span className="dot-sep" />
+                        <span>
+                          {retentionLabel(
+                            item.last_foreground_at,
+                            retentionDays ?? 30,
+                          )}
+                        </span>
+                      </>
+                    )}
                   </p>
                 </div>
                 <div className="report-status">

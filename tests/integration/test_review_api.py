@@ -1,6 +1,6 @@
 import io
 from concurrent.futures import ThreadPoolExecutor
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -62,11 +62,11 @@ def test_never_auto_approves_and_checks_not_run_is_a_warning(client, owned_table
     assert snapshot["unresolved_count"] == 3  # Not run, unavailable coverage, limited geometry.
     assert {i["kind"] for i in snapshot["issues"]} == {"coverage_unavailable", "limited_reference"}
     assert snapshot["check_versions"] == {
-        "engine": "2",
+        "engine": "3",
         "coverage": "not_run",
         "source_identity": "not_run",
-        "placement": "2",
-        "structural": "2",
+        "placement": "3",
+        "structural": "3",
     }
 
 
@@ -93,25 +93,67 @@ def test_text_edit_retains_old_snapshot_and_carries_only_unchanged_checks(client
 
 
 @pytest.mark.parametrize(
-    "operation",
+    ("operation", "expected_checked"),
     [
-        {"kind": "insert_row", "index": 1},
-        {"kind": "delete_row", "index": 1},
-        {"kind": "insert_column", "index": 1},
-        {"kind": "delete_column", "index": 1},
-        {"kind": "merge", "row": 0, "col": 0, "rows": 1, "columns": 2},
-        {"kind": "set_headers", "header_rows": [0], "row_label_columns": [0]},
-        {"kind": "set_notes", "unit_notes": ["EUR thousands"]},
+        ({"kind": "insert_row", "index": 1}, 9),
+        ({"kind": "delete_row", "index": 1}, 6),
+        ({"kind": "insert_column", "index": 1}, 9),
+        ({"kind": "delete_column", "index": 1}, 6),
+        ({"kind": "merge", "row": 0, "col": 0, "rows": 1, "columns": 2}, 7),
+        ({"kind": "set_headers", "header_rows": [0], "row_label_columns": [0]}, 0),
+        ({"kind": "set_notes", "unit_notes": ["EUR thousands"]}, 9),
+        ({"kind": "set_title", "title": "Balance Sheet"}, 9),
+        ({"kind": "set_table_context", "currency": "USD", "scale": "millions"}, 9),
     ],
 )
-def test_structural_and_association_edits_clear_all_checks(client, owned_table, operation):
+def test_edits_surgically_invalidate_only_affected_checks_and_clear_approval(
+    client, owned_table, operation, expected_checked
+):
     _, _, table = owned_table
     check_all(client, table)
     approve(client, table.current_revision_id)
     response = edit(client, table, operation)
     assert response.status_code == 200
     state = client.get(f"/api/v1/revisions/{response.json()['id']}/review").json()
-    assert state["checked_cell_ids"] == [] and state["current_approval"] is None
+    assert len(state["checked_cell_ids"]) == expected_checked
+    assert state["current_approval"] is None
+
+
+def test_bulk_review_standard_approval_and_atomic_set_cell(client, app, owned_table):
+    actor, _, table = owned_table
+    app.state.reviews.checker = None
+    app.state.reviews.set_checks(actor, table.current_revision_id, (), {"fixture": "ran"})
+    updated = edit(
+        client,
+        table,
+        {"kind": "set_cell", "cell_id": "r1c1", "text": "$1,234.50", "interpretation": "en_us_number"},
+    )
+    assert updated.status_code == 200
+    rev_id = updated.json()["id"]
+    app.state.reviews.set_checks(actor, UUID(rev_id), (), {"fixture": "ran"})
+    bulk = client.post(
+        f"/api/v1/revisions/{rev_id}/bulk-review",
+        json={"scope": "row", "row": 1, "skip_flagged": True},
+    )
+    assert bulk.status_code == 200
+    assert len(bulk.json()["checked_cell_ids"]) == 3
+    snapshot = client.post(
+        f"/api/v1/revisions/{rev_id}/approval",
+        json={"allow_warnings": False, "mode": "standard"},
+    )
+    assert snapshot.status_code == 200
+    assert snapshot.json()["approval_mode"] == "standard"
+
+
+def test_formatted_table_endpoint_returns_tsv_markdown_and_json(client, owned_table):
+    _, _, table = owned_table
+    rev_id = table.current_revision_id
+    tsv = client.get(f"/api/v1/tables/{table.id}/revisions/{rev_id}/formatted?format=tsv")
+    assert tsv.status_code == 200 and "\t" in tsv.text
+    md = client.get(f"/api/v1/tables/{table.id}/revisions/{rev_id}/formatted?format=markdown")
+    assert md.status_code == 200 and "|" in md.text
+    js = client.get(f"/api/v1/tables/{table.id}/revisions/{rev_id}/formatted?format=json")
+    assert js.status_code == 200 and len(js.json()["rows"]) == 2
 
 
 def test_split_and_interpretation_edit_are_saved_atomically(client, owned_table):

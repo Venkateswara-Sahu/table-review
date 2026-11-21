@@ -15,6 +15,7 @@ from table_review.extraction.types import ExtractionRequest, ExtractorConfig
 from table_review.jobs.queue import StaleLease
 from table_review.jobs.runner import ProcessingFailure, run_operation
 from table_review.jobs.types import ProcessingLimits, TaskOutcome
+from table_review.jobs.warm_worker import WarmChildHost
 
 
 def maintain(queue, now):
@@ -32,7 +33,27 @@ def maintain(queue, now):
     return result
 
 
-def run_once(queue, worker_id: str) -> bool:
+def _vlm_extra_env(settings, backend: str) -> dict[str, str] | None:
+    if (
+        backend not in ("vlm", "auto")
+        or not settings.vlm_base_url
+        or not settings.vlm_model
+        or (settings.deployment_mode == "hosted" and not settings.allow_vlm_in_hosted)
+    ):
+        return None
+    env = {
+        "TABLE_REVIEW_VLM_BASE_URL": settings.vlm_base_url,
+        "TABLE_REVIEW_VLM_MODEL": settings.vlm_model,
+        "TABLE_REVIEW_VLM_TIMEOUT_SECONDS": str(settings.vlm_timeout_seconds),
+        "TABLE_REVIEW_DEPLOYMENT_MODE": settings.deployment_mode,
+        "TABLE_REVIEW_ALLOW_VLM_IN_HOSTED": "true" if settings.allow_vlm_in_hosted else "false",
+    }
+    if settings.vlm_api_key:
+        env["TABLE_REVIEW_VLM_API_KEY"] = settings.vlm_api_key
+    return env
+
+
+def run_once(queue, worker_id: str, *, warm_host: WarmChildHost | None = None) -> bool:
     lease = queue.claim(datetime.now(UTC), worker_id)
     if lease is None:
         return False
@@ -75,12 +96,25 @@ def run_once(queue, worker_id: str) -> bool:
             source_path = timing.call(
                 "source_validation", queue.documents.source_path, actor, task.document_id
             )
+            extra_env = None
             if task.kind == "extract":
+                raw_backend = task.input.get("backend") or "auto"
+                effective_backend = (
+                    settings.default_extraction_backend
+                    if raw_backend == "auto" and settings.default_extraction_backend != "auto"
+                    else raw_backend
+                )
+                extra_env = _vlm_extra_env(settings, effective_backend)
                 request = ExtractionRequest(
                     source_path=source_path,
                     pages=tuple(task.input["pages"]),
                     region=task.input.get("region"),
-                    config=ExtractorConfig(artifacts_path=settings.model_path.resolve()),
+                    config=ExtractorConfig(
+                        artifacts_path=settings.model_path.resolve(),
+                        backend=effective_backend,
+                        mode=task.input.get("mode", "accurate"),
+                        device=settings.extraction_device,
+                    ),
                 )
                 payload = {"kind": "extract", "request": request.model_dump(mode="json")}
             elif task.kind == "prepare":
@@ -91,14 +125,17 @@ def run_once(queue, worker_id: str) -> bool:
                 }
             else:
                 raise ProcessingFailure("unsupported_task")
+            runner_fn = warm_host.run if warm_host is not None and not extra_env else run_operation
+            runner_kwargs = {"extra_env": extra_env} if extra_env else {}
             result = timing.call(
                 "bounded_operation",
-                run_operation,
+                runner_fn,
                 payload,
                 limits,
                 work_dir=work_dir,
                 cancelled=lambda: not queue.active(lease),
                 heartbeat=lambda: queue.heartbeat(lease, datetime.now(UTC)),
+                **runner_kwargs,
             )
             if task.kind == "extract":
                 result["manifest"]["worker_timing"] = {
@@ -188,6 +225,7 @@ def main():
     app = create_app(Settings.from_env())
     from table_review.runtime import WorkerPulse
 
+    warm_host = WarmChildHost(app.state.settings.blob_root / ".warm")
     try:
         with WorkerPulse(app.state.settings.pulse_path):
             next_maintenance = 0
@@ -196,12 +234,15 @@ def main():
                     # Fail closed if current journal is unavailable; never recreate it here.
                     maintain(app.state.queue, datetime.now(UTC))
                     next_maintenance = time.monotonic() + 60
-                worked = run_once(app.state.queue, f"worker-{os.getpid()}")
+                worked = run_once(
+                    app.state.queue, f"worker-{os.getpid()}", warm_host=warm_host
+                )
                 if args.once:
                     return
                 if not worked:
-                    time.sleep(1)
+                    time.sleep(0.25)
     finally:
+        warm_host.close()
         app.state.session_factory.kw["bind"].dispose()
 
 

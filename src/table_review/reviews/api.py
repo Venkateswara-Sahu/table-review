@@ -9,6 +9,8 @@ from table_review.accounts.types import Actor
 from table_review.checks.types import IssueDecisionInput
 from table_review.documents.types import ImmutableModel
 from table_review.reviews.types import (
+    ApprovalMode,
+    BulkCellReviewInput,
     CellReviewHistory,
     CellReviewInput,
     ReviewSnapshot,
@@ -37,6 +39,7 @@ class CheckedInput(ImmutableModel):
 
 class ApprovalInput(ImmutableModel):
     allow_warnings: bool = False
+    mode: ApprovalMode = "strict_audit"
 
 
 @router.post("/revisions/{revision_id}/cell-review", response_model=ReviewState)
@@ -47,6 +50,16 @@ def cell_review(
     actor: Annotated[Actor, Depends(require_actor)],
 ):
     return request.app.state.reviews.decide_cells(actor, revision_id, payload)
+
+
+@router.post("/revisions/{revision_id}/bulk-review", response_model=ReviewState)
+def bulk_review(
+    revision_id: UUID,
+    payload: BulkCellReviewInput,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+):
+    return request.app.state.reviews.bulk_decide_cells(actor, revision_id, payload)
 
 
 @router.get("/revisions/{revision_id}/review", response_model=ReviewState)
@@ -83,7 +96,9 @@ def approve(
     request: Request,
     actor: Annotated[Actor, Depends(require_actor)],
 ):
-    return request.app.state.reviews.approve(actor, revision_id, payload.allow_warnings)
+    return request.app.state.reviews.approve(
+        actor, revision_id, payload.allow_warnings, payload.mode
+    )
 
 
 @router.get("/approvals/{snapshot_id}", response_model=ReviewSnapshot)
