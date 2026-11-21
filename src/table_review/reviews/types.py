@@ -8,6 +8,26 @@ from table_review.checks.types import Issue, IssueDecisionRecord
 from table_review.documents.types import ImmutableModel, SourceReference
 
 type CellVerdict = Literal["confirmed_value", "confirmed_blank", "unreadable", "unreviewed"]
+type ApprovalMode = Literal["standard", "strict_audit"]
+
+
+class BulkCellReviewInput(ImmutableModel):
+    scope: Literal["clean_all", "row", "column", "cells"] = "clean_all"
+    row: int | None = Field(default=None, ge=0)
+    col: int | None = Field(default=None, ge=0)
+    cell_ids: tuple[str, ...] = Field(default=(), max_length=10_000)
+    skip_flagged: bool = True
+    include_blanks: bool = False
+
+    @model_validator(mode="after")
+    def valid_scope(self):
+        if self.scope == "row" and self.row is None:
+            raise ValueError("Specify a row index for row bulk review")
+        if self.scope == "column" and self.col is None:
+            raise ValueError("Specify a column index for column bulk review")
+        if self.scope == "cells" and not self.cell_ids:
+            raise ValueError("Select at least one cell for bulk review")
+        return self
 
 
 class CellReviewInput(ImmutableModel):
@@ -34,7 +54,7 @@ class CellReviewRecord(ImmutableModel):
     actor_id: UUID | None = None
     decided_at: datetime | None = None
     source_references: tuple[SourceReference, ...]
-    origin: Literal["explicit", "legacy"] = "explicit"
+    origin: Literal["explicit", "bulk", "legacy"] = "explicit"
 
 
 class ReviewSnapshot(ImmutableModel):
@@ -42,6 +62,7 @@ class ReviewSnapshot(ImmutableModel):
     revision_id: UUID
     content_checksum: str
     label: Literal["reviewed", "reviewed_with_warnings"]
+    approval_mode: ApprovalMode = "strict_audit"
     checked_cell_ids: tuple[str, ...]
     issue_decisions: dict[str, IssueDecisionRecord]
     check_versions: dict[str, str]

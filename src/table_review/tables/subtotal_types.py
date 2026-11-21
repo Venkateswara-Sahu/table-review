@@ -43,5 +43,18 @@ class SubtotalResult(ImmutableModel):
     difference: str | None = None
 
 
+class DetectedSubtotal(ImmutableModel):
+    id: str
+    direction: Literal["vertical", "horizontal"]
+    label: str
+    total_cell_id: str
+    term_cell_ids: tuple[str, ...]
+    input_sum: str
+    reported_total: str
+    difference: str
+    state: Literal["match", "rounding_match", "difference"]
+
+
 class SubtotalResults(ImmutableModel):
     items: tuple[SubtotalResult, ...]
+    detected: tuple[DetectedSubtotal, ...] = ()

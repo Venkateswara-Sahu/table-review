@@ -450,3 +450,28 @@ def test_numeric_formats_preserve_authored_signs_and_grouping(tmp_path, literal,
     workbook = load_workbook(path)
     assert workbook["Table"]["A1"].number_format == expected_format
     assert workbook["Source"]["F2"].value == literal
+
+
+def test_report_workbook_export_combines_document_tables_end_to_end(app, client, owned_table):  # noqa: F811
+    from openpyxl import load_workbook
+
+    _, doc, _ = owned_table
+    response = client.post(
+        f"/api/v1/documents/{doc.id}/exports",
+        json={"include_formulas": True},
+        headers={"Idempotency-Key": uuid4().hex},
+    )
+    assert response.status_code == 202
+    export_id = response.json()["id"]
+    for _ in range(6):
+        assert run_once(app.state.queue, "report-export-worker")
+        status = client.get(f"/api/v1/documents/{doc.id}/exports/{export_id}")
+        if status.json()["state"] in ("succeeded", "failed", "cancelled"):
+            break
+    assert status.status_code == 200 and status.json()["state"] == "succeeded"
+    download = client.get(f"/api/v1/exports/{export_id}/download")
+    assert download.status_code == 200
+    wb = load_workbook(io.BytesIO(download.content))
+    assert wb.sheetnames[0] == "Overview"
+    assert wb.sheetnames[-1] == "Source & Audit"
+    assert len(wb.sheetnames) == 3

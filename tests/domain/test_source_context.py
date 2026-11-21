@@ -130,9 +130,8 @@ def test_context_source_qualifiers_are_preserved_and_dollar_is_not_usd():
 def test_legacy_checksum_does_not_change_for_empty_context_extensions():
     table = contextual_table()
     legacy = table.model_dump(mode="json")
-    legacy.pop("context_sources", None)
-    legacy.pop("context_bindings", None)
-    legacy.pop("subtotal_groups", None)
+    for field in ("context_sources", "context_bindings", "subtotal_groups", "title", "table_context"):
+        legacy.pop(field, None)
     digest = hashlib.sha256(
         json.dumps(legacy, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
     ).hexdigest()
@@ -250,20 +249,25 @@ def test_below_table_unit_note_is_captured_but_neighbour_table_is_excluded():
 
 
 @pytest.mark.parametrize(
-    "operation",
+    ("operation", "expect_preserved"),
     [
-        {"kind": "delete_row", "index": 2},
-        {"kind": "delete_column", "index": 1},
-        {"kind": "insert_row", "index": 2},
-        {"kind": "set_headers", "header_rows": [0], "row_label_columns": [0]},
-        {"kind": "set_notes", "unit_notes": ["USD millions"]},
+        ({"kind": "delete_row", "index": 2}, False),
+        ({"kind": "delete_column", "index": 1}, False),
+        ({"kind": "insert_row", "index": 2}, True),
+        ({"kind": "set_headers", "header_rows": [0], "row_label_columns": [0]}, False),
+        ({"kind": "set_notes", "unit_notes": ["USD millions"]}, True),
     ],
 )
-def test_structural_and_note_edits_clear_context_without_dangling_bindings(operation):
+def test_structural_and_note_edits_prune_only_affected_context(operation, expect_preserved):
     from table_review.tables.grid import apply_edit, parse_edit
     from tests.domain.test_context_exports import confirmed_table
 
     table = confirmed_table()
     changed = apply_edit(table, parse_edit(operation))
-    assert not changed.content.context_bindings
+    surviving_ids = {cell.id for cell in changed.content.cells}
+    assert all(b.cell_id in surviving_ids for b in changed.content.context_bindings)
+    if expect_preserved:
+        assert changed.content.context_bindings == table.context_bindings
+    else:
+        assert not changed.content.context_bindings
     assert table.context_bindings

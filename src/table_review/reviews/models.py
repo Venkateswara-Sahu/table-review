@@ -29,6 +29,9 @@ class ReviewSnapshotRow(Base):
     revision_id: Mapped[UUID] = mapped_column(ForeignKey("table_revisions.id"), index=True)
     content_checksum: Mapped[str] = mapped_column(String(64))
     label: Mapped[str]
+    approval_mode: Mapped[str] = mapped_column(
+        String(32), default="strict_audit", server_default="strict_audit"
+    )
     checked_cell_ids: Mapped[list] = mapped_column(JSONB)
     cell_reviews: Mapped[dict] = mapped_column(JSONB, default=dict)
     unreadable_count: Mapped[int] = mapped_column(default=0)

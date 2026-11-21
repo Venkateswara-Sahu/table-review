@@ -29,6 +29,7 @@ class Issue(ImmutableModel):
         "unreadable_value",
         "subtotal_difference",
         "subtotal_unavailable",
+        "detected_subtotal_difference",
     ]
     affected_cell_ids: tuple[str, ...]
     evidence: dict[str, Any]

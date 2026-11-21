@@ -11,12 +11,19 @@ from table_review.documents.types import ImmutableModel, SourceReference
 type ContextKind = Literal["period", "currency", "scale", "measure"]
 
 
+class TableContext(ImmutableModel):
+    currency: str | None = Field(default=None, max_length=32)
+    scale: str | None = Field(default=None, max_length=64)
+    period: str | None = Field(default=None, max_length=120)
+    measure: str | None = Field(default=None, max_length=120)
+
+
 class ContextSource(ImmutableModel):
     id: str = Field(max_length=200)
     text: str = Field(max_length=800)
     raw_text: str = Field(max_length=800)
     references: tuple[SourceReference, ...] = Field(min_length=1, max_length=32)
-    origin: Literal["extracted", "current_draft"]
+    origin: Literal["extracted", "current_draft", "manual"]
     truncated: bool = False
 
 
@@ -29,6 +36,7 @@ class ContextProposal(ImmutableModel):
 
 class ContextBinding(ContextProposal):
     cell_id: str
+    origin: Literal["extracted", "manual", "table_context"] = "extracted"
     confirmed_by: UUID | None = None
     confirmed_at: datetime | None = None
 

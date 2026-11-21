@@ -10,6 +10,7 @@ from table_review.reviews.verdicts import record_for
 from table_review.tables.types import TableContent, content_checksum
 
 type ExportFormat = Literal["workbook", "csv_package"]
+type AnyExportFormat = Literal["workbook", "csv_package", "report_workbook"]
 
 
 class ExportInput(ImmutableModel):
@@ -25,6 +26,8 @@ class ExportInput(ImmutableModel):
     timeline_through_sequence: int = 0
     issues: tuple[dict[str, Any], ...] = ()
     subtotal_results: tuple[dict[str, Any], ...] = ()
+    detected_subtotals: tuple[dict[str, Any], ...] = ()
+    include_formulas: bool = True
 
     @model_validator(mode="after")
     def matching_snapshot(self):
@@ -38,8 +41,24 @@ class ExportInput(ImmutableModel):
         return self
 
 
+class ReportExportTableInput(ImmutableModel):
+    table_id: UUID
+    page_no: int
+    label: str
+    export_input: ExportInput
+
+
+class ReportExportInput(ImmutableModel):
+    document_id: UUID
+    filename: str
+    source_sha256: str
+    tables: tuple[ReportExportTableInput, ...]
+    include_formulas: bool = True
+    generation_manifest: dict[str, Any] = Field(default_factory=dict)
+
+
 class ExportArtifact(ImmutableModel):
-    format: ExportFormat
+    format: AnyExportFormat
     path: Path
     sha256: str
     manifest: dict[str, Any]
@@ -50,6 +69,16 @@ class ExportRecord(ImmutableModel):
     table_id: UUID
     revision_id: UUID
     format: ExportFormat
+    state: str
+    failure_code: str | None = None
+    sha256: str | None = None
+    manifest: dict[str, Any] = Field(default_factory=dict)
+
+
+class ReportExportRecord(ImmutableModel):
+    id: UUID
+    document_id: UUID
+    format: Literal["report_workbook"] = "report_workbook"
     state: str
     failure_code: str | None = None
     sha256: str | None = None
@@ -72,7 +101,12 @@ def export_manifest(data: ExportInput, format: ExportFormat):
         "revision_id": str(data.revision_id),
         "content_checksum": content_checksum(data.content),
         "approval_id": str(snapshot.id) if snapshot else None,
+        "approval_mode": snapshot.approval_mode if snapshot else None,
         "review_status": snapshot.label if snapshot else "draft",
+        "title": data.content.title,
+        "table_context": data.content.table_context.model_dump(mode="json")
+        if data.content.table_context
+        else None,
         "review": evidence,
         "check_versions": (snapshot or review).check_versions
         if snapshot or review
@@ -100,9 +134,10 @@ def export_manifest(data: ExportInput, format: ExportFormat):
         "csv_text_escape": "Dangerous literal text is prefixed with [text] ; unreadable values with [unreadable] . cells.json preserves exact text and per-cell prefix flags.",
         "numeric_policy": "Explicit English/US interpretation, at most 15 authored significant digits, Decimal round trip; no scale conversion; signed negative zero remains text.",
     }
-    if data.content.subtotal_groups:
+    if data.content.subtotal_groups or data.detected_subtotals:
         manifest["subtotal_policy"] = "declared_sum_v1_explicit_scope_no_financial_approval"
         manifest["subtotal_results"] = list(data.subtotal_results)
+        manifest["detected_subtotals"] = list(data.detected_subtotals)
     return manifest
 
 

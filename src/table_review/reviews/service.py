@@ -13,6 +13,8 @@ from table_review.reviews.models import (
 )
 from table_review.reviews.timeline import append_event, read_events
 from table_review.reviews.types import (
+    ApprovalMode,
+    BulkCellReviewInput,
     CellReviewEvent,
     CellReviewHistory,
     CellReviewInput,
@@ -23,6 +25,19 @@ from table_review.reviews.types import (
 from table_review.reviews.verdicts import normalize_legacy, record_for, review_warnings
 from table_review.storage.models import DocumentRow, RevisionRow, TableRow
 from table_review.storage.repository import NotFound, RevisionConflict, _record
+
+_CELL_EXCEPTION_KINDS = frozenset(
+    {
+        "coverage_discrepancy",
+        "duplicate_source_token",
+        "placement_ambiguity",
+        "structural_inconsistency",
+        "unreadable_value",
+        "subtotal_difference",
+        "detected_subtotal_difference",
+        "subtotal_unavailable",
+    }
+)
 
 
 class ReviewIncomplete(RuntimeError):
@@ -271,6 +286,102 @@ class ReviewService:
                         )
             return self._view(session, table, state)
 
+    def bulk_decide_cells(
+        self, actor, revision_id, payload: BulkCellReviewInput
+    ) -> ReviewState:
+        with self.session_factory.begin() as session:
+            table, revision, state = self._context(session, actor, revision_id, current=True)
+            cells = revision.content["cells"]
+            cell_map = {cell["id"]: cell for cell in cells}
+            if payload.scope == "clean_all":
+                targets = cells
+            elif payload.scope == "row":
+                targets = [cell for cell in cells if cell["row"] == payload.row]
+                if not targets:
+                    raise ReviewInputError("Selected row is outside this table")
+            elif payload.scope == "column":
+                targets = [cell for cell in cells if cell["col"] == payload.col]
+                if not targets:
+                    raise ReviewInputError("Selected column is outside this table")
+            else:
+                if set(payload.cell_ids) - cell_map.keys():
+                    raise ReviewInputError("Selected cells are not in this revision")
+                wanted = set(payload.cell_ids)
+                targets = [cell for cell in cells if cell["id"] in wanted]
+
+            flagged_ids = {
+                cid
+                for issue in state.issues
+                if issue.get("kind") in _CELL_EXCEPTION_KINDS
+                and state.issue_decisions.get(issue["fingerprint"], {}).get("kind")
+                not in ("dismiss", "resolved")
+                for cid in issue.get("affected_cell_ids", ())
+            }
+            flagged_ids |= {
+                cid
+                for cid, record in state.cell_reviews.items()
+                if record.get("verdict") == "unreadable"
+            }
+
+            header_rows = set(revision.content.get("header_rows", ()))
+            records, changed = dict(state.cell_reviews), {}
+            now = datetime.now(UTC)
+            for cell in targets:
+                cid = cell["id"]
+                if payload.skip_flagged and cid in flagged_ids:
+                    continue
+                prior = records.get(cid)
+                if prior and prior.get("verdict") != "unreviewed":
+                    continue
+                if cell["text"].strip():
+                    verdict = "confirmed_value"
+                elif payload.include_blanks or cell["row"] in header_rows:
+                    verdict = "confirmed_blank"
+                else:
+                    continue
+                record = record_for(
+                    cell,
+                    revision.id,
+                    verdict,
+                    actor_id=actor.id,
+                    decided_at=now,
+                    origin="bulk",
+                )
+                changed[cid] = record
+                records[cid] = record
+
+            if changed:
+                append_event(
+                    session,
+                    revision,
+                    "cell_review",
+                    actor_id=actor.id,
+                    cell_ids=changed,
+                    details={
+                        "reason": f"Bulk cell review ({payload.scope})",
+                        "bulk_scope": payload.scope,
+                        "before": {key: state.cell_reviews.get(key) for key in changed},
+                        "after": {key: records.get(key) for key in changed},
+                        "invalidated_approval_id": str(state.current_approval_id)
+                        if state.current_approval_id
+                        else None,
+                    },
+                )
+                session.add(
+                    CellReviewEventRow(
+                        revision_id=revision.id,
+                        actor_id=actor.id,
+                        cell_ids=sorted(changed),
+                        checked=True,
+                        cell_reviews=changed,
+                    )
+                )
+                state.cell_reviews = records
+                state.checked_cell_ids = sorted(records)
+                state.current_approval_id = None
+                state.generation += 1
+            return self._view(session, table, state)
+
     def checked_history(self, actor, revision_id, offset):
         with self.session_factory.begin() as session:
             self._context(session, actor, revision_id)
@@ -398,14 +509,15 @@ class ReviewService:
         )
         if old_state:
             normalize_legacy(old_state, old_revision)
-            if not event.structural_change and event.operation["kind"] not in (
-                "set_headers",
-                "set_notes",
-            ):
+            kind = event.operation["kind"]
+            if kind not in ("restore", "adopt_extraction"):
                 ids = {cell["id"] for cell in new_revision.content["cells"]}
-                checked = sorted(
-                    set(old_state.checked_cell_ids) & ids - set(event.affected_cell_ids)
-                )
+                if kind in ("confirm_context", "reopen_context", "set_context_manual"):
+                    checked = sorted(set(old_state.checked_cell_ids) & ids)
+                else:
+                    checked = sorted(
+                        set(old_state.checked_cell_ids) & ids - set(event.affected_cell_ids)
+                    )
                 cell_reviews = {key: old_state.cell_reviews[key] for key in checked}
             old_state.current_approval_id = None
         new_state = ReviewStateRow(
@@ -499,14 +611,30 @@ class ReviewService:
             },
         )
 
-    def approve(self, actor, revision_id, allow_warnings=False):
+    def approve(self, actor, revision_id, allow_warnings=False, mode: ApprovalMode = "strict_audit"):
         with self.session_factory.begin() as session:
             table, revision, state = self._context(session, actor, revision_id, current=True)
             cell_ids = {cell["id"] for cell in revision.content["cells"]}
-            if cell_ids != set(state.checked_cell_ids):
-                raise ReviewIncomplete(
-                    "Check every current cell, including blanks, before approving"
-                )
+            checked_set = set(state.checked_cell_ids)
+            if mode == "strict_audit":
+                if cell_ids != checked_set:
+                    raise ReviewIncomplete(
+                        "Check every current cell, including blanks, before approving"
+                    )
+            else:
+                flagged_ids = {
+                    cid
+                    for issue in state.issues
+                    if issue.get("kind") in _CELL_EXCEPTION_KINDS
+                    and state.issue_decisions.get(issue["fingerprint"], {}).get("kind")
+                    not in ("dismiss", "resolved")
+                    for cid in issue.get("affected_cell_ids", ())
+                } & cell_ids
+                unreviewed_flagged = flagged_ids - checked_set
+                if unreviewed_flagged:
+                    raise ReviewIncomplete(
+                        "Review all flagged exception cells before approving"
+                    )
             view = self._view(session, table, state)
             not_run, unresolved = view.checks_not_run, view.unresolved_count
             if unresolved and not allow_warnings:
@@ -517,13 +645,15 @@ class ReviewService:
                 view.current_approval
                 and view.current_approval.actor_id == actor.id
                 and view.current_approval.content_checksum == revision.checksum
+                and view.current_approval.approval_mode == mode
             ):
                 return view.current_approval
             row = ReviewSnapshotRow(
                 revision_id=revision.id,
                 content_checksum=revision.checksum,
                 label="reviewed_with_warnings" if unresolved else "reviewed",
-                checked_cell_ids=sorted(cell_ids),
+                approval_mode=mode,
+                checked_cell_ids=sorted(checked_set),
                 cell_reviews=state.cell_reviews,
                 unreadable_count=view.unreadable_count,
                 issue_decisions=state.issue_decisions,
@@ -542,6 +672,7 @@ class ReviewService:
                 actor_id=actor.id,
                 details={
                     "reason": "Table approved with warnings" if unresolved else "Table approved",
+                    "approval_mode": mode,
                     "before": {
                         "approval_id": str(state.current_approval_id)
                         if state.current_approval_id
@@ -550,6 +681,7 @@ class ReviewService:
                     "after": {
                         "approval_id": str(row.id),
                         "label": row.label,
+                        "approval_mode": mode,
                         "content_checksum": revision.checksum,
                         "generation": state.generation,
                         "unresolved_count": unresolved,
