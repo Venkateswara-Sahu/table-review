@@ -1649,13 +1649,15 @@
   text-align: left;
 }
 
-.subtotal-results {
+.subtotal-results,
+.subtotal-detected {
   display: flex;
   flex-direction: column;
   gap: 7px;
 }
 
-.subtotal-results > h4 {
+.subtotal-results > h4,
+.subtotal-detected > h4 {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -1663,7 +1665,8 @@
   color: var(--muted);
 }
 
-.subtotal-result {
+.subtotal-result,
+.subtotal-detected-item {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -1682,7 +1685,8 @@
   border-left-color: var(--danger);
 }
 
-.subtotal-result h5 {
+.subtotal-result h5,
+.subtotal-detected-item h5 {
   font-size: 12px;
   font-weight: 600;
 }

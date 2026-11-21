@@ -188,7 +188,8 @@ test("approval with warnings exports the pinned warning record and an edit clear
 
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   const invalidated = page.getByRole("dialog", { name: "Finish this table" });
-  await expect(invalidated).toContainText("1 unresolved check warning");
+  // Editing 1,234.50 -> 1234.51 triggers both the literal mismatch and the auto-subtotal mismatch.
+  await expect(invalidated).toContainText("2 unresolved check warnings");
   await expect(invalidated).toContainText(
     "This revision can only be approved with warnings",
   );

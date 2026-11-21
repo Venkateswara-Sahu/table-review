@@ -132,6 +132,7 @@ export function TableGrid({
   const [colOverrides, setColOverrides] = useState<Record<number, number>>({});
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(640);
+  const [viewportWidth, setViewportWidth] = useState(800);
 
   useEffect(() => {
     setColOverrides({});
@@ -142,6 +143,7 @@ export function TableGrid({
     if (!el) return;
     const update = () => {
       if (el.clientHeight > 0) setViewportHeight(el.clientHeight);
+      if (el.clientWidth > 0) setViewportWidth(el.clientWidth);
     };
     update();
     const observer = new ResizeObserver(update);
@@ -194,17 +196,21 @@ export function TableGrid({
     [content.row_label_columns],
   );
 
-  const stickyLefts = useMemo(() => {
+  const allowStickyCols = viewportWidth >= 480;
+
+  const { stickyLefts, stickyTotalLeft } = useMemo(() => {
     const map: Record<number, number> = {};
     let offset = 0;
-    for (let c = 0; c < content.columns; c++) {
-      if (labelColSet.has(c)) {
-        map[c] = offset;
-        offset += colWidths[c];
+    if (allowStickyCols) {
+      for (let c = 0; c < content.columns; c++) {
+        if (labelColSet.has(c)) {
+          map[c] = offset;
+          offset += colWidths[c];
+        }
       }
     }
-    return map;
-  }, [content.columns, labelColSet, colWidths]);
+    return { stickyLefts: map, stickyTotalLeft: offset };
+  }, [allowStickyCols, content.columns, labelColSet, colWidths]);
 
   const contiguousTopHeaders = useMemo(() => {
     const sorted = [...content.header_rows].sort((a, b) => a - b);
@@ -391,6 +397,7 @@ export function TableGrid({
           const isRowLabel =
             labelColSet.has(cell.col) && !headerRowSet.has(cell.row);
           const isStickyCol =
+            allowStickyCols &&
             labelColSet.has(cell.col) &&
             !(
               cell.col_span > 1 && cell.col + cell.col_span === content.columns
@@ -614,6 +621,12 @@ export function TableGrid({
     }
   }
 
+  const stickyTotalTop = useMemo(() => {
+    if (!contiguousTopHeaders.size) return 0;
+    const last = contiguousTopHeaders.size - 1;
+    return (headerTops[last] ?? last * 40) + 42;
+  }, [contiguousTopHeaders.size, headerTops]);
+
   return (
     <div
       className="review-grid-scroll"
@@ -621,6 +634,10 @@ export function TableGrid({
       aria-label="Review table"
       tabIndex={0}
       ref={scroller}
+      style={{
+        scrollPaddingLeft: stickyTotalLeft || undefined,
+        scrollPaddingTop: stickyTotalTop || undefined,
+      }}
       onScroll={(event) => {
         if (shouldVirtualize) setScrollTop(event.currentTarget.scrollTop);
       }}
@@ -630,7 +647,7 @@ export function TableGrid({
         aria-label="Review table"
         aria-rowcount={content.rows}
         aria-colcount={content.columns}
-        className="review-table"
+        className="review-grid review-table"
         style={{ minWidth: totalWidth }}
       >
         <colgroup>

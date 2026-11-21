@@ -217,7 +217,7 @@ test("history explains the edit and restores the original as a fresh draft", asy
   await expect(timeline).toContainText("Cell review changed");
 
   const revisions = page.locator(".revision-list");
-  await expect(revisions).toContainText("set text");
+  await expect(revisions).toContainText("set cell");
   await revisions
     .getByRole("button", { name: "Inspect", exact: true })
     .first()

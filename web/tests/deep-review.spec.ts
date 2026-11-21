@@ -219,7 +219,7 @@ test("reopening history after an edit shows the new revision", async ({
   await expect(page.locator(".timeline-list")).toContainText("Revision saved");
   const edit = page
     .locator(".revision-list li")
-    .filter({ hasText: "set text" })
+    .filter({ hasText: "set cell" })
     .first();
   await expect(edit).toBeVisible();
   await expect(edit).toContainText("1 affected cells");

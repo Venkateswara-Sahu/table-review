@@ -109,7 +109,7 @@ export function SubtotalsPanel({
         </p>
       </div>
 
-      <section className="subtotal-results">
+      <section className="subtotal-detected">
         <h4>Auto-detected subtotals & cross-footing</h4>
         {results.isPending ? (
           <p className="small muted" role="status">
@@ -123,7 +123,7 @@ export function SubtotalsPanel({
         ) : (
           detected.map((item) => (
             <article
-              className={`subtotal-result ${
+              className={`subtotal-detected-item ${
                 item.state === "difference"
                   ? "subtotal-difference"
                   : "subtotal-match"

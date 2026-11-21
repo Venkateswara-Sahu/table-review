@@ -116,7 +116,7 @@ export function ExtractDialog({
         title={region ? "Extract selected region" : "Extract tables"}
         description={
           region
-            ? "Reads the drawn area as a table. The original PDF stays untouched."
+            ? "OCR reads the drawn area as a table. The original PDF stays untouched."
             : "Choose up to 20 pages. Digital pages extract in milliseconds via native mode."
         }
         size="sm"
