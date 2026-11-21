@@ -4,10 +4,16 @@ import { Kbd } from "../ui/primitives";
 const shortcuts: Array<[string, string]> = [
   ["Arrow keys", "Move between cells"],
   ["Shift + arrow / click", "Select a range"],
-  ["Enter or F2", "Edit the selected cell"],
+  ["Double-click / Enter / F2", "Edit cell inline"],
+  ["Tab / Shift + Tab", "Save inline edit & move next"],
   ["Ctrl / ⌘ + Enter", "Confirm the value — saves the edit first"],
-  ["Escape", "Discard the current edit"],
+  ["Ctrl / ⌘ + C", "Copy selected cells as TSV"],
+  ["Escape", "Discard or cancel current edit"],
+  ["Ctrl / ⌘ + Z", "Undo last table change"],
+  ["Ctrl / ⌘ + Shift + Z", "Redo undone change"],
+  ["E", "Jump to next open exception"],
   ["N", "Next unchecked cell"],
+  ["Ctrl / ⌘ + F", "Find text across the PDF"],
   ["Page Up / Page Down", "Move a screen through the source"],
   ["?", "Open this list"],
 ];

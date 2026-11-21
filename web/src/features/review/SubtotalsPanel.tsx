@@ -97,17 +97,82 @@ export function SubtotalsPanel({
   }
 
   const items = results.data?.items ?? [];
+  const detected = results.data?.detected ?? [];
 
   return (
     <div className="subtotal-panel">
       <div className="more-intro">
         <Calculator size={16} aria-hidden="true" />
         <p className="small">
-          Check a signed sum of selected currency amounts. Confirm period,
-          currency and scale for every participating cell first. No scale
-          conversion, inferred formula or financial approval.
+          Automatic cross-footing and vertical subtotals run continuously across
+          financial columns. You can also record custom signed relations below.
         </p>
       </div>
+
+      <section className="subtotal-results">
+        <h4>Auto-detected subtotals & cross-footing</h4>
+        {results.isPending ? (
+          <p className="small muted" role="status">
+            Checking subtotals…
+          </p>
+        ) : !detected.length ? (
+          <p className="small muted">
+            No automatic subtotal rows or cross-footing columns detected on this
+            table.
+          </p>
+        ) : (
+          detected.map((item) => (
+            <article
+              className={`subtotal-result ${
+                item.state === "difference"
+                  ? "subtotal-difference"
+                  : "subtotal-match"
+              }`}
+              key={item.id}
+            >
+              <div className="row spread">
+                <h5>
+                  {item.label}{" "}
+                  <span className="tiny muted">({item.direction})</span>
+                </h5>
+                <Badge
+                  tone={item.state === "difference" ? "danger" : "success"}
+                  dot
+                >
+                  {item.state === "match"
+                    ? "Exact match"
+                    : item.state === "rounding_match"
+                      ? "Rounding match"
+                      : "Differs"}
+                </Badge>
+              </div>
+              <dl className="subtotal-math">
+                <div>
+                  <dt>Computed sum</dt>
+                  <dd className="num">{item.input_sum}</dd>
+                </div>
+                <div>
+                  <dt>Reported total</dt>
+                  <dd className="num">{item.reported_total}</dd>
+                </div>
+                <div>
+                  <dt>Difference</dt>
+                  <dd className="num">{item.difference}</dd>
+                </div>
+              </dl>
+              <div className="row">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onSelect(item.total_cell_id)}
+                >
+                  Jump to {label(item.total_cell_id)}
+                </Button>
+              </div>
+            </article>
+          ))
+        )}
+      </section>
 
       <details
         className="subtotal-setup"

@@ -18,13 +18,14 @@ import {
   idempotencyKey,
 } from "../../api/client";
 import type {
+  ApprovalMode,
   ExportFormat,
   ExportRecord,
   ReviewState,
   TableContent,
 } from "../../api/models";
 import { Dialog, DialogContent } from "../../ui/dialog";
-import { Badge, Button, InlineNote } from "../../ui/primitives";
+import { Badge, Button, InlineNote, Select } from "../../ui/primitives";
 import { useNotices } from "../../app/notices";
 
 export function FinishDialog({
@@ -46,11 +47,13 @@ export function FinishDialog({
   review?: ReviewState;
   busy: boolean;
   exports: ExportRecord[];
-  onApprove: (warnings: boolean) => Promise<boolean>;
+  onApprove: (warnings: boolean, mode: ApprovalMode) => Promise<boolean>;
 }) {
   const { notify, notifyError } = useNotices();
   const client = useQueryClient();
   const [approving, setApproving] = useState<"clean" | "warnings" | null>(null);
+  const [mode, setMode] = useState<ApprovalMode>("standard");
+  const [includeFormulas, setIncludeFormulas] = useState(true);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
   const keys = useRef<Partial<Record<ExportFormat, string>>>({});
@@ -66,6 +69,7 @@ export function FinishDialog({
   const total = content.cells.length;
   const reviewed = review?.checked_cell_ids.length ?? 0;
   const allReviewed = total > 0 && reviewed === total;
+  const cellRequirementMet = mode === "standard" ? total > 0 : allReviewed;
   const approval = review?.current_approval;
   const approved = !!approval;
   const unreadable = review?.unreadable_count ?? 0;
@@ -79,12 +83,14 @@ export function FinishDialog({
   async function approve(warnings: boolean) {
     setApproving(warnings ? "warnings" : "clean");
     try {
-      const ok = await onApprove(warnings);
+      const ok = await onApprove(warnings, mode);
       if (ok)
         notify(
           warnings
             ? "Approved with warnings. The warnings are preserved in the record."
-            : "Table approved. Every cell has a recorded decision.",
+            : mode === "standard"
+              ? "Table approved in standard mode."
+              : "Table approved. Every cell has a recorded decision.",
           warnings ? "warning" : "success",
         );
     } finally {
@@ -101,7 +107,11 @@ export function FinishDialog({
         {
           method: "POST",
           headers: { "Idempotency-Key": keys.current[format]! },
-          body: JSON.stringify({ revision_id: revisionId, format }),
+          body: JSON.stringify({
+            revision_id: revisionId,
+            format,
+            include_formulas: includeFormulas,
+          }),
         },
       );
       keys.current[format] = undefined;
@@ -164,7 +174,7 @@ export function FinishDialog({
               <>
                 <Button
                   variant="secondary"
-                  disabled={busy || !allReviewed || approving !== null}
+                  disabled={busy || !cellRequirementMet || approving !== null}
                   loading={approving === "warnings"}
                   onClick={() => void approve(true)}
                 >
@@ -175,7 +185,7 @@ export function FinishDialog({
                   icon={<ShieldCheck size={15} />}
                   disabled={
                     busy ||
-                    !allReviewed ||
+                    !cellRequirementMet ||
                     unresolved > 0 ||
                     unreadable > 0 ||
                     approving !== null
@@ -212,11 +222,38 @@ export function FinishDialog({
         }
       >
         <div className="finish-preflight">
+          {!approved && (
+            <label className="field">
+              <span className="field-label">Sign-off mode</span>
+              <Select
+                value={mode}
+                onChange={(event) =>
+                  setMode(event.target.value as ApprovalMode)
+                }
+              >
+                <option value="standard">
+                  Standard (Exception-first — clear open checks & unreadable
+                  cells)
+                </option>
+                <option value="strict_audit">
+                  Strict audit (Require explicit decision on all {total} cells)
+                </option>
+              </Select>
+            </label>
+          )}
           <section className="preflight-list" aria-label="Preflight checks">
             <CheckLine
-              passed={allReviewed}
-              label="Every cell reviewed"
-              detail={`${reviewed} of ${total} cells have a recorded decision`}
+              passed={cellRequirementMet}
+              label={
+                mode === "standard"
+                  ? "Exception-first coverage"
+                  : "Every cell reviewed"
+              }
+              detail={
+                mode === "standard"
+                  ? `${reviewed} of ${total} explicitly confirmed; clean remaining cells accepted under standard review`
+                  : `${reviewed} of ${total} cells have a recorded decision`
+              }
             />
             <CheckLine
               passed={!unreadable}
@@ -274,7 +311,7 @@ export function FinishDialog({
           ) : (
             <InlineNote
               tone={
-                allReviewed
+                cellRequirementMet
                   ? unresolved || unreadable
                     ? "warning"
                     : "info"
@@ -283,8 +320,8 @@ export function FinishDialog({
               icon={<AlertTriangle size={16} />}
             >
               <p>
-                {!allReviewed
-                  ? `Review the remaining ${total - reviewed} cell${total - reviewed === 1 ? "" : "s"} before approving. Use Next cell in the verdict tray.`
+                {!cellRequirementMet
+                  ? `Review the remaining ${total - reviewed} cell${total - reviewed === 1 ? "" : "s"} before approving in strict audit mode.`
                   : unresolved || unreadable
                     ? "This revision can only be approved with warnings. The warnings stay attached to the approval and every export."
                     : "Every requirement is met. You can approve this revision now."}
@@ -322,6 +359,16 @@ export function FinishDialog({
               )}
             </div>
 
+            <div className="finish-export-options">
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={includeFormulas}
+                  onChange={(event) => setIncludeFormulas(event.target.checked)}
+                />
+                Include live Excel =SUM() formulas on matched totals
+              </label>
+            </div>
             {!approved && (
               <div className="draft-export-row">
                 <Button

@@ -23,6 +23,7 @@ const labels: Record<Issue["kind"], string> = {
   unreadable_value: "Unreadable value",
   subtotal_difference: "Declared subtotal difference",
   subtotal_unavailable: "Subtotal needs attention",
+  detected_subtotal_difference: "Detected subtotal difference",
 };
 
 type DecisionKind = IssueDecision["kind"];

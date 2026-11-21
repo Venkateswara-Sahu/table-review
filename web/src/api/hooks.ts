@@ -3,26 +3,39 @@ import { apiRequest, idempotencyKey } from "./client";
 import type {
   CellContext,
   Document,
+  DocumentOutline,
+  DocumentSearchResult,
   EditHistory,
   ExportRecord,
+  ExtractionBackend,
+  ExtractionMode,
   List,
   PageBox,
   PageInfo,
+  ReportExportRecord,
   ReviewState,
   ReviewTimeline,
   Run,
+  RuntimeCapabilities,
   SubtotalResults,
   Table,
+  TableCandidatesResult,
   TableView,
   Task,
 } from "./models";
 
 const keys = {
+  capabilities: ["capabilities"] as const,
   documents: ["documents"] as const,
   document: (id: string) => ["document", id] as const,
   page: (id: string, page: number) => ["page", id, page] as const,
   tables: (id: string, page: number, removed: boolean) =>
     ["tables", id, page, removed] as const,
+  allTables: (id: string) => ["tables", id, "all"] as const,
+  outline: (id: string) => ["outline", id] as const,
+  search: (id: string, query: string) => ["search", id, query] as const,
+  tableCandidates: (id: string) => ["table-candidates", id] as const,
+  reportExports: (id: string) => ["report-exports", id] as const,
   tasks: (id: string) => ["tasks", id] as const,
   runs: (id: string) => ["runs", id] as const,
   table: (id: string) => ["table", id] as const,
@@ -36,6 +49,16 @@ const keys = {
   timeline: (revisionId: string, cellId?: string) =>
     ["timeline", revisionId, cellId ?? "table"] as const,
 };
+
+export function useCapabilities(enabled = true) {
+  return useQuery({
+    queryKey: keys.capabilities,
+    queryFn: () => apiRequest<RuntimeCapabilities>("/api/v1/capabilities"),
+    enabled,
+    staleTime: 60_000,
+    retry: false,
+  });
+}
 
 export function useDocuments() {
   return useQuery({
@@ -92,6 +115,76 @@ export function useTables(
       ),
     enabled: !!documentId && !!pageNo && pageNo > 0,
     refetchInterval: active ? 1500 : false,
+  });
+}
+
+export function useAllTables(documentId?: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.allTables(documentId ?? ""),
+    queryFn: () =>
+      apiRequest<List<Table>>(
+        `/api/v1/documents/${encodeURIComponent(documentId!)}/tables`,
+      ),
+    enabled: !!documentId && enabled,
+    staleTime: 10_000,
+  });
+}
+
+export function useDocumentOutline(documentId?: string, enabled = false) {
+  return useQuery({
+    queryKey: keys.outline(documentId ?? ""),
+    queryFn: () =>
+      apiRequest<DocumentOutline>(
+        `/api/v1/documents/${encodeURIComponent(documentId!)}/outline`,
+      ),
+    enabled: !!documentId && enabled,
+    staleTime: 300_000,
+  });
+}
+
+export function useDocumentSearch(
+  documentId?: string,
+  query = "",
+  enabled = false,
+) {
+  const trimmed = query.trim();
+  return useQuery({
+    queryKey: keys.search(documentId ?? "", trimmed),
+    queryFn: () =>
+      apiRequest<DocumentSearchResult>(
+        `/api/v1/documents/${encodeURIComponent(documentId!)}/search?q=${encodeURIComponent(trimmed)}&limit=80`,
+      ),
+    enabled: !!documentId && enabled && trimmed.length > 0,
+    staleTime: 60_000,
+  });
+}
+
+export function useTableCandidates(documentId?: string, enabled = false) {
+  return useQuery({
+    queryKey: keys.tableCandidates(documentId ?? ""),
+    queryFn: () =>
+      apiRequest<TableCandidatesResult>(
+        `/api/v1/documents/${encodeURIComponent(documentId!)}/table-candidates`,
+      ),
+    enabled: !!documentId && enabled,
+    staleTime: 300_000,
+  });
+}
+
+export function useReportExports(documentId?: string, enabled = false) {
+  return useQuery({
+    queryKey: keys.reportExports(documentId ?? ""),
+    queryFn: () =>
+      apiRequest<List<ReportExportRecord>>(
+        `/api/v1/documents/${encodeURIComponent(documentId!)}/exports`,
+      ),
+    enabled: !!documentId && enabled,
+    refetchInterval: (query) =>
+      query.state.data?.items.some(
+        (item) => item.state === "queued" || item.state === "running",
+      )
+        ? 1000
+        : false,
   });
 }
 
@@ -273,18 +366,47 @@ export function useOpenDocument() {
 export function useExtract(documentId: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: { pages: number[]; region?: PageBox | null }) =>
+    mutationFn: (input: {
+      pages: number[];
+      region?: PageBox | null;
+      backend?: ExtractionBackend;
+      mode?: ExtractionMode;
+    }) =>
       apiRequest<Task>(`/api/v1/documents/${documentId}/runs`, {
         method: "POST",
         headers: { "Idempotency-Key": idempotencyKey() },
         body: JSON.stringify({
           pages: input.pages,
           region: input.region ?? null,
+          backend: input.backend ?? "auto",
+          mode: input.mode ?? "accurate",
         }),
       }),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: keys.tasks(documentId) });
       client.invalidateQueries({ queryKey: keys.runs(documentId) });
+    },
+  });
+}
+
+export function useStitchTables(documentId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      table_ids: string[];
+      title?: string | null;
+      drop_repeated_headers?: boolean;
+    }) =>
+      apiRequest<Table>(`/api/v1/documents/${documentId}/tables/stitch`, {
+        method: "POST",
+        body: JSON.stringify({
+          table_ids: input.table_ids,
+          title: input.title || null,
+          drop_repeated_headers: input.drop_repeated_headers ?? true,
+        }),
+      }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["tables", documentId] });
     },
   });
 }

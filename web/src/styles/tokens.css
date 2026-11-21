@@ -1,47 +1,106 @@
 :root {
+  color-scheme: light dark;
+
   --font-ui:
     "Instrument Sans Variable", "Instrument Sans", "Segoe UI", system-ui,
     sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
 
-  --paper: #f1f2ed;
-  --surface: #fffefa;
-  --surface-2: #f4f5f0;
-  --surface-3: #eceee8;
-  --surface-raised: #fbfbf7;
-  --surface-rail: #f7f8f3;
-  --desk: #ebede7;
+  /* Light palette raw tokens */
+  --paper-light: #f1f2ed;
+  --surface-light: #fffefa;
+  --surface-2-light: #f4f5f0;
+  --surface-3-light: #eceee8;
+  --surface-raised-light: #fbfbf7;
+  --surface-rail-light: #f7f8f3;
+  --desk-light: #ebede7;
+  --ink-light: #141816;
+  --ink-2-light: #35423b;
+  --ink-strong-light: #232b26;
+  --muted-light: #68736c;
+  --faint-light: #929b95;
+  --line-light: #d9ded7;
+  --line-strong-light: #bec6be;
+  --accent-light: #2447c9;
+  --accent-strong-light: #1a35a4;
+  --accent-soft-light: #e9edff;
+  --success-light: #1c6a4d;
+  --success-soft-light: #e7f2ec;
+  --warning-light: #925512;
+  --warning-soft-light: #fbf0de;
+  --danger-light: #a5362a;
+  --danger-soft-light: #fbeae7;
+  --highlight-fill-light: rgba(36, 71, 201, 0.12);
+  --code-background-light: #f3f4ef;
+  --scrollbar-thumb-light: #c1c8c0;
+  --scrollbar-track-light: #ebede7;
 
-  --ink: #141816;
-  --ink-2: #35423b;
-  --ink-strong: #232b26;
-  --muted: #68736c;
-  --faint: #929b95;
-  --line: #d9ded7;
-  --line-strong: #bec6be;
+  /* Dark palette raw tokens */
+  --paper-dark: #101412;
+  --surface-dark: #171c19;
+  --surface-2-dark: #1d2420;
+  --surface-3-dark: #242d28;
+  --surface-raised-dark: #1f2723;
+  --surface-rail-dark: #141916;
+  --desk-dark: #0c100e;
+  --ink-dark: #eef2ee;
+  --ink-2-dark: #cdd6d0;
+  --ink-strong-dark: #f7faf7;
+  --muted-dark: #97a39b;
+  --faint-dark: #748179;
+  --line-dark: #2c3630;
+  --line-strong-dark: #3f4d45;
+  --accent-dark: #6f92ff;
+  --accent-strong-dark: #8ca8ff;
+  --accent-soft-dark: #1e2a4a;
+  --success-dark: #4ac495;
+  --success-soft-dark: #183228;
+  --warning-dark: #ebb35c;
+  --warning-soft-dark: #342814;
+  --danger-dark: #f08378;
+  --danger-soft-dark: #391c1a;
+  --highlight-fill-dark: rgba(111, 146, 255, 0.22);
+  --code-background-dark: #1b221e;
+  --scrollbar-thumb-dark: #46544c;
+  --scrollbar-track-dark: #141916;
 
-  --accent: #2447c9;
-  --accent-strong: #1a35a4;
-  --accent-soft: #e9edff;
-
-  --success: #1c6a4d;
-  --success-soft: #e7f2ec;
-  --warning: #925512;
-  --warning-soft: #fbf0de;
-  --danger: #a5362a;
-  --danger-soft: #fbeae7;
-
-  --highlight-fill: rgba(36, 71, 201, 0.12);
+  /* Default (light) semantic tokens for browsers without light-dark() */
+  --paper: var(--paper-light);
+  --surface: var(--surface-light);
+  --surface-2: var(--surface-2-light);
+  --surface-3: var(--surface-3-light);
+  --surface-raised: var(--surface-raised-light);
+  --surface-rail: var(--surface-rail-light);
+  --desk: var(--desk-light);
+  --ink: var(--ink-light);
+  --ink-2: var(--ink-2-light);
+  --ink-strong: var(--ink-strong-light);
+  --muted: var(--muted-light);
+  --faint: var(--faint-light);
+  --line: var(--line-light);
+  --line-strong: var(--line-strong-light);
+  --accent: var(--accent-light);
+  --accent-strong: var(--accent-strong-light);
+  --accent-soft: var(--accent-soft-light);
+  --success: var(--success-light);
+  --success-soft: var(--success-soft-light);
+  --warning: var(--warning-light);
+  --warning-soft: var(--warning-soft-light);
+  --danger: var(--danger-light);
+  --danger-soft: var(--danger-soft-light);
+  --highlight-fill: var(--highlight-fill-light);
+  --code-background: var(--code-background-light);
+  --scrollbar-thumb: var(--scrollbar-thumb-light);
+  --scrollbar-track: var(--scrollbar-track-light);
 
   --radius-xs: 3px;
   --radius-sm: 5px;
   --radius: 8px;
   --radius-lg: 12px;
 
-  --shadow-page:
-    0 1px 2px rgba(20, 24, 22, 0.08), 0 14px 34px rgba(20, 24, 22, 0.14);
-  --shadow-pop: 0 16px 48px rgba(20, 24, 22, 0.18);
-  --shadow-soft: 0 1px 2px rgba(20, 24, 22, 0.05);
+  --shadow-page: 0 1px 2px rgba(0, 0, 0, 0.12), 0 14px 34px rgba(0, 0, 0, 0.18);
+  --shadow-pop: 0 16px 48px rgba(0, 0, 0, 0.28);
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.08);
 
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --dur: 150ms;
@@ -50,4 +109,116 @@
   --command-h: 52px;
   --rail-w: 288px;
   --review-head-h: 52px;
+
+  accent-color: var(--accent);
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+:root:has(> head > meta[name="color-scheme"][content="dark"]) {
+  color-scheme: dark;
+}
+
+:root:has(> head > meta[name="color-scheme"][content="light"]) {
+  color-scheme: light;
+}
+
+/* Fallback for browsers without light-dark() support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: var(--paper-dark);
+    --surface: var(--surface-dark);
+    --surface-2: var(--surface-2-dark);
+    --surface-3: var(--surface-3-dark);
+    --surface-raised: var(--surface-raised-dark);
+    --surface-rail: var(--surface-rail-dark);
+    --desk: var(--desk-dark);
+    --ink: var(--ink-dark);
+    --ink-2: var(--ink-2-dark);
+    --ink-strong: var(--ink-strong-dark);
+    --muted: var(--muted-dark);
+    --faint: var(--faint-dark);
+    --line: var(--line-dark);
+    --line-strong: var(--line-strong-dark);
+    --accent: var(--accent-dark);
+    --accent-strong: var(--accent-strong-dark);
+    --accent-soft: var(--accent-soft-dark);
+    --success: var(--success-dark);
+    --success-soft: var(--success-soft-dark);
+    --warning: var(--warning-dark);
+    --warning-soft: var(--warning-soft-dark);
+    --danger: var(--danger-dark);
+    --danger-soft: var(--danger-soft-dark);
+    --highlight-fill: var(--highlight-fill-dark);
+    --code-background: var(--code-background-dark);
+    --scrollbar-thumb: var(--scrollbar-thumb-dark);
+    --scrollbar-track: var(--scrollbar-track-dark);
+  }
+}
+
+@supports (color: light-dark(white, black)) {
+  :root {
+    --paper: light-dark(var(--paper-light), var(--paper-dark));
+    --surface: light-dark(var(--surface-light), var(--surface-dark));
+    --surface-2: light-dark(var(--surface-2-light), var(--surface-2-dark));
+    --surface-3: light-dark(var(--surface-3-light), var(--surface-3-dark));
+    --surface-raised: light-dark(
+      var(--surface-raised-light),
+      var(--surface-raised-dark)
+    );
+    --surface-rail: light-dark(
+      var(--surface-rail-light),
+      var(--surface-rail-dark)
+    );
+    --desk: light-dark(var(--desk-light), var(--desk-dark));
+    --ink: light-dark(var(--ink-light), var(--ink-dark));
+    --ink-2: light-dark(var(--ink-2-light), var(--ink-2-dark));
+    --ink-strong: light-dark(var(--ink-strong-light), var(--ink-strong-dark));
+    --muted: light-dark(var(--muted-light), var(--muted-dark));
+    --faint: light-dark(var(--faint-light), var(--faint-dark));
+    --line: light-dark(var(--line-light), var(--line-dark));
+    --line-strong: light-dark(
+      var(--line-strong-light),
+      var(--line-strong-dark)
+    );
+    --accent: light-dark(var(--accent-light), var(--accent-dark));
+    --accent-strong: light-dark(
+      var(--accent-strong-light),
+      var(--accent-strong-dark)
+    );
+    --accent-soft: light-dark(
+      var(--accent-soft-light),
+      var(--accent-soft-dark)
+    );
+    --success: light-dark(var(--success-light), var(--success-dark));
+    --success-soft: light-dark(
+      var(--success-soft-light),
+      var(--success-soft-dark)
+    );
+    --warning: light-dark(var(--warning-light), var(--warning-dark));
+    --warning-soft: light-dark(
+      var(--warning-soft-light),
+      var(--warning-soft-dark)
+    );
+    --danger: light-dark(var(--danger-light), var(--danger-dark));
+    --danger-soft: light-dark(
+      var(--danger-soft-light),
+      var(--danger-soft-dark)
+    );
+    --highlight-fill: light-dark(
+      var(--highlight-fill-light),
+      var(--highlight-fill-dark)
+    );
+    --code-background: light-dark(
+      var(--code-background-light),
+      var(--code-background-dark)
+    );
+    --scrollbar-thumb: light-dark(
+      var(--scrollbar-thumb-light),
+      var(--scrollbar-thumb-dark)
+    );
+    --scrollbar-track: light-dark(
+      var(--scrollbar-track-light),
+      var(--scrollbar-track-dark)
+    );
+  }
 }

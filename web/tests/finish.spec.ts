@@ -65,6 +65,8 @@ test("a draft export is explicit before approval", async ({ page }, info) => {
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Finish this table" });
   await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("0 of 12 explicitly confirmed");
+  await dialog.getByLabel("Sign-off mode").selectOption("strict_audit");
   await expect(dialog).toContainText("0 of 12 cells have a recorded decision");
   await expect(
     dialog.getByRole("button", { name: "Approve table", exact: true }),
@@ -82,6 +84,7 @@ test("a draft export is explicit before approval", async ({ page }, info) => {
   expect(request.postDataJSON()).toEqual({
     revision_id: view.revision.id,
     format: "workbook",
+    include_formulas: true,
   });
   await expect(page.locator(".toast")).toContainText("Workbook export started");
   await expect(dialog.getByText("Workbook (.xlsx)")).toBeVisible({
@@ -151,6 +154,7 @@ test("approval with warnings exports the pinned warning record and an edit clear
   expect(request.postDataJSON()).toEqual({
     revision_id: approvedView.revision.id,
     format: "workbook",
+    include_formulas: true,
   });
   const download = await downloadLatest(page);
   expect(download.suggestedFilename()).toContain("reviewed_with_warnings");
