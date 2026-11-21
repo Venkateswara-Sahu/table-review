@@ -7,7 +7,11 @@
 
 Table Review places a spreadsheet-grade review grid beside the original PDF page, links every cell back to its PDF coordinates, automatically detects financial subtotals and cross-footing checks, and exports audit-ready Excel workbooks with live `=SUM(...)` formulas, currency formatting, and deterministic revision checksums.
 
-![Table Review review screen](docs/assets/review-screen.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/review-screen-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/review-screen.png" />
+  <img alt="Table Review financial PDF-to-Excel workbench" src="docs/assets/review-screen.png" />
+</picture>
 
 *Synthetic fixture shown. Built for private, local financial documents.*
 

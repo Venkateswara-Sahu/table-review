@@ -72,7 +72,7 @@ function computeColumnWidths(content: TableContent): number[] {
     const mostlyNumeric =
       bodyCounts[col] > 0 && numericCounts[col] >= bodyCounts[col] * 0.5;
     if (mostlyNumeric) {
-      return clamp(96, Math.round(len * 8.2 + 30), 184);
+      return clamp(122, Math.round(len * 8.6 + 48), 210);
     }
     return clamp(118, Math.round(len * 7.5 + 30), 260);
   });

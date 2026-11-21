@@ -178,12 +178,30 @@ def detect_subtotals(
             chosen_terms = terms
             if len(chosen_terms) >= 2:
                 input_sum, difference, state = _classify_difference(reported, chosen_terms)
+                # Running-subtotal fallback (e.g. Total revenue - Operating expenses = Operating income).
+                if state == "difference" and prior_subtotals and terms:
+                    running_terms = [prior_subtotals[-1], *terms]
+                    run_sum, run_diff, run_state = _classify_difference(reported, running_terms)
+                    if run_state != "difference":
+                        chosen_terms = running_terms
+                        input_sum, difference, state = run_sum, run_diff, run_state
                 # Grand-total fallback: if contiguous terms don't match, try summing prior subtotals.
                 if state == "difference" and len(prior_subtotals) >= 2:
                     alt_sum, alt_diff, alt_state = _classify_difference(reported, prior_subtotals)
                     if alt_state != "difference" or abs(alt_diff) < abs(difference):
                         chosen_terms = prior_subtotals
                         input_sum, difference, state = alt_sum, alt_diff, alt_state
+            elif prior_subtotals and terms:
+                running_terms = [prior_subtotals[-1], *terms]
+                run_sum, run_diff, run_state = _classify_difference(reported, running_terms)
+                if run_state != "difference":
+                    chosen_terms = running_terms
+                    input_sum, difference, state = run_sum, run_diff, run_state
+                elif len(prior_subtotals) >= 2:
+                    chosen_terms = prior_subtotals
+                    input_sum, difference, state = _classify_difference(reported, chosen_terms)
+                else:
+                    continue
             elif len(prior_subtotals) >= 2:
                 chosen_terms = prior_subtotals
                 input_sum, difference, state = _classify_difference(reported, chosen_terms)

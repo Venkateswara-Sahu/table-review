@@ -112,3 +112,25 @@ def test_detected_mismatch_emits_check_issue_and_skips_declared_totals():
     )
     with_declared = content.model_copy(update={"subtotal_groups": (declared,)})
     assert detect_subtotals(with_declared) == ()
+
+
+def test_detects_running_subtotal_income_statement_pattern():
+    content = _table(
+        [
+            ["Line item", "FY 2025"],
+            ["Product revenue", "$842.60"],
+            ["Subscription services", "418.90"],
+            ["Total revenue", "1,261.50"],
+            ["Cost of revenue", "(438.20)"],
+            ["Research & development", "(214.50)"],
+            ["Sales & general admin", "(186.30)"],
+            ["Operating income", "422.50"],
+        ]
+    )
+    detected = detect_subtotals(content)
+    by_id = {item.id: item for item in detected}
+    assert by_id["auto:v:r3c1"].state == "match"
+    assert by_id["auto:v:r3c1"].term_cell_ids == ("r1c1", "r2c1")
+    assert by_id["auto:v:r7c1"].state == "match"
+    assert by_id["auto:v:r7c1"].term_cell_ids == ("r3c1", "r4c1", "r5c1", "r6c1")
+    assert by_id["auto:v:r7c1"].input_sum == "422.50"

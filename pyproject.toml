@@ -1,7 +1,7 @@
 [project]
 name = "table-review"
 version = "0.1.0"
-description = "Source-backed PDF table review and reproducible spreadsheet exports"
+description = "Local-first financial PDF-to-Excel workbench with hybrid extraction, live formula tracing, and source-backed exports"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "pydantic>=2,<3",
