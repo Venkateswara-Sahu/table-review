@@ -1,7 +1,7 @@
 """Public response schemas: storage locations are not browser contracts."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
@@ -53,6 +53,26 @@ class SessionView(APIModel):
 
 class SessionCreated(SessionView):
     expires_at: datetime
+
+
+class SetupStatusView(APIModel):
+    setup_required: bool
+    deployment_mode: Literal["local", "hosted"]
+    local_onboarding_enabled: bool
+
+
+class AvailableBackendsView(APIModel):
+    native_fast: bool = True
+    docling: bool
+    vlm: bool
+
+
+class RuntimeCapabilitiesView(APIModel):
+    deployment_mode: Literal["local", "hosted"]
+    retention_days: int | None
+    default_extraction_backend: Literal["auto", "docling", "native_fast", "vlm"]
+    max_selected_pages: int
+    available_backends: AvailableBackendsView
 
 
 class DocumentView(APIModel):

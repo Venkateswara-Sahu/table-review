@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
-from sqlalchemy import select, update
+from sqlalchemy import select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 
@@ -32,6 +32,10 @@ class SignInThrottled(AuthenticationError):
     pass
 
 
+class SetupUnavailable(PermissionError):
+    pass
+
+
 def secret_hash(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
@@ -48,12 +52,39 @@ class AccountService:
         self.hasher = PasswordHasher()
         self._dummy_hash = self.hasher.hash(secrets.token_urlsafe(32))
 
-    def create(self, username: str, password: str) -> AccountRecord:
+    def _prepare_credentials(self, username: str, password: str) -> tuple[str, str]:
         normalized = username.strip().lower()
         if not re.fullmatch(r"[a-z0-9._@+-]{3,80}", normalized):
             raise InvalidAccount("Use a username with 3 to 80 supported characters")
         _password(password)
-        hashed = self.hasher.hash(password)
+        return normalized, self.hasher.hash(password)
+
+    @staticmethod
+    def _issue_session(session, account: AccountRow, now: datetime) -> SessionGrant:
+        token, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
+        expires = now + timedelta(days=7)
+        session.add(
+            SessionRow(
+                owner_id=account.id,
+                auth_epoch=account.auth_epoch,
+                token_hash=secret_hash(token),
+                csrf_hash=secret_hash(csrf),
+                expires_at=expires,
+            )
+        )
+        return SessionGrant(
+            actor=Actor(id=account.id, username=account.username),
+            token=token,
+            csrf_token=csrf,
+            expires_at=expires,
+        )
+
+    def has_accounts(self) -> bool:
+        with self.session_factory() as session:
+            return session.scalar(select(AccountRow.id).limit(1)) is not None
+
+    def create(self, username: str, password: str) -> AccountRecord:
+        normalized, hashed = self._prepare_credentials(username, password)
         try:
             with self.session_factory.begin() as session:
                 row = AccountRow(username=normalized, password_hash=hashed)
@@ -62,6 +93,20 @@ class AccountService:
                 return AccountRecord(id=row.id, username=row.username)
         except IntegrityError as error:
             raise InvalidAccount("Username unavailable") from error
+
+    def bootstrap_first_account(self, username: str, password: str) -> SessionGrant:
+        """Atomically create the initial local account and sign it in once."""
+        normalized, hashed = self._prepare_credentials(username, password)
+        now = datetime.now(UTC)
+        with self.session_factory.begin() as session:
+            if session.get_bind().dialect.name == "postgresql":
+                session.execute(text("SELECT pg_advisory_xact_lock(741852963)"))
+            if session.scalar(select(AccountRow.id).limit(1)) is not None:
+                raise SetupUnavailable("Initial setup is already complete")
+            account = AccountRow(username=normalized, password_hash=hashed)
+            session.add(account)
+            session.flush()
+            return self._issue_session(session, account, now)
 
     def sign_in(self, username: str, password: str, client_key: str = "local") -> SessionGrant:
         normalized = username.strip().lower()
@@ -107,23 +152,7 @@ class AccountService:
                     if self.hasher.check_needs_rehash(account.password_hash):
                         account.password_hash = self.hasher.hash(password)
                     throttle.failures = 0
-                    token, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
-                    expires = now + timedelta(days=7)
-                    session.add(
-                        SessionRow(
-                            owner_id=account.id,
-                            auth_epoch=account.auth_epoch,
-                            token_hash=secret_hash(token),
-                            csrf_hash=secret_hash(csrf),
-                            expires_at=expires,
-                        )
-                    )
-                    grant = SessionGrant(
-                        actor=Actor(id=account.id, username=account.username),
-                        token=token,
-                        csrf_token=csrf,
-                        expires_at=expires,
-                    )
+                    grant = self._issue_session(session, account, now)
         # Failed attempts must commit before returning an authentication error.
         if failure:
             raise failure
@@ -133,7 +162,12 @@ class AccountService:
         if not token or len(token) > 128:
             raise AuthenticationError("Sign in required")
         row = session.scalar(select(SessionRow).where(SessionRow.token_hash == secret_hash(token)))
-        if row is None or row.revoked_at is not None or row.expires_at <= datetime.now(UTC):
+        if row is None or row.revoked_at is not None:
+            raise AuthenticationError("Sign in required")
+        expires_at = (
+            row.expires_at if row.expires_at.tzinfo is not None else row.expires_at.replace(tzinfo=UTC)
+        )
+        if expires_at <= datetime.now(UTC):
             raise AuthenticationError("Sign in required")
         account = session.get(AccountRow, row.owner_id)
         if (
