@@ -1,6 +1,6 @@
 import io
 from concurrent.futures import ThreadPoolExecutor
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -130,6 +130,7 @@ def test_bulk_review_standard_approval_and_atomic_set_cell(client, app, owned_ta
     )
     assert updated.status_code == 200
     rev_id = updated.json()["id"]
+    app.state.reviews.set_checks(actor, UUID(rev_id), (), {"fixture": "ran"})
     bulk = client.post(
         f"/api/v1/revisions/{rev_id}/bulk-review",
         json={"scope": "row", "row": 1, "skip_flagged": True},
