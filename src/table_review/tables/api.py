@@ -1,13 +1,19 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Query, Request
+from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import Field
 
 from table_review.accounts.api import require_actor
 from table_review.accounts.types import Actor
 from table_review.api_types import EditHistory, RevisionView, TableList, TableView
 from table_review.documents.types import ImmutableModel, PageBox
+from table_review.exports.clipboard import (
+    format_table_json,
+    format_table_markdown,
+    format_table_tsv,
+)
 from table_review.storage.models import TableRecord
 from table_review.tables.adoption import AdoptInput, AdoptionPreview
 from table_review.tables.context_types import CellContext
@@ -65,6 +71,12 @@ class ManualInput(ImmutableModel):
     columns: int = Field(ge=1, le=60)
 
 
+class StitchInput(ImmutableModel):
+    table_ids: tuple[UUID, ...] = Field(min_length=2, max_length=20)
+    title: str | None = Field(default=None, max_length=200)
+    drop_repeated_headers: bool = True
+
+
 class RemovalInput(ImmutableModel):
     base_revision_id: UUID
     expected_version: int = Field(ge=0)
@@ -106,6 +118,22 @@ def manual(
     )
 
 
+@router.post("/documents/{document_id}/tables/stitch", status_code=201, response_model=TableRecord)
+def stitch(
+    document_id: UUID,
+    payload: StitchInput,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+):
+    return request.app.state.tables.stitch(
+        actor,
+        document_id,
+        payload.table_ids,
+        title=payload.title,
+        drop_repeated_headers=payload.drop_repeated_headers,
+    )
+
+
 @router.get("/tables/{table_id}", response_model=TableView)
 def table(table_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return request.app.state.tables.get(actor, table_id)
@@ -119,6 +147,28 @@ def revision(
     actor: Annotated[Actor, Depends(require_actor)],
 ):
     return request.app.state.repository.get_revision(actor.id, table_id, revision_id)
+
+
+@router.get("/tables/{table_id}/revisions/{revision_id}/formatted")
+def formatted_revision(
+    table_id: UUID,
+    revision_id: UUID,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+    format: Literal["tsv", "markdown", "json"] = "tsv",
+):
+    record = request.app.state.repository.get_revision(actor.id, table_id, revision_id)
+    if format == "json":
+        return JSONResponse(content=format_table_json(record.content))
+    if format == "markdown":
+        return PlainTextResponse(
+            content=format_table_markdown(record.content),
+            media_type="text/markdown; charset=utf-8",
+        )
+    return PlainTextResponse(
+        content=format_table_tsv(record.content),
+        media_type="text/tab-separated-values; charset=utf-8",
+    )
 
 
 @router.get("/tables/{table_id}/history", response_model=EditHistory)

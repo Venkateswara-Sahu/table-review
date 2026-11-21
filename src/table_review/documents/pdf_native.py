@@ -18,6 +18,19 @@ def visible_char(text, index):
     return bool(obj) and pdfium_raw.FPDFTextObj_GetTextRenderMode(obj) not in (3, 7)
 
 
+def map_charbox(l, b, r, t, crop_l, crop_b, unrotated_w, unrotated_h, rotation):
+    l, r, b, t = l - crop_l, r - crop_l, b - crop_b, t - crop_b
+    if rotation == 0:
+        return (l, unrotated_h - t, r, unrotated_h - b)
+    if rotation == 90:
+        return (b, l, t, r)
+    if rotation == 180:
+        return (unrotated_w - r, b, unrotated_w - l, t)
+    if rotation == 270:
+        return (unrotated_h - t, unrotated_w - r, unrotated_h - b, unrotated_w - l)
+    raise ValueError("Unsupported PDF rotation")
+
+
 def serialized_pdfium(function):
     @wraps(function)
     def call(*args, **kwargs):

@@ -3,6 +3,11 @@ import sys
 from contextlib import contextmanager
 from threading import Semaphore
 
+from table_review.documents.discovery import (
+    DocumentOutline,
+    DocumentSearchResult,
+    TableCandidatesResult,
+)
 from table_review.documents.errors import DocumentError
 from table_review.documents.preview_host import PreviewHost
 from table_review.documents.types import PageInfo, PdfInfo, RenderedPage
@@ -57,7 +62,7 @@ class PdfOperations:
                     # children of a trusted, preloaded Linux template.
                     if (
                         self.host is not None
-                        and kind in ("info", "render")
+                        and kind in ("info", "render", "outline", "search", "table_candidates")
                         and command == PdfOperations.command(self, request, result)
                     ):
                         self.host.run(request, result, self.timeout_seconds)
@@ -103,3 +108,19 @@ class PdfOperations:
     def render(self, source, page_no, scale):
         with self._operation("render", source, page_no=page_no, scale=scale) as data:
             yield RenderedPage.model_validate(data)
+
+    def outline(self, source) -> DocumentOutline:
+        with self._operation("outline", source) as data:
+            return DocumentOutline.model_validate(data)
+
+    def search(
+        self, source, query: str, *, limit: int = 100, case_sensitive: bool = False
+    ) -> DocumentSearchResult:
+        with self._operation(
+            "search", source, query=query, limit=limit, case_sensitive=case_sensitive
+        ) as data:
+            return DocumentSearchResult.model_validate(data)
+
+    def table_candidates(self, source) -> TableCandidatesResult:
+        with self._operation("table_candidates", source) as data:
+            return TableCandidatesResult.model_validate(data)

@@ -16,8 +16,16 @@ from table_review.storage.models import (
     TableRow,
 )
 from table_review.storage.repository import RevisionConflict, _record
+from table_review.tables.auto_subtotals import detect_subtotals
 from table_review.tables.context import ContextIndex
-from table_review.tables.grid import ConfirmContext, ConfirmSubtotal, apply_edit, validate_grid
+from table_review.tables.grid import (
+    ConfirmContext,
+    ConfirmSubtotal,
+    SetContextManual,
+    apply_edit,
+    validate_grid,
+)
+from table_review.tables.stitch import stitch_tables
 from table_review.tables.subtotal_types import SubtotalResults
 from table_review.tables.subtotals import evaluate_subtotals
 from table_review.tables.types import CellContent, TableContent
@@ -59,6 +67,32 @@ class TableService:
                         )
                     }
                 )
+            if isinstance(operation, SetContextManual):
+                digest = next(
+                    (
+                        b.id
+                        for b in content.context_bindings
+                        if b.cell_id in operation.cell_ids
+                        and b.kind == operation.context_kind
+                        and b.origin == "manual"
+                    ),
+                    None,
+                )
+                return content.model_copy(
+                    update={
+                        "context_bindings": tuple(
+                            binding.model_copy(
+                                update={"confirmed_by": actor.id, "confirmed_at": timestamp}
+                            )
+                            if binding.cell_id in operation.cell_ids
+                            and binding.kind == operation.context_kind
+                            and binding.origin == "manual"
+                            and (digest is None or binding.id == digest)
+                            else binding
+                            for binding in content.context_bindings
+                        )
+                    }
+                )
             return content.model_copy(
                 update={
                     "context_bindings": tuple(
@@ -87,7 +121,7 @@ class TableService:
             event,
             on_saved=self._after_save,
             prepare_content=prepare_content
-            if isinstance(operation, (ConfirmContext, ConfirmSubtotal))
+            if isinstance(operation, (ConfirmContext, SetContextManual, ConfirmSubtotal))
             else None,
         )
 
@@ -144,6 +178,46 @@ class TableService:
             extraction_manifest={"origin": "manual", "checks": "checks_not_run"},
         )
 
+    def stitch(
+        self,
+        actor,
+        document_id,
+        table_ids,
+        *,
+        title: str | None = None,
+        drop_repeated_headers: bool = True,
+    ):
+        if len(table_ids) < 2 or len(set(table_ids)) != len(table_ids):
+            raise TableInputError("Select at least two distinct tables to stitch")
+        self.repository.get_document(actor.id, document_id)
+        revisions = []
+        for tid in table_ids:
+            tbl = self.repository.get_table(actor.id, tid)
+            if tbl.document_id != document_id:
+                raise TableInputError("All stitched tables must belong to the same document")
+            revisions.append(self.repository.get_revision(actor.id, tid, tbl.current_revision_id))
+        try:
+            stitched = stitch_tables(
+                [rev.content for rev in revisions],
+                title=title,
+                drop_repeated_headers=drop_repeated_headers,
+            )
+        except ValueError as error:
+            raise TableInputError(str(error)) from error
+        return self.repository.create_table(
+            actor.id,
+            document_id,
+            stitched,
+            origin="extracted",
+            extraction_manifest={
+                "origin": "stitched",
+                "source_table_ids": [str(tid) for tid in table_ids],
+                "source_revision_ids": [str(rev.id) for rev in revisions],
+                "pages": sorted({c.reference.page for c in stitched.cells}),
+                "drop_repeated_headers": drop_repeated_headers,
+            },
+        )
+
     def restore(
         self, actor, table_id, base_revision_id, historical_revision_id, *, idempotency_key=None
     ):
@@ -188,7 +262,8 @@ class TableService:
                 else set()
             )
             return SubtotalResults(
-                items=evaluate_subtotals(revision.content, unreadable_ids=unreadable)
+                items=evaluate_subtotals(revision.content, unreadable_ids=unreadable),
+                detected=detect_subtotals(revision.content, unreadable_ids=unreadable),
             )
 
     def set_removed(self, actor, table_id, base_revision_id, expected_version, removed):

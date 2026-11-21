@@ -2,12 +2,17 @@ from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, Request, UploadFile
+from fastapi import APIRouter, Depends, Header, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 
 from table_review.accounts.api import require_actor
 from table_review.accounts.types import Actor
 from table_review.api_types import DocumentList, DocumentView, PageView
+from table_review.documents.discovery import (
+    DocumentOutline,
+    DocumentSearchResult,
+    TableCandidatesResult,
+)
 from table_review.documents.types import PdfInfo
 from table_review.lifecycle.deletion import DeletionReceipt
 
@@ -91,3 +96,29 @@ def page_image(
 ):
     rendered = request.app.state.documents.page(actor, document_id, page_no, scale)
     return FileResponse(rendered.image_path, media_type="image/png")
+
+
+@router.get("/{document_id}/outline", response_model=DocumentOutline)
+def outline(document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
+    return request.app.state.documents.outline(actor, document_id)
+
+
+@router.get("/{document_id}/search", response_model=DocumentSearchResult)
+def search(
+    document_id: UUID,
+    q: Annotated[str, Query(min_length=1, max_length=200)],
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+    case_sensitive: bool = False,
+):
+    return request.app.state.documents.search(
+        actor, document_id, q, limit=limit, case_sensitive=case_sensitive
+    )
+
+
+@router.get("/{document_id}/table-candidates", response_model=TableCandidatesResult)
+def table_candidates(
+    document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]
+):
+    return request.app.state.documents.table_candidates(actor, document_id)

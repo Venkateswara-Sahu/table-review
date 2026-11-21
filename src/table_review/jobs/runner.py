@@ -1,11 +1,14 @@
+import collections
 import hashlib
 import json
+import logging
 import os
 import platform
 import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 
@@ -154,7 +157,7 @@ def _terminate(process):
     psutil.wait_procs(children, timeout=5)
 
 
-def child_environment(work_dir):
+def child_environment(work_dir, *, extra_env: dict[str, str] | None = None):
     # Do not copy DB credentials, account cookies or arbitrary model service tokens.
     env = {
         key: value
@@ -181,13 +184,37 @@ def child_environment(work_dir):
     elif "HOME" in os.environ:
         env["HOME"] = os.environ["HOME"]
     env["DOCLING_CACHE_DIR"] = str(work_dir / "docling")
+    if extra_env:
+        env.update(extra_env)
     return env
 
 
-def run_child(command, limits, *, work_dir, cancelled=lambda: False, heartbeat=lambda: None):
+def _drain_stderr(stream, buffer: collections.deque):
+    try:
+        while chunk := stream.read(512):
+            buffer.extend(chunk)
+    except OSError:
+        pass
+
+
+def attach_extract_metadata(result: dict, metrics: dict) -> dict:
+    result["manifest"]["bounded_runner"] = metrics
+    result["manifest"].update(code_identity())
+    return result
+
+
+def run_child(
+    command,
+    limits,
+    *,
+    work_dir,
+    cancelled=lambda: False,
+    heartbeat=lambda: None,
+    extra_env: dict[str, str] | None = None,
+):
     work_dir = Path(work_dir).resolve()
     work_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
-    env = child_environment(work_dir)
+    env = child_environment(work_dir, extra_env=extra_env)
     if sys.platform == "linux":
         command = [sys.executable, "-m", "table_review.jobs.linux_exec", str(os.getpid()), *command]
     oom_before = _oom_count()
@@ -195,10 +222,15 @@ def run_child(command, limits, *, work_dir, cancelled=lambda: False, heartbeat=l
         command,
         env=env,
         stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
         stdin=subprocess.DEVNULL,
         start_new_session=os.name != "nt",
     )
+    stderr_buf: collections.deque = collections.deque(maxlen=4096)
+    stderr_thread = threading.Thread(
+        target=_drain_stderr, args=(process.stderr, stderr_buf), daemon=True
+    )
+    stderr_thread.start()
     job = None
     started, next_heartbeat, peak = time.monotonic(), time.monotonic(), 0
     try:
@@ -229,6 +261,15 @@ def run_child(command, limits, *, work_dir, cancelled=lambda: False, heartbeat=l
         if cancelled():
             raise ProcessingFailure("cancelled")
         if process.returncode:
+            stderr_thread.join(timeout=1)
+            raw_tail = bytes(stderr_buf).decode("utf-8", errors="replace").splitlines()[-5:]
+            sanitized_tail = " | ".join(line.strip()[:120] for line in raw_tail if line.strip())
+            logging.getLogger(__name__).warning(
+                "bounded_child_failed returncode=%s stderr_bytes=%s tail=%s",
+                process.returncode,
+                len(stderr_buf),
+                sanitized_tail[:300],
+            )
             raise ProcessingFailure(
                 "resource_exhaustion"
                 if _oom_count() > oom_before
@@ -242,11 +283,22 @@ def run_child(command, limits, *, work_dir, cancelled=lambda: False, heartbeat=l
         }
     finally:
         _terminate(process)
+        if process.stderr:
+            process.stderr.close()
+        stderr_thread.join(timeout=1)
         if job:
             job.close()
 
 
-def run_operation(payload, limits, *, work_dir, cancelled=lambda: False, heartbeat=lambda: None):
+def run_operation(
+    payload,
+    limits,
+    *,
+    work_dir,
+    cancelled=lambda: False,
+    heartbeat=lambda: None,
+    extra_env: dict[str, str] | None = None,
+):
     work_dir = Path(work_dir)
     work_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     request_path, result_path = work_dir / "request.json", work_dir / "result.json"
@@ -257,15 +309,21 @@ def run_operation(payload, limits, *, work_dir, cancelled=lambda: False, heartbe
         work_dir=work_dir,
         cancelled=cancelled,
         heartbeat=heartbeat,
+        extra_env=extra_env,
     )
     if not result_path.is_file():
         raise ProcessingFailure("infrastructure_interruption")
     result = json.loads(result_path.read_text(encoding="utf-8"))
     if "failure_code" in result:
+        if "error_type" in result:
+            logging.getLogger(__name__).warning(
+                "child_operation_failed failure_code=%s error_type=%s",
+                result["failure_code"],
+                result["error_type"],
+            )
         raise ProcessingFailure(result["failure_code"])
     if payload["kind"] == "extract":
-        result["manifest"]["bounded_runner"] = metrics
-        result["manifest"].update(code_identity())
+        attach_extract_metadata(result, metrics)
     return result
 
 
