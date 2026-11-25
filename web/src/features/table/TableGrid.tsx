@@ -43,6 +43,21 @@ function isNumericInterpretation(interp: Cell["interpretation"]) {
   );
 }
 
+function isNegativeAccountingValue(
+  text: string,
+  interp: Cell["interpretation"],
+) {
+  if (!isNumericInterpretation(interp)) return false;
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  if (/^\([^()]*\d[^()]*\)$/.test(trimmed)) return true;
+  if (/^[-−]\s*[$€£₹¥]?\s*\d/.test(trimmed)) return true;
+  return false;
+}
+
+const GUTTER_WIDTH = 32;
+const LETTER_ROW_HEIGHT = 22;
+
 function computeColumnWidths(content: TableContent): number[] {
   const maxChars = Array.from({ length: content.columns }, () => 4);
   const numericCounts = Array.from({ length: content.columns }, () => 0);
@@ -67,14 +82,14 @@ function computeColumnWidths(content: TableContent): number[] {
 
   return maxChars.map((len, col) => {
     if (labelCols.has(col)) {
-      return clamp(180, Math.round(len * 7.6 + 34), 340);
+      return clamp(156, Math.round(len * 7.2 + 28), 290);
     }
     const mostlyNumeric =
       bodyCounts[col] > 0 && numericCounts[col] >= bodyCounts[col] * 0.5;
     if (mostlyNumeric) {
-      return clamp(122, Math.round(len * 8.6 + 48), 210);
+      return clamp(104, Math.round(len * 8.1 + 40), 185);
     }
-    return clamp(118, Math.round(len * 7.5 + 30), 260);
+    return clamp(108, Math.round(len * 7.3 + 26), 240);
   });
 }
 
@@ -157,7 +172,7 @@ export function TableGrid({
     [autoColWidths, colOverrides],
   );
   const totalWidth = useMemo(
-    () => colWidths.reduce((sum, w) => sum + w, 0),
+    () => GUTTER_WIDTH + colWidths.reduce((sum, w) => sum + w, 0),
     [colWidths],
   );
 
@@ -200,7 +215,7 @@ export function TableGrid({
 
   const { stickyLefts, stickyTotalLeft } = useMemo(() => {
     const map: Record<number, number> = {};
-    let offset = 0;
+    let offset = allowStickyCols ? GUTTER_WIDTH : 0;
     if (allowStickyCols) {
       for (let c = 0; c < content.columns; c++) {
         if (labelColSet.has(c)) {
@@ -211,6 +226,15 @@ export function TableGrid({
     }
     return { stickyLefts: map, stickyTotalLeft: offset };
   }, [allowStickyCols, content.columns, labelColSet, colWidths]);
+
+  const totalRowSet = useMemo(() => {
+    const rows = new Set<number>();
+    if (!subtotalByTotalCell || !subtotalByTotalCell.size) return rows;
+    for (const cell of content.cells) {
+      if (subtotalByTotalCell.has(cell.id)) rows.add(cell.row);
+    }
+    return rows;
+  }, [content.cells, subtotalByTotalCell]);
 
   const contiguousTopHeaders = useMemo(() => {
     const sorted = [...content.header_rows].sort((a, b) => a - b);
@@ -228,7 +252,7 @@ export function TableGrid({
       return;
     }
     const next: Record<number, number> = {};
-    let top = 0;
+    let top = LETTER_ROW_HEIGHT;
     for (let r = 0; r < contiguousTopHeaders.size; r++) {
       next[r] = top;
       const el = rowRefs.current.get(r);
@@ -370,6 +394,24 @@ export function TableGrid({
 
   function renderRow(rowIndex: number, rowCells: Cell[]) {
     const isTopStickyRow = contiguousTopHeaders.has(rowIndex);
+    const isTotalRow = !headerRowSet.has(rowIndex) && totalRowSet.has(rowIndex);
+    const rowFocused = selection.focus.row === rowIndex;
+    const rowClasses = [
+      headerRowSet.has(rowIndex) && "grid-row-header",
+      isTotalRow && "grid-row-total",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    const gutterStyle: CSSProperties = {};
+    if (isTopStickyRow) {
+      gutterStyle.position = "sticky";
+      gutterStyle.top =
+        headerTops[rowIndex] ?? LETTER_ROW_HEIGHT + rowIndex * 40;
+    }
+    if (allowStickyCols) {
+      gutterStyle.position = "sticky";
+      gutterStyle.left = 0;
+    }
     return (
       <tr
         key={rowIndex}
@@ -379,8 +421,23 @@ export function TableGrid({
         }}
         role="row"
         aria-rowindex={rowIndex + 1}
-        className={headerRowSet.has(rowIndex) ? "grid-row-header" : undefined}
+        className={rowClasses || undefined}
       >
+        <th
+          role="presentation"
+          aria-hidden="true"
+          className={[
+            "grid-row-num",
+            isTopStickyRow && "grid-row-num-sticky-top",
+            allowStickyCols && "grid-row-num-sticky-col",
+            rowFocused && "is-active",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          style={gutterStyle}
+        >
+          {rowIndex + 1}
+        </th>
         {rowCells.map((cell) => {
           const verdict = cellReviews[cell.id]?.verdict ?? "unreviewed";
           const isChecked = checked.has(cell.id) && verdict !== "unreadable";
@@ -409,12 +466,21 @@ export function TableGrid({
           const stickyStyle: CSSProperties = {};
           if (isTopStickyRow) {
             stickyStyle.position = "sticky";
-            stickyStyle.top = headerTops[rowIndex] ?? rowIndex * 40;
+            stickyStyle.top =
+              headerTops[rowIndex] ?? LETTER_ROW_HEIGHT + rowIndex * 40;
           }
           if (isStickyCol && stickyLefts[cell.col] !== undefined) {
             stickyStyle.position = "sticky";
             stickyStyle.left = stickyLefts[cell.col];
           }
+
+          const isNumericCell =
+            !isRowLabel &&
+            isNumericInterpretation(cell.interpretation) &&
+            /\d|[-—–]/.test(cell.text);
+          const isNegative =
+            isNumericCell &&
+            isNegativeAccountingValue(cell.text, cell.interpretation);
 
           const classNames = [
             "review-cell",
@@ -433,7 +499,8 @@ export function TableGrid({
             editing && "cell-editing",
             tracedTotalCellId === cell.id && "cell-formula-total",
             tracedAddendCells?.has(cell.id) && "cell-formula-addend",
-            isNumericInterpretation(cell.interpretation) ? "cell-numeric" : "",
+            isNumericCell ? "cell-numeric" : "",
+            isNegative && "cell-negative",
           ]
             .filter(Boolean)
             .join(" ");
@@ -622,9 +689,9 @@ export function TableGrid({
   }
 
   const stickyTotalTop = useMemo(() => {
-    if (!contiguousTopHeaders.size) return 0;
+    if (!contiguousTopHeaders.size) return LETTER_ROW_HEIGHT;
     const last = contiguousTopHeaders.size - 1;
-    return (headerTops[last] ?? last * 40) + 42;
+    return (headerTops[last] ?? LETTER_ROW_HEIGHT + last * 40) + 42;
   }, [contiguousTopHeaders.size, headerTops]);
 
   return (
@@ -651,20 +718,63 @@ export function TableGrid({
         style={{ minWidth: totalWidth }}
       >
         <colgroup>
+          <col className="grid-col-gutter" style={{ width: GUTTER_WIDTH }} />
           {colWidths.map((width, index) => (
             <col key={index} style={{ width }} />
           ))}
         </colgroup>
-        {headRows.length > 0 && (
-          <thead>
-            {headRows.map((row) => renderRow(row.rowIndex, row.cells))}
-          </thead>
-        )}
+        <thead>
+          <tr
+            className="grid-letter-row"
+            role="presentation"
+            aria-hidden="true"
+          >
+            <th
+              role="presentation"
+              className={`grid-letter-corner ${allowStickyCols ? "is-sticky" : ""}`}
+            />
+            {colWidths.map((_, colIdx) => {
+              const isStickyLetter =
+                allowStickyCols && stickyLefts[colIdx] !== undefined;
+              return (
+                <th
+                  key={colIdx}
+                  role="presentation"
+                  className={[
+                    "grid-letter-cell",
+                    isStickyLetter && "is-sticky",
+                    selection.focus.col === colIdx && "is-active",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  style={
+                    isStickyLetter ? { left: stickyLefts[colIdx] } : undefined
+                  }
+                >
+                  {columnName(colIdx)}
+                  <span
+                    className="col-resize-handle"
+                    onPointerDown={(event) => startColResize(event, colIdx)}
+                    onDoubleClick={(event) => {
+                      event.stopPropagation();
+                      setColOverrides((prev) => {
+                        const next = { ...prev };
+                        delete next[colIdx];
+                        return next;
+                      });
+                    }}
+                  />
+                </th>
+              );
+            })}
+          </tr>
+          {headRows.map((row) => renderRow(row.rowIndex, row.cells))}
+        </thead>
         <tbody>
           {topSpacerHeight > 0 && (
             <tr className="grid-spacer" aria-hidden="true">
               <td
-                colSpan={content.columns}
+                colSpan={content.columns + 1}
                 style={{ height: topSpacerHeight }}
               />
             </tr>
@@ -681,7 +791,7 @@ export function TableGrid({
           {bottomSpacerHeight > 0 && (
             <tr className="grid-spacer" aria-hidden="true">
               <td
-                colSpan={content.columns}
+                colSpan={content.columns + 1}
                 style={{ height: bottomSpacerHeight }}
               />
             </tr>

@@ -44,22 +44,51 @@
 }
 
 .sheet-head {
+  position: relative;
   flex: none;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 6px 8px;
+  gap: 8px;
   min-height: var(--review-head-h);
-  padding: 6px 8px 6px 12px;
+  padding: 5px 8px 7px 12px;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
+}
+
+.sheet-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2.5px;
+  appearance: none;
+  border: 0 solid;
+  overflow: clip;
+  background: color-mix(in oklab, var(--line) 55%, transparent);
+  pointer-events: none;
+}
+
+.sheet-progress::-webkit-progress-bar {
+  background: transparent;
+}
+
+.sheet-progress::-webkit-progress-value {
+  background: var(--accent);
+  transition: inline-size 260ms var(--ease);
+}
+
+.sheet-progress::-moz-progress-bar {
+  background: var(--accent);
+  transition: inline-size 260ms var(--ease);
 }
 
 .sheet-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1 1 220px;
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
 }
@@ -172,14 +201,16 @@
   align-items: center;
   gap: 5px;
   min-width: 0;
-  max-width: 190px;
+  max-width: 240px;
   padding: 2px 6px;
   border: 1px solid transparent;
   border-radius: 4px;
   background: transparent;
   color: var(--ink);
-  font-size: 12px;
+  font-family: var(--font-display);
+  font-size: 14.5px;
   font-weight: 500;
+  letter-spacing: -0.01em;
   overflow: hidden;
 }
 
@@ -759,11 +790,33 @@
 
 .grid-footnote-hint {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ---------- Review grid (semantic sticky spreadsheet) ---------- */
+.grid-rev-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--faint);
+  font-size: 9px;
+}
+
+.grid-rev-tag .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.grid-footnote-keys {
+  color: var(--faint);
+}
+
+/* ---------- Review grid (archival financial ledger) ---------- */
 
 .review-table {
   width: 100%;
@@ -773,9 +826,81 @@
   background: var(--surface);
 }
 
+.grid-letter-row th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 22px;
+  padding: 0 4px;
+  background: var(--surface-rail);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-strong);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+  text-align: center;
+  user-select: none;
+}
+
+.grid-letter-corner {
+  left: 0;
+  background: var(--surface-2);
+}
+
+.grid-letter-corner.is-sticky {
+  z-index: 7;
+  box-shadow: inset -1px 0 0 var(--line-strong);
+}
+
+.grid-letter-cell.is-sticky {
+  z-index: 6;
+  box-shadow: inset -1px 0 0 var(--line-strong);
+}
+
+.grid-letter-cell.is-active {
+  background: color-mix(in oklab, var(--accent-soft) 72%, var(--surface-rail));
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.grid-row-num {
+  width: 32px;
+  padding: 0 4px;
+  background: var(--surface-rail);
+  border-right: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--faint);
+  text-align: center;
+  vertical-align: middle;
+  user-select: none;
+}
+
+.grid-row-num-sticky-col {
+  z-index: 3;
+}
+
+.grid-row-num-sticky-top {
+  z-index: 4;
+}
+
+.grid-row-num-sticky-col.grid-row-num-sticky-top {
+  z-index: 6;
+}
+
+.grid-row-num.is-active {
+  background: color-mix(in oklab, var(--accent-soft) 72%, var(--surface-rail));
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .review-cell {
   position: relative;
-  height: 42px;
+  height: 40px;
   padding: 0;
   vertical-align: middle;
   background: var(--surface);
@@ -804,7 +929,7 @@
 
 .review-cell.cell-header {
   background: var(--surface-rail);
-  box-shadow: inset 0 -1px 0 var(--line-strong);
+  box-shadow: inset 0 -1.5px 0 var(--line-strong);
 }
 
 .review-cell.cell-header:hover {
@@ -812,14 +937,53 @@
 }
 
 .review-cell.cell-section {
-  background: var(--surface-2);
+  background: color-mix(in oklab, var(--surface-2) 78%, var(--surface));
+  box-shadow: inset 0 -1px 0 var(--line-strong);
+}
+
+.review-cell.cell-section .cell-value {
   font-weight: 600;
+  letter-spacing: 0.015em;
+  color: var(--ink);
+}
+
+/* Classic accounting total / subtotal rule: single top rule + double bottom rule */
+.grid-row-total .review-cell {
+  background: color-mix(in oklab, var(--brass-soft) 30%, var(--surface));
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 3px double var(--line-strong);
+}
+
+.grid-row-total .review-cell:hover {
+  background: color-mix(in oklab, var(--brass-soft) 45%, var(--surface));
+}
+
+.grid-row-total .cell-value {
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.grid-row-total .grid-row-num {
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 3px double var(--line-strong);
+  color: var(--brass);
+}
+
+.review-cell.cell-negative .cell-value {
+  color: var(--danger);
 }
 
 .review-cell.cell-selected {
   z-index: 2;
-  background: color-mix(in srgb, var(--accent-soft) 92%, var(--surface));
+  background: color-mix(in oklab, var(--accent-soft) 92%, var(--surface));
   box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+@media (forced-colors: active) {
+  .review-cell.cell-selected {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
 }
 
 .review-cell.cell-sticky-top.cell-selected,
@@ -1002,21 +1166,78 @@
   gap: 6px;
 }
 
+.cell-loupe-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cell-loupe-head .rail-label {
+  margin-bottom: 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 9px;
+}
+
+.cell-loupe-badge {
+  padding: 1px 5px;
+  border: 1px solid color-mix(in oklab, var(--brass) 35%, var(--line));
+  border-radius: 3px;
+  background: var(--brass-soft);
+  color: var(--brass);
+  font-size: 9px;
+  font-weight: 500;
+}
+
 .cell-loupe-frame {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  background: var(--surface);
+  padding: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--desk);
+  box-shadow: inset 0 1px 4px rgba(14, 16, 14, 0.16);
   overflow: hidden;
+}
+
+.loupe-reticle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+  border-color: color-mix(in oklab, var(--brass) 68%, var(--line-strong));
+  border-style: solid;
+  border-width: 0;
+}
+
+.loupe-reticle-tl {
+  top: 4px;
+  left: 4px;
+  border-top-width: 1.5px;
+  border-left-width: 1.5px;
+}
+
+.loupe-reticle-br {
+  right: 4px;
+  bottom: 4px;
+  border-right-width: 1.5px;
+  border-bottom-width: 1.5px;
 }
 
 .cell-loupe-canvas {
   display: block;
   max-width: 100%;
   border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition: filter 180ms var(--ease);
+}
+
+.cell-loupe-canvas.is-night-paper {
+  filter: invert(0.88) hue-rotate(180deg) sepia(0.08) contrast(0.96)
+    brightness(0.95);
 }
 
 .context-manual-row {
@@ -2568,6 +2789,19 @@
 
   .verdict .inline-note {
     margin: 0 10px 10px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .sheet-shape {
+    display: none;
+  }
+}
+
+@media (max-width: 1040px) {
+  .sheet-head {
+    flex-wrap: wrap;
+    row-gap: 4px;
   }
 }
 

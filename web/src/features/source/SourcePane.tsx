@@ -10,6 +10,7 @@ import {
 import {
   ListTree,
   Minus,
+  MoonStar,
   Plus,
   ScanLine,
   Search,
@@ -64,6 +65,8 @@ export function SourcePane({
   onManualRegion,
   onJumpPage,
   onQuickExtractPage,
+  nightPaper = false,
+  onToggleNightPaper,
 }: {
   documentId: string;
   previews: PdfPreviews;
@@ -83,6 +86,8 @@ export function SourcePane({
   onManualRegion: () => void;
   onJumpPage?: (page: number) => void;
   onQuickExtractPage?: (page: number) => void;
+  nightPaper?: boolean;
+  onToggleNightPaper?: () => void;
 }) {
   const reader = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -386,7 +391,10 @@ export function SourcePane({
 
   const currentScale = scaleFor(page);
   return (
-    <section className="source-pane" aria-label="Report source">
+    <section
+      className={`source-pane ${nightPaper ? "is-night-paper" : ""}`}
+      aria-label="Report source"
+    >
       <div className="source-tools">
         <IconButton
           label="Document outline"
@@ -453,6 +461,16 @@ export function SourcePane({
           <option value="page">Fit page</option>
           <option value="custom">Custom</option>
         </Select>
+        {onToggleNightPaper && (
+          <IconButton
+            label="Night paper PDF filter"
+            aria-pressed={nightPaper}
+            className={nightPaper ? "is-active" : undefined}
+            onClick={onToggleNightPaper}
+          >
+            <MoonStar size={14} />
+          </IconButton>
+        )}
         <span className="rule-v" aria-hidden="true" />
         <Button
           size="sm"

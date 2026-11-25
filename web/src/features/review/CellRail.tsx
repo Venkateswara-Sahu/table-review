@@ -18,6 +18,7 @@ export function CellRail({
   content,
   review,
   previews,
+  nightPaper = false,
   draft,
   onDraft,
   onSaveCell,
@@ -28,6 +29,7 @@ export function CellRail({
   content: TableContent;
   review?: ReviewState;
   previews: PdfPreviews;
+  nightPaper?: boolean;
   draft: EditDraft;
   onDraft: (value: EditDraft) => void;
   onSaveCell: () => void;
@@ -64,7 +66,7 @@ export function CellRail({
       </header>
 
       <section className="rail-section">
-        <CellLoupe previews={previews} cell={cell} />
+        <CellLoupe previews={previews} cell={cell} nightPaper={nightPaper} />
       </section>
 
       <section className="rail-section">

@@ -27,6 +27,7 @@ export function ReviewPane({
   tableLabel,
   tableOptions,
   previews,
+  nightPaper = false,
   onOpenTable,
   onSource,
   onRevision,
@@ -39,6 +40,7 @@ export function ReviewPane({
   tableLabel: string;
   tableOptions: Array<{ id: string; label: string }>;
   previews: PdfPreviews;
+  nightPaper?: boolean;
   onOpenTable: (id: string) => void;
   onSource: (reference: SourceReference, label?: string) => void;
   onRevision: (revision: Revision) => void;
@@ -157,6 +159,8 @@ export function ReviewPane({
             railOpen={railOpen}
             exceptionsOnly={exceptionsOnly}
             exceptionRowCount={exceptionRowSet.size}
+            reviewedCount={reviewed}
+            totalCount={total}
             onToggleExceptionsOnly={() => setExceptionsOnly((prev) => !prev)}
             onOpenTable={onOpenTable}
             onSaveTitle={(title) =>
@@ -327,17 +331,20 @@ export function ReviewPane({
                 )}
               </span>
               <span className="grid-footnote-hint">
-                Double-click or Enter edits · E next issue · N next cell
+                <span
+                  className="grid-rev-tag mono"
+                  title={`Pinned to revision ${state.revision.id}`}
+                >
+                  <span className="dot" aria-hidden="true" />
+                  rev {state.revision.id.slice(0, 8)}
+                </span>
+                <span className="grid-footnote-keys">
+                  Enter edits · E issue · N next
+                </span>
               </span>
             </div>
           </div>
         </article>
-
-        <div className="mat-note">
-          <span className="dot" aria-hidden="true" />
-          Source-backed draft, pinned to revision{" "}
-          <span className="mono">{state.revision.id.slice(0, 8)}</span>
-        </div>
 
         <VerdictTray
           cell={state.cell}
@@ -396,6 +403,7 @@ export function ReviewPane({
                 content={content}
                 review={review}
                 previews={previews}
+                nightPaper={nightPaper}
                 draft={state.draft}
                 onDraft={state.setDraft}
                 onSaveCell={() => void state.saveCellChanges()}

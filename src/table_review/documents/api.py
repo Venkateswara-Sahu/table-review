@@ -98,6 +98,16 @@ def page_image(
     return FileResponse(rendered.image_path, media_type="image/png")
 
 
+@router.get("/{document_id}/thumbnail")
+def document_thumbnail(
+    document_id: UUID,
+    request: Request,
+    actor: Annotated[Actor, Depends(require_actor)],
+):
+    rendered = request.app.state.documents.page(actor, document_id, 1, 0.35)
+    return FileResponse(rendered.image_path, media_type="image/png")
+
+
 @router.get("/{document_id}/outline", response_model=DocumentOutline)
 def outline(document_id: UUID, request: Request, actor: Annotated[Actor, Depends(require_actor)]):
     return request.app.state.documents.outline(actor, document_id)

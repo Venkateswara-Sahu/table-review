@@ -298,6 +298,7 @@
 
 .source-pane {
   position: relative;
+  container-type: inline-size;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -322,19 +323,50 @@
 
 .source-tools {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 12px;
+  right: 12px;
   z-index: 5;
   display: flex;
   align-items: center;
   gap: 1px;
+  max-width: calc(100% - 24px);
   height: 32px;
   padding: 3px;
   border: 1px solid var(--line-strong);
   border-radius: 7px;
-  background: color-mix(in srgb, var(--surface-raised) 94%, transparent);
+  background: color-mix(in oklab, var(--surface-raised) 95%, transparent);
   box-shadow: 0 6px 20px rgba(20, 24, 22, 0.1);
   backdrop-filter: blur(8px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.source-tools::-webkit-scrollbar {
+  display: none;
+}
+
+@container (max-width: 460px) {
+  .source-tools {
+    left: 8px;
+    right: 8px;
+    max-width: calc(100% - 16px);
+    padding: 2px 3px;
+    gap: 0;
+  }
+
+  .source-tools .rule-v {
+    margin: 0 2px;
+  }
+
+  .source-tools .zoom-value {
+    min-width: 28px;
+  }
+}
+
+@container (max-width: 370px) {
+  .source-fit.select-compact {
+    display: none;
+  }
 }
 
 .source-tools .icon-button {
@@ -588,15 +620,20 @@
 }
 
 .source-fit.select-compact {
+  flex: none;
   width: auto;
   min-height: 25px;
   height: 25px;
-  padding: 0 6px;
+  padding: 0 18px 0 6px;
   border-color: transparent;
   border-radius: 5px;
-  background: transparent;
+  background-color: transparent;
+  background-position:
+    calc(100% - 9px) 10px,
+    calc(100% - 5px) 10px;
   color: var(--muted);
   font-size: 10px;
+  white-space: nowrap;
 }
 
 .source-fit.select-compact:hover {
@@ -738,6 +775,17 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+  transition: filter 180ms var(--ease);
+}
+
+.source-pane.is-night-paper .source-frame {
+  background: #171b18;
+  outline-color: var(--line-strong);
+}
+
+.source-pane.is-night-paper .source-canvas img {
+  filter: invert(0.88) hue-rotate(180deg) sepia(0.08) contrast(0.96)
+    brightness(0.95);
 }
 
 .page-loading {
@@ -924,9 +972,10 @@
 }
 
 .pane-head h2 {
-  font-size: 13.5px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
 }
 
 .chip {
@@ -1002,10 +1051,11 @@
 }
 
 .pane-heading {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  line-height: 1.18;
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 450;
+  letter-spacing: -0.02em;
+  line-height: 1.14;
 }
 
 .pane-copy .lede {

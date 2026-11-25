@@ -112,6 +112,13 @@ export function WorkspaceScreen() {
       return 0.42;
     }
   });
+  const [nightPaper, setNightPaper] = useState(() => {
+    try {
+      return window.localStorage.getItem("tr.nightPaper") === "true";
+    } catch {
+      return false;
+    }
+  });
   useEffect(() => {
     try {
       window.localStorage.setItem("tr.splitRatio", String(sourceRatio));
@@ -119,6 +126,16 @@ export function WorkspaceScreen() {
       /* Ignore restricted storage environments. */
     }
   }, [sourceRatio]);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        "tr.nightPaper",
+        nightPaper ? "true" : "false",
+      );
+    } catch {
+      /* Ignore restricted storage environments. */
+    }
+  }, [nightPaper]);
 
   const [reference, setReference] = useState<{
     reference: SourceReference;
@@ -605,6 +622,8 @@ export function WorkspaceScreen() {
             selection={region}
             onExtractRegion={onExtractSelection}
             onManualRegion={onManualSelection}
+            nightPaper={nightPaper}
+            onToggleNightPaper={() => setNightPaper((prev) => !prev)}
             onJumpPage={(target) => {
               if (!tableId) {
                 changePage(target);
@@ -693,6 +712,7 @@ export function WorkspaceScreen() {
               key={view.table.id}
               view={view}
               previews={previews}
+              nightPaper={nightPaper}
               tableLabel={
                 selectedTableIndex >= 0
                   ? `Table ${selectedTableIndex + 1}`

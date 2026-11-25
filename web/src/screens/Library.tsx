@@ -18,6 +18,7 @@ import {
 import { useConfirm } from "../app/confirm";
 import { useNotices } from "../app/notices";
 import { FileIcon } from "../ui/FileIcon";
+import { FolioThumbnail } from "../ui/FolioThumbnail";
 import { Menu } from "../ui/Menu";
 import {
   Badge,
@@ -268,7 +269,10 @@ export function LibraryScreen() {
             </div>
             {filtered.map((item) => (
               <div className="report-row" role="listitem" key={item.id}>
-                <FileIcon />
+                <FolioThumbnail
+                  documentId={item.id}
+                  ready={item.preparation_state === "ready"}
+                />
                 <div className="report-main">
                   <h3 title={item.filename}>{item.filename}</h3>
                   <p className="report-meta">

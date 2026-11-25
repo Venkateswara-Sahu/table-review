@@ -42,6 +42,8 @@ export function SheetToolbar({
   railOpen,
   exceptionsOnly = false,
   exceptionRowCount = 0,
+  reviewedCount = 0,
+  totalCount = 0,
   onToggleExceptionsOnly,
   onOpenTable,
   onSaveTitle,
@@ -70,6 +72,8 @@ export function SheetToolbar({
   railOpen: boolean;
   exceptionsOnly?: boolean;
   exceptionRowCount?: number;
+  reviewedCount?: number;
+  totalCount?: number;
   onToggleExceptionsOnly?: () => void;
   onOpenTable: (id: string) => void;
   onSaveTitle: (title: string | null) => void;
@@ -132,17 +136,6 @@ export function SheetToolbar({
   return (
     <header className="sheet-head">
       <div className="sheet-title">
-        <span className="table-glyph sheet-glyph" aria-hidden="true">
-          <i className="ok" />
-          <i className="ok" />
-          <i className="ok" />
-          <i className="ok" />
-          <i />
-          <i />
-          <i />
-          <i />
-          <i />
-        </span>
         <div className="sheet-title-copy">
           <label className="table-switch">
             <span className="sr-only">Switch table</span>
@@ -435,6 +428,14 @@ export function SheetToolbar({
           )}
         </IconButton>
       </div>
+      {totalCount > 0 && (
+        <progress
+          className="sheet-progress"
+          value={reviewedCount}
+          max={totalCount}
+          aria-label={`Table review progress: ${reviewedCount} of ${totalCount} cells reviewed`}
+        />
+      )}
     </header>
   );
 }

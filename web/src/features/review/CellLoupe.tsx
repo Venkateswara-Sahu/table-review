@@ -5,12 +5,15 @@ import type { PdfPreviews } from "../source/PdfPreviews";
 export function CellLoupe({
   previews,
   cell,
+  nightPaper = false,
 }: {
   previews: PdfPreviews;
   cell?: Cell;
+  nightPaper?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [caption, setCaption] = useState("");
+  const [magnification, setMagnification] = useState("");
   const box = cell?.reference.box ?? null;
   const pageNo = cell?.reference.page ?? 0;
 
@@ -18,6 +21,7 @@ export function CellLoupe({
     const canvas = canvasRef.current;
     if (!box || !pageNo || !canvas) {
       setCaption("");
+      setMagnification("");
       return;
     }
     const controller = new AbortController();
@@ -86,15 +90,20 @@ export function CellLoupe({
         const rw = ((box!.right - box!.left) / cropW) * targetCanvas.width;
         const rh = ((box!.bottom - box!.top) / cropH) * targetCanvas.height;
 
-        ctx.fillStyle = "rgba(36, 71, 201, 0.14)";
+        ctx.fillStyle = "rgba(21, 94, 76, 0.16)";
         ctx.fillRect(rx, ry, rw, rh);
-        ctx.strokeStyle = "#2447c9";
+        ctx.strokeStyle = "#155e4c";
         ctx.lineWidth = Math.max(1.5, 1.8 * dpr);
         ctx.strokeRect(rx, ry, rw, rh);
 
+        const zoomRatio = cssW / cropW;
+        setMagnification(`${zoomRatio.toFixed(1)}×`);
         setCaption(`p.${pageNo} · ${cell!.reference.precision} crop`);
       } catch {
-        if (!cancelled) setCaption("");
+        if (!cancelled) {
+          setCaption("");
+          setMagnification("");
+        }
       }
     }
 
@@ -110,11 +119,18 @@ export function CellLoupe({
 
   return (
     <div className="cell-loupe">
-      <div className="rail-label">Source crop</div>
+      <div className="cell-loupe-head">
+        <span className="rail-label">Source loupe</span>
+        {magnification && (
+          <span className="cell-loupe-badge mono">{magnification}</span>
+        )}
+      </div>
       <div className="cell-loupe-frame">
+        <span className="loupe-reticle loupe-reticle-tl" aria-hidden="true" />
+        <span className="loupe-reticle loupe-reticle-br" aria-hidden="true" />
         <canvas
           ref={canvasRef}
-          className="cell-loupe-canvas"
+          className={`cell-loupe-canvas ${nightPaper ? "is-night-paper" : ""}`}
           aria-label={`Zoomed source crop on page ${pageNo}`}
         />
       </div>
