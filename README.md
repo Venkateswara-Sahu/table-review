@@ -25,7 +25,7 @@ Table Review places a spreadsheet-grade review grid beside the original PDF page
   - `auto`: Routes digital pages through fast native extraction and falls back cleanly when ML/OCR is needed.
 - **Multi-page table stitching:** Combine continuation pages into a single unified table while stripping repeated headers and preserving each cell's original page number and PDF bounding box.
 - **Spreadsheet-grade review desk:**
-  - Drag-resizable split pane (`localStorage` persisted) with a collapsible Inspector Rail and a live 2× DPR **Source Cell Loupe** cropping the active PDF cell.
+  - Drag-resizable split pane (`localStorage` persisted) with a collapsible Inspector Rail, a calibrated 2× DPR **Optical Source Loupe**, and an optional **Night Paper** darkroom PDF filter.
   - Semantic sticky-header / sticky-row-label spreadsheet grid with range selection, IME-safe inline cell editing, and full revision **Undo / Redo** history (`Ctrl+Z` / `Ctrl+Shift+Z`).
   - Financial parsing for `$`, `€`, `£`, `₹`, `¥`, ISO currency codes, accounting negatives `(1,234.50)`, European (`1.234,56`) and Indian (`12,34,567.89`) number formats, and dash-zero (`-`).
   - Automatic vertical, grand-total, and horizontal cross-footing subtotal detection with inline badge verification (`Σ`, `Σ≈`, `Σ!`) alongside custom manual subtotals.

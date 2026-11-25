@@ -120,7 +120,8 @@
 .sheet-title-copy {
   display: flex;
   align-items: baseline;
-  gap: 9px;
+  gap: 7px;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -162,11 +163,7 @@
 }
 
 .sheet-shape {
-  color: var(--faint);
-  font-size: 9.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: none;
 }
 
 .spacer {
@@ -200,7 +197,8 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-width: 0;
+  flex: 1 1 90px;
+  min-width: 72px;
   max-width: 240px;
   padding: 2px 6px;
   border: 1px solid transparent;
@@ -245,9 +243,9 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  flex: 0 1 auto;
+  flex: 0 2 auto;
   min-width: 0;
-  max-width: 170px;
+  max-width: 118px;
   height: 24px;
   padding: 0 8px;
   border: 1px solid var(--line);
